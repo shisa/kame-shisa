@@ -1,4 +1,4 @@
-/*	$Id: fsm.c,v 1.6 2004/10/25 13:06:53 keiichi Exp $	*/
+/*	$Id: fsm.c,v 1.7 2004/10/28 06:22:18 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -2515,7 +2515,7 @@ bul_fsm_back_deregister(bul, data)
 	}
 	/* clear IFF_DEREGISTERING flag. */
 	if (set_ip6addr(homeifname, &bul->bul_hoainfo->hinfo_hoa, 64,
-		IN6_IFF_NODAD|IN6_IFF_HOME|IN6_IFF_AUTOCONF)) {
+		IN6_IFF_NODAD|IN6_IFF_HOME)) {
 		syslog(LOG_ERR,
 		    "removing IFF_DEREGISTERING flag failed.\n");
 	}

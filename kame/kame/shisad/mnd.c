@@ -1,4 +1,4 @@
-/*	$Id: mnd.c,v 1.8 2004/10/20 03:37:07 keiichi Exp $	*/
+/*	$Id: mnd.c,v 1.9 2004/10/28 06:22:18 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -517,7 +517,7 @@ mipsock_md_dereg_bul(hoa, coa, ifindex)
 		    ip6_sprintf(&hoainfo->hinfo_hoa));
 		return (-1);
 	}
-	flags = IN6_IFF_NODAD|IN6_IFF_HOME|IN6_IFF_AUTOCONF;
+	flags = IN6_IFF_NODAD|IN6_IFF_HOME;
 	if ((bul->bul_flags & IP6_MH_BU_HOME) &&
 	    ((bul->bul_reg_fsm_state == MIP6_BUL_REG_FSM_STATE_WAITAR) ||
 		(bul->bul_reg_fsm_state == MIP6_BUL_REG_FSM_STATE_BOUND))) {
