@@ -152,7 +152,7 @@ nd6_rs_input(m, off, icmp6len)
 	if ((ip6_accept_rtadv != 0 || !ip6_forwarding) && !MIP6_IS_MR)
 #else
 	if (ip6_accept_rtadv != 0 || !ip6_forwarding)
-#endif
+#endif /* MIP6 && NMIP > 0 */
 		goto freeit;
 
 	/* Sanity checks */
@@ -582,7 +582,7 @@ defrtrlist_del(dr)
 	if ((!ip6_forwarding && ip6_accept_rtadv) && !MIP6_IS_MR) /* XXX: better condition? */
 #else
 	if (!ip6_forwarding && ip6_accept_rtadv) /* XXX: better condition? */
-#endif
+#endif /* MIP6 && NMIP > 0 */
 		rt6_flush(&dr->rtaddr, dr->ifp);
 
 	if (dr->installed) {
@@ -717,7 +717,7 @@ defrouter_select()
 	if ((ip6_forwarding || !ip6_accept_rtadv) && !MIP6_IS_MR) 
 #else
 	if (ip6_forwarding || !ip6_accept_rtadv) 
-#endif
+#endif /* MIP6 && NMIP > 0 */
 	{
 		nd6log((LOG_WARNING,
 		    "defrouter_select: called unexpectedly (forwarding=%d, "
@@ -1675,17 +1675,17 @@ pfxlist_onlink_check()
 				if (ifa->ia6_flags & IN6_IFF_DETACHED) {
 					ifa->ia6_flags &= ~IN6_IFF_DETACHED;
 					ifa->ia6_flags |= IN6_IFF_TENTATIVE;
-#ifdef MIP6
+#if defined(MIP6) && NMIP > 0
 					rt_addrinfomsg((struct ifaddr *)ifa);
-#endif /* MIP6 */
+#endif /* MIP6 && NMIP > 0 */
 					nd6_dad_start((struct ifaddr *)ifa,
 					    0);
 				}
 			} else {
 				ifa->ia6_flags |= IN6_IFF_DETACHED;
-#ifdef MIP6
+#if defined(MIP6) && NMIP > 0
 				rt_addrinfomsg((struct ifaddr *)ifa);
-#endif /* MIP6 */
+#endif /* MIP6 && NMIP > 0 */
 			}
 		}
 	}
@@ -1696,9 +1696,9 @@ pfxlist_onlink_check()
 			if (ifa->ia6_flags & IN6_IFF_DETACHED) {
 				ifa->ia6_flags &= ~IN6_IFF_DETACHED;
 				ifa->ia6_flags |= IN6_IFF_TENTATIVE;
-#ifdef MIP6
+#if defined(MIP6) && NMIP > 0
 				rt_addrinfomsg((struct ifaddr *)ifa);
-#endif /* MIP6 */
+#endif /* MIP6 && NMIP > 0 */
 				/* Do we need a delay in this case? */
 				nd6_dad_start((struct ifaddr *)ifa, 0);
 			}
