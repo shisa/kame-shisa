@@ -1,4 +1,4 @@
-/*      $Id: mdd.c,v 1.5 2004/10/13 16:13:43 keiichi Exp $  */
+/*      $Id: mdd.c,v 1.6 2004/10/28 12:34:28 keiichi Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -58,6 +58,7 @@
 
 static void reload(int);
 static void terminate(int);
+static int in6_is_addr_coa_candidate(struct in6_addr *);
 
 static char *cmd;
 int ver_major = 0;
@@ -494,6 +495,11 @@ set_coa()
 	struct sockaddr_in6 sin6;
 
 	LIST_FOREACH(bp, &bl_head, binding_entries) {
+		if (in6_is_addr_coa_candidate(&bp->coa.sin6_addr)) {
+			/* the care-of address is still valid. */
+			continue;
+		}
+
 		maxmatchlen = -1;
 		LIST_FOREACH(cp, &coacl_head, coac_entries) {
 			matchlen = in6_matchlen(&bp->hoa.sin6_addr,
@@ -532,6 +538,20 @@ set_coa()
 		}
 	}
 }
+
+static int
+in6_is_addr_coa_candidate(addr)
+	struct in6_addr *addr;
+{
+	struct coac *cp;
+
+	LIST_FOREACH(cp, &coacl_head, coac_entries) {
+		if (IN6_ARE_ADDR_EQUAL(&cp->coa.sin6_addr, addr))
+			return (1);
+	}
+	return (0);
+}
+
 
 void
 sync_binding()
@@ -662,20 +682,7 @@ mainloop()
 				(void) dereg_detach_coa((struct ifa_msghdr *) ifm);
 #endif /* MIP_MCOA */
 
-#if 1
-/* ETSI 2004.10.11 */
-			if (in6_is_one_of_hoa((struct ifa_msghdr *)ifm,
-			    &bl_head)) {
-				continue;
-			}
-#endif
-
 			get_coacandidate();
-/*
-			if (in6_is_on_homenetwork(
-			    (struct ifa_msghdr *)ifm, &bl_head))
-					continue;
-*/
 			set_coa();
 			sync_binding();
 
