@@ -2757,7 +2757,11 @@ icmp6_redirect_input(m, off)
 			    "with inet6 gateway found for redirect dst: %s\n",
 			    icmp6_redirect_diag(&src6, &reddst6.sin6_addr,
 			    &redtgt6.sin6_addr)));
+#if defined(__FreeBSD__) && __FreeBSD_version >= 502010
+			RTFREE_LOCKED(rt);
+#else
 			RTFREE(rt);
+#endif
 			goto bad;
 		}
 
@@ -2770,7 +2774,11 @@ icmp6_redirect_input(m, off)
 			    ip6_sprintf(gw6),
 			    icmp6_redirect_diag(&src6, &reddst6.sin6_addr,
 			    &redtgt6.sin6_addr)));
+#if defined(__FreeBSD__) && __FreeBSD_version >= 502010
+			RTFREE_LOCKED(rt);
+#else
 			RTFREE(rt);
+#endif
 			goto bad;
 		}
 	} else {
@@ -2781,7 +2789,11 @@ icmp6_redirect_input(m, off)
 		    &redtgt6.sin6_addr)));
 		goto bad;
 	}
+#if defined(__FreeBSD__) && __FreeBSD_version >= 502010
+	RTFREE_LOCKED(rt);
+#else
 	RTFREE(rt);
+#endif
 	rt = NULL;
 
 	is_router = is_onlink = 0;
