@@ -477,7 +477,6 @@ encap6_lookup(m, off, proto, dir)
 			prio = (*ep->func)(m, off, proto, ep->arg);
 		else {
 #ifdef USE_RADIX
-printf("FUCK???\n");
 			continue;
 #else
 			prio = mask_match(ep, (struct sockaddr *)&pack.mine,
