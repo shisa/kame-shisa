@@ -1,4 +1,4 @@
-/*	$Id: mnd.c,v 1.5 2004/10/08 07:53:08 keiichi Exp $	*/
+/*	$Id: mnd.c,v 1.6 2004/10/13 16:09:01 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -108,6 +108,8 @@ static int mipsock_md_dereg_bul_fl(struct in6_addr *, struct in6_addr *,
     struct in6_addr *, u_int16_t, u_int16_t);
 #endif /* !MIP_MCOA */
 
+static int add_hal_by_commanline_xxx(char *);
+
 static void noro_show(int);
 static void noro_init(void);
 static void noro_sync(void);
@@ -139,6 +141,7 @@ main(int argc, char **argv)
 	char *arg_ifname = NULL;
 	struct mip6_hoainfo *hoainfo = NULL;
 	struct binding_update_list *bul;
+	char *homeagent = NULL;
 #ifdef MIP_NEMO
 	char *nemofile = NULL;
 #endif /* MIP_NEMO */
@@ -149,9 +152,9 @@ main(int argc, char **argv)
 	}
 
 #ifdef MIP_NEMO
-        while ((ch = getopt(argc, argv, "dnif:")) != -1)
+        while ((ch = getopt(argc, argv, "dna:if:")) != -1)
 #else
-        while ((ch = getopt(argc, argv, "dnl:i")) != -1) 
+        while ((ch = getopt(argc, argv, "dna:il:")) != -1) 
 #endif
 	{
                 switch (ch) {
@@ -161,6 +164,9 @@ main(int argc, char **argv)
                 case 'n':
                         numerichost = 1;
                         break;
+		case 'a':
+			homeagent = optarg;
+			break;
 		case 'i':	/* Is it necessary to use '-i' option? Specifing interface is mandatory for mnd. thus, using option is too lengthy */
 			goto startmn;
 			break;
@@ -226,7 +232,14 @@ main(int argc, char **argv)
 	}
 #ifdef MIP_NEMO
 	nemo_parse_conf(nemofile);
-#endif /* MIP_NEMO */ 
+#endif /* MIP_NEMO */
+
+#if 1
+	/* ETSI 2004.10.12 XXX */
+	/* install a home agent address, if specified. */
+	if (homeagent != NULL)
+		add_hal_by_commanline_xxx(homeagent);
+#endif
 
 	/* let's insert NULL binding update list to each binding update list */
 	for (hoainfo = LIST_FIRST(&hoa_head); hoainfo;
@@ -471,8 +484,12 @@ mipsock_md_dereg_bul(hoa, coa, ifindex)
 	if (if_indextoname(hoainfo->hinfo_ifindex, mipifname) == NULL) 
 		return (EINVAL);
 	err = delete_ip6addr(mipifname, &hoainfo->hinfo_hoa, 64);
-	if (err)
+	if (err) {
+		syslog(LOG_ERR,
+		    "removing a home address (%s) from %s failed.\n",
+		    ip6_sprintf(&hoainfo->hinfo_hoa), mipifname);
 		return (err);
+	}
 
 	/*
 	 * add a home address to the physical interface specified by
@@ -482,8 +499,12 @@ mipsock_md_dereg_bul(hoa, coa, ifindex)
 		return (EINVAL);
 	err = set_ip6addr(ifname, &hoainfo->hinfo_hoa, 64,
 	    IN6_IFF_NODAD|IN6_IFF_HOME|IN6_IFF_DEREGISTERING);
-	if (err)
+	if (err) {
+		syslog(LOG_ERR,
+		    "assigning a home address (%s) to %s failed.\n",
+		    ip6_sprintf(&hoainfo->hinfo_hoa), ifname);
 		return (err);
+	}
 
 	/* set HOME as mn's location */
 	hoainfo->hinfo_location = MNINFO_MN_HOME;
@@ -990,6 +1011,34 @@ mnd_add_hal(hpfx_entry, gladdr, flag)
 	return (hal);
 }
 
+static int
+add_hal_by_commanline_xxx(homeagent)
+	char *homeagent;
+{
+	struct in6_addr homeagent_in6;
+	struct mip6_mipif *mif;
+	struct mip6_hpfxl *hpfx;
+
+	if (inet_pton(AF_INET6, homeagent, &homeagent_in6) != 1) {
+		syslog(LOG_ERR,
+		    "the specified home agent addrss (%s) is invalid.\n",
+		    homeagent);
+		return(-1);
+	}
+
+	LIST_FOREACH(mif, &mipifhead, mipif_entry) {
+		LIST_FOREACH(hpfx, &mif->mipif_hprefx_head, hpfx_entry) {
+			if (mip6_are_prefix_equal(&hpfx->hpfx_prefix,
+				&homeagent_in6, hpfx->hpfx_prefixlen)) {
+				/* XXXX can we add the same addr to
+				   multiple prefixes? */
+				mnd_add_hal(hpfx, &homeagent_in6, 0);
+			}
+		}
+	}
+
+	return (0);
+}
 
 struct mip6_hpfxl *
 mnd_add_hpfxlist(home_prefix, home_prefixlen, hpfx_mnoption, hpfxhead) 
