@@ -953,16 +953,6 @@ rt_ifannouncemsg(struct ifnet *ifp, int what)
 	strlcpy(ifan->ifan_name, ifp->if_xname, sizeof(ifan->ifan_name));
 	ifan->ifan_what = what;
 	rt_dispatch(m, NULL);
- }
-
-static void
-rt_dispatch(struct mbuf *m, struct sockaddr *sa)
-{
-	struct sockproto route_proto;
-
-	route_proto.sp_family = PF_ROUTE;
-	route_proto.sp_protocol = sa ?  sa->sa_family : 0;
-	raw_input(m, &route_proto, &route_src, &route_dst);
 }
 
 /*
@@ -977,15 +967,11 @@ rt_addrinfomsg(ifa)
 	struct ifa_msghdr *ifam;
 	struct mbuf *m;
 	struct rt_addrinfo info;
-	struct sockaddr *sa;
-	struct sockproto route_proto;
-
-	sa = ifa->ifa_addr;
 
 	if (route_cb.any_count == 0)
 		return;
 	bzero((caddr_t)&info, sizeof(info));
-	info.rti_info[RTAX_IFA] = sa;
+	info.rti_info[RTAX_IFA] = ifa->ifa_addr;
 	m = rt_msg1(RTM_ADDRINFO, &info);
 	if (m == 0)
 		return;
@@ -994,7 +980,16 @@ rt_addrinfomsg(ifa)
 	ifam->ifam_metric = ifa->ifa_metric;
 	ifam->ifam_flags = ifa->ifa_flags;
 	ifam->ifam_addrs = info.rti_addrs;
-	route_proto.sp_protocol = sa ? sa->sa_family : 0;
+	rt_dispatch(m, ifa->ifa_addr);
+}
+
+static void
+rt_dispatch(struct mbuf *m, struct sockaddr *sa)
+{
+	struct sockproto route_proto;
+
+	route_proto.sp_family = PF_ROUTE;
+	route_proto.sp_protocol = sa ?  sa->sa_family : 0;
 	raw_input(m, &route_proto, &route_src, &route_dst);
 }
 
