@@ -1,4 +1,4 @@
-/*	$Id: mip6.h,v 1.6 2004/11/04 17:54:54 mitsuya Exp $	*/
+/*	$Id: mip6.h,v 1.7 2004/11/05 02:42:38 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -51,8 +51,8 @@
 #define MIP6CTL_NAMES {				\
 	{ 0, 0 },				\
 	{ "debug", CTLTYPE_INT },		\
-	{ "rr_hint_ppslimit", CTLTYPE_INT },	\
 	{ "use_ipsec", CTLTYPE_INT },		\
+	{ "rr_hint_ppslimit", CTLTYPE_INT },	\
 }
 
 #endif /* !_NETINET6_MIP6_H_ */
