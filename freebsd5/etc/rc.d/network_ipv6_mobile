@@ -77,6 +77,8 @@ network_ipv6_mobile_start()
 		mnd -n -i mip0
 		echo -n ' mdd'
 		mdd -n
+		echo -n ' cnd'
+		cnd -n
 		echo -n ' rtsold'
 		rtsold -a -m
 		;;
@@ -105,7 +107,9 @@ network_ipv6_mobile_start()
 			done
 
 			echo -n ' had'
-			had -i ${ipv6_mobile_home_interface}
+			had -n -i ${ipv6_mobile_home_interface}
+			echo -n ' cnd'
+			cnd -n
 			echo -n ' rtadvd'
 			rtadvd -m ${ipv6_mobile_home_interface}
 			# take in Router Advertisement
@@ -113,6 +117,9 @@ network_ipv6_mobile_start()
 			;;
 		esac
 		;;
+	*)
+		echo -n ' cnd'
+		cnd -n
 	esac
 
 	echo ''
