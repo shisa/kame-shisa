@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.8 2004/10/11 10:54:57 t-momose Exp $	*/
+/*	$Id: mip6.c,v 1.9 2004/10/12 09:47:53 t-momose Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -241,7 +241,9 @@ mip6_input(mp, offp, proto)
 	 * code0. 
 	 */
 	mhlen = (mh->ip6mh_len + 1) << 3;
-	if (mhlen < IP6OPT_MINLEN || mhlen < mhdefaultlen[mh->ip6mh_type]) {
+	if (mhlen < IP6OPT_MINLEN ||
+	    (mh->ip6mh_type < sizeof(mhdefaultlen) / sizeof(int)
+	     && mhlen < mhdefaultlen[mh->ip6mh_type])) {
 		mip6log((LOG_INFO, "%s:%d: Mobility Header Length %d.\n",
 			__FILE__, __LINE__, mhlen));
 		/* 9.2 discard and SHOULD send ICMP Parameter Problem XXX */
