@@ -206,7 +206,8 @@ struct accept_filter_arg {
 #define	AF_NETGRAPH	32		/* Netgraph sockets */
 #define	AF_SLOW		33		/* 802.3ad slow protocol */
 #define	AF_SCLUSTER	34		/* Sitara cluster protocol */
-#define	AF_MAX		35
+#define AF_MOBILITY	35
+#define	AF_MAX		36
 #endif
 
 /*
@@ -289,6 +290,7 @@ struct sockaddr_storage {
 #define	PF_NETGRAPH	AF_NETGRAPH
 #define	PF_SLOW		AF_SLOW
 #define PF_SCLUSTER	AF_SCLUSTER
+#define	PF_MOBILITY	AF_MOBILITY
 
 #define	PF_MAX		AF_MAX
 

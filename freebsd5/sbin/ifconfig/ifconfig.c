@@ -145,6 +145,7 @@ void	status(const struct afswtch *afp, int addrcount,
 		    struct sockaddr_dl *sdl, struct if_msghdr *ifm,
 		    struct ifa_msghdr *ifam);
 void	tunnel_status(int s);
+void	nexthop_status __P((int s));
 void	usage(void);
 void	ifmaybeload(char *name);
 
@@ -160,7 +161,9 @@ typedef	void c_func2(const char *arg, const char *arg2, int s, const struct afsw
 c_func	setatphase, setatrange;
 c_func	setifaddr, setifbroadaddr, setifdstaddr, setifnetmask;
 c_func2	settunnel;
+c_func	setnexthop;
 c_func	deletetunnel;
+c_func	deletenexthop;
 #ifdef INET6
 c_func	setifprefixlen;
 c_func	setip6flags;
@@ -219,6 +222,12 @@ struct	cmd {
 	{ "pltime",     NEXTARG,        setip6pltime },
 	{ "vltime",     NEXTARG,        setip6vltime },
 	{ "eui64",	0,		setip6eui64 },
+#ifdef MIP6
+	{ "home",	IN6_IFF_HOME, setip6flags },
+	{ "-home",	-IN6_IFF_HOME, setip6flags },
+	{ "deregistering",	IN6_IFF_DEREGISTERING, setip6flags },
+	{ "-deregistering",	-IN6_IFF_DEREGISTERING, setip6flags },
+#endif /* MIP6 */
 #endif
 	{ "range",	NEXTARG,	setatrange },
 	{ "phase",	NEXTARG,	setatphase },
@@ -227,6 +236,8 @@ struct	cmd {
 	{ "ipdst",	NEXTARG,	setifipdst },
 	{ "tunnel",	NEXTARG2,	NULL,	settunnel },
 	{ "deletetunnel", 0,		deletetunnel },
+	{ "nexthop",	NEXTARG,	setnexthop },
+	{ "deletenexthop", 0,		deletenexthop },
 	{ "link0",	IFF_LINK0,	setifflags },
 	{ "-link0",	-IFF_LINK0,	setifflags },
 	{ "link1",	IFF_LINK1,	setifflags },
@@ -809,6 +820,58 @@ settunnel(const char *src, const char *dst, int s, const struct afswtch *afp)
 	freeaddrinfo(dstres);
 }
 
+/*ARGSUSED*/
+void
+setnexthop(addr, param, s, afp)
+	const char *addr;
+	int param;
+	int s;
+	const struct afswtch *afp;
+{
+	struct addrinfo hints, *res;
+	struct ifaliasreq addreq;
+	int ecode;
+#ifdef INET6
+	struct in6_aliasreq in6_addreq; 
+#endif
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = afp->af_af;
+
+	if ((ecode = getaddrinfo(addr, NULL, NULL, &res)) != 0)
+		errx(1, "error in parsing address string: %s",
+		    gai_strerror(ecode));
+
+	switch (res->ai_addr->sa_family) {
+	case AF_INET:
+		memset(&addreq, 0, sizeof(addreq));
+		strncpy(addreq.ifra_name, name, IFNAMSIZ);
+		memcpy(&addreq.ifra_addr, res->ai_addr,
+		    res->ai_addr->sa_len);
+
+		if (ioctl(s, SIOCSIFPHYNEXTHOP, &addreq) < 0)
+			warn("SIOCSIFPHYNEXTHOP");
+		break;
+
+#ifdef INET6
+	case AF_INET6:
+		memset(&in6_addreq, 0, sizeof(in6_addreq));
+		strncpy(in6_addreq.ifra_name, name, IFNAMSIZ);
+		memcpy(&in6_addreq.ifra_addr, res->ai_addr,
+		    res->ai_addr->sa_len);
+
+		if (ioctl(s, SIOCSIFPHYNEXTHOP_IN6, &in6_addreq) < 0)
+			warn("SIOCSIFPHYNEXTHOP_IN6");
+		break;
+#endif /* INET6 */
+
+	default:
+		warn("address family not supported");
+	}
+
+	freeaddrinfo(res);
+}
+
 /* ARGSUSED */
 void
 deletetunnel(const char *vname, int param, int s, const struct afswtch *afp)
@@ -816,6 +879,18 @@ deletetunnel(const char *vname, int param, int s, const struct afswtch *afp)
 
 	if (ioctl(s, SIOCDIFPHYADDR, &ifr) < 0)
 		err(1, "SIOCDIFPHYADDR");
+}
+
+/* ARGSUSED */
+void
+deletenexthop(vname, param, s, afp)
+	const char *vname;
+	int param;
+	int s;
+	const struct afswtch *afp;
+{
+	if (ioctl(s, SIOCDIFPHYNEXTHOP, &ifr) < 0)
+		err(1, "SIOCDIFPHYNEXTHOP");
 }
 
 void
@@ -1104,6 +1179,7 @@ status(const struct afswtch *afp, int addrcount, struct	sockaddr_dl *sdl,
 	}
 
 	tunnel_status(s);
+ 	nexthop_status(s);
 
 	while (addrcount > 0) {
 		
@@ -1226,6 +1302,60 @@ tunnel_status(int s)
 
 	printf("\ttunnel inet%s %s --> %s\n", ver,
 	    psrcaddr, pdstaddr);
+}
+
+void
+nexthop_status(s)
+	int s;
+{
+	char pnexthopaddr[NI_MAXHOST];
+	u_long nexthopcmd;
+	struct ifreq *ifrp;
+	const char *ver = "";
+#ifdef NI_WITHSCOPEID
+	const int niflag = NI_NUMERICHOST | NI_WITHSCOPEID;
+#else
+	const int niflag = NI_NUMERICHOST;
+#endif
+#ifdef INET6
+	struct in6_ifreq in6_ifr;
+	int s6;
+#endif /* INET6 */
+
+	pnexthopaddr[0] = '\0';
+
+#ifdef INET6
+	memset(&in6_ifr, 0, sizeof(in6_ifr));
+	strncpy(in6_ifr.ifr_name, name, IFNAMSIZ);
+	s6 = socket(AF_INET6, SOCK_DGRAM, 0);
+	if (s6 < 0) {
+		nexthopcmd = SIOCGIFPHYNEXTHOP;
+		ifrp = &ifr;
+	} else {
+		close(s6);
+		nexthopcmd = SIOCGIFPHYNEXTHOP_IN6;
+		ifrp = (struct ifreq *)&in6_ifr;
+	}
+#else /* INET6 */
+	nexthopcmd = SIOCGIFPHYNEXTHOP;
+	ifrp = &ifr;
+#endif /* INET6 */
+
+	if (ioctl(s, nexthopcmd, (caddr_t)ifrp) < 0)
+		return;
+
+#ifdef INET6
+	if (ifrp->ifr_addr.sa_family == AF_INET6)
+		in6_fillscopeid((struct sockaddr_in6 *)&ifrp->ifr_addr);
+#endif
+	getnameinfo(&ifrp->ifr_addr, ifrp->ifr_addr.sa_len,
+	    pnexthopaddr, sizeof(pnexthopaddr), 0, 0, niflag);
+#ifdef INET6
+	if (ifrp->ifr_addr.sa_family == AF_INET6)
+		ver = "6";
+#endif
+
+	printf("\tnexthop inet%s %s\n", ver, pnexthopaddr);
 }
 
 void
@@ -1389,6 +1519,10 @@ in6_status(int s __unused, struct rt_addrinfo * info)
 #ifdef IN6_IFF_HOME
 	if ((flags6 & IN6_IFF_HOME) != 0)
 		printf("home ");
+#endif
+#ifdef IN6_IFF_DEREGISTERING
+	if ((flags6 & IN6_IFF_DEREGISTERING) != 0)
+		printf("deregistering ");
 #endif
 
         if (scopeid)
