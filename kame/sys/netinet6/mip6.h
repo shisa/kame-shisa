@@ -1,4 +1,4 @@
-/*	$Id: mip6.h,v 1.4 2004/10/28 06:17:27 keiichi Exp $	*/
+/*	$Id: mip6.h,v 1.5 2004/11/04 17:53:19 mitsuya Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -28,8 +28,8 @@
  * SUCH DAMAGE.
  */
 
-#ifndef _NETINET6_MIP6_H_
-#define _NETINET6_MIP6_H_
+#ifndef _MIP6_H_
+#define _MIP6_H_
 
 #define IP6OPT_HALEN	16	/* Length of home address option */
 

@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.24 2004/10/28 06:17:27 keiichi Exp $	*/
+/*	$Id: mip6.c,v 1.25 2004/11/04 17:53:19 mitsuya Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -97,7 +97,7 @@ struct mip6stat mip6stat;
 u_int8_t mip6_nodetype = MIP6_NODETYPE_NONE;
 
 /* sysctl parameters. */
-int mip6ctl_use_ipsec = 1;
+int mip6ctl_use_ipsec = 0;
 #ifdef MIP6_DEBUG
 int mip6ctl_debug = 1;
 #else

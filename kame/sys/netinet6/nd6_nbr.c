@@ -255,7 +255,7 @@ nd6_ns_input(m, off, icmp6len)
 #ifdef RADIX_MPATH
 		bzero(&ro, sizeof(ro));
 		ro.ro_dst = tsin6;
-		rtalloc_mpath_with_flag((struct route *)&ro, RTF_ANNOUNCE);
+		rtalloc_mpath((struct route *)&ro, RTF_ANNOUNCE);
 		rt = ro.ro_rt;
 #else /* RADIX_MPATH */
 		rt = rtalloc1((struct sockaddr *)&tsin6, 0
