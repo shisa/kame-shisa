@@ -40,8 +40,8 @@
 #include <sys/sockio.h>
 #include <sys/kernel.h>
 #include <sys/syslog.h>
-#if defined(__OpenBSD__)
-#include <sys/md5k.h>
+#ifdef __OpenBSD__
+#include <crypto/md5.h>
 #else
 #include <sys/md5.h>
 #endif
@@ -1082,15 +1082,23 @@ in6_ifdetach(ifp)
 #ifndef SCOPEDROUTING
 	sin6.sin6_scope_id = 0;	/* XXX */
 #endif
-#ifndef __FreeBSD__
-	rt = rtalloc1((struct sockaddr *)&sin6, 0);
-#else
-	rt = rtalloc1((struct sockaddr *)&sin6, 0, 0UL);
+	if (rt_tables[AF_INET6] != NULL) {
+#if defined(__FreeBSD__) && __FreeBSD_version >= 503000
+		RADIX_NODE_HEAD_LOCK(rt_tables[AF_INET6]);
 #endif
-	if (rt && rt->rt_ifp == ifp) {
-		rtrequest(RTM_DELETE, (struct sockaddr *)rt_key(rt),
-		    rt->rt_gateway, rt_mask(rt), rt->rt_flags, 0);
-		rtfree(rt);
+#ifndef __FreeBSD__
+		rt = rtalloc1((struct sockaddr *)&sin6, 0);
+#else
+		rt = rtalloc1((struct sockaddr *)&sin6, 0, 0UL);
+#endif
+		if (rt && rt->rt_ifp == ifp) {
+			rtrequest(RTM_DELETE, (struct sockaddr *)rt_key(rt),
+			    rt->rt_gateway, rt_mask(rt), rt->rt_flags, 0);
+			rtfree(rt);
+		}
+#if defined(__FreeBSD__) && __FreeBSD_version >= 503000
+		RADIX_NODE_HEAD_UNLOCK(rt_tables[AF_INET6]);
+#endif
 	}
 }
 

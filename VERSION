@@ -8,4 +8,4 @@ platform	base version			webpage
 netbsd		NetBSD 1.6.2			http://www.netbsd.org/
 openbsd		OpenBSD 3.5			http://www.openbsd.org/
 freebsd4	FreeBSD 4.10-RELEASE		http://www.freebsd.org/
-freebsd5	FreeBSD 5.2.1-RELEASE		http://www.freebsd.org/
+freebsd5	FreeBSD 5.3-RELEASE		http://www.freebsd.org/

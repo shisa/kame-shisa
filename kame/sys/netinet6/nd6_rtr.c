@@ -323,9 +323,8 @@ nd6_ra_input(m, off, icmp6len)
 	dr0.advints_lost = 0;	/* Mobile IPv6 */
 	/* unspecified or not? (RFC 2461 6.3.4) */
 	if (nd_ra->nd_ra_reachable) {
-		u_int32_t advreachable = nd_ra->nd_ra_reachable;
+		u_int32_t advreachable = ntohl(nd_ra->nd_ra_reachable);
 
-		NTOHL(advreachable);
 		if (advreachable <= MAX_REACHABLE_TIME &&
 		    ndi->basereachable != advreachable) {
 			ndi->basereachable = advreachable;

@@ -106,6 +106,8 @@ route6_input(mp, offp, proto)
 	switch (rh->ip6r_type) {
 	case IPV6_RTHDR_TYPE_0:
 		rhlen = (rh->ip6r_len + 1) << 3;
+		if (rh->ip6r_segleft == 0)
+			break;	/* Final dst. Just ignore the header. */
 #ifndef PULLDOWN_TEST
 		/*
 		 * note on option length:

@@ -134,6 +134,10 @@ int ipsec_debug = 1;
 int ipsec_debug = 0;
 #endif
 
+#ifdef NET_NEEDS_GIANT
+NET_NEEEDS_GIANT("ipsec");
+#endif
+
 #ifndef offsetof		/* XXX */
 #define	offsetof(type, member)	((size_t)(&((type *)0)->member))
 #endif
@@ -2291,7 +2295,9 @@ ipsec4_encapsulate(m, sav)
 	}
 #if defined(__NetBSD__) || defined(__OpenBSD__)
 	ip->ip_id = htons(ip_randomid());
-#elif defined(__FreeBSD__)
+#elif (defined(__FreeBSD__) && __FreeBSD_version >= 503000)
+	ip->ip_id = ip_newid();
+#else
 #ifdef RANDOM_IP_ID
 	ip->ip_id = htons(ip_randomid());
 #else

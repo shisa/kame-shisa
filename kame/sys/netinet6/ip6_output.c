@@ -203,7 +203,7 @@ extern int ipsec_ipcomp_default_level;
  
 #include <net/net_osdep.h>
 
-#if defined(__NetBSD__) && defined(PFIL_HOOKS)
+#if (defined(__NetBSD__) && defined(PFIL_HOOKS)) || (defined(__FreeBSD__) && __FreeBSD_version >= 503000)
 extern struct pfil_head inet6_pfil_hook;	/* XXX */
 #endif
 
@@ -351,11 +351,13 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 	struct socket *so;
 	struct secpolicy *sp = NULL;
 
+#if !(defined(__FreeBSD__) && __FreeBSD_version >= 503000)
 	/* for AH processing. stupid to have "socket" variable in IP layer... */
 	so = ipsec_getsocket(m);
 	(void)ipsec_setsocket(m, NULL);
 #endif
-#endif /* IPSEC */
+#endif
+#endif /* IPSEC || FAST_IPSEC */
 
 	ip6 = mtod(m, struct ip6_hdr *);
 	finaldst = ip6->ip6_dst;
@@ -1386,6 +1388,16 @@ skip_ipsec2:;
 	if (m == NULL)
 		goto done;
 	ip6 = mtod(m, struct ip6_hdr *);
+#elif defined(__FreeBSD__) && __FreeBSD_version >= 503000
+	/* Jump over all PFIL processing if hooks are not active .*/
+	if (inet6_pfil_hook.ph_busy_count == -1)
+		goto passout;
+
+	/* Run through list of hooks for output packets. */
+	error = pfil_run_hooks(&inet6_pfil_hook, &m, ifp, PFIL_OUT, inp);
+	if (error != 0 || m == NULL)
+		goto done;
+	ip6 = mtod(m, struct ip6_hdr *);
 #endif /* PFIL_HOOKS */
 
 #if NPF > 0
@@ -1399,6 +1411,9 @@ skip_ipsec2:;
 	ip6 = mtod(m, struct ip6_hdr *);
 #endif
 
+#if defined(__FreeBSD__) && __FreeBSD_version >= 503000
+passout:
+#endif
 	/*
 	 * Send the packet to the outgoing interface.
 	 * If necessary, do IPv6 fragmentation before sending.
@@ -1496,6 +1511,9 @@ skip_ipsec2:;
 		u_char nextproto;
 		struct ip6ctlparam ip6cp;
 		u_int32_t mtu32;
+#if defined(__FreeBSD__) && __FreeBSD_version >= 503000
+		int qslots = ifp->if_snd.ifq_maxlen - ifp->if_snd.ifq_len;
+#endif
 
 		/*
 		 * Too large for the destination or interface;
@@ -1519,6 +1537,19 @@ skip_ipsec2:;
 			in6_ifstat_inc(ifp, ifs6_out_fragfail);
 			goto bad;
 		}
+
+#if defined(__FreeBSD__) && __FreeBSD_version >= 503000
+		/*
+		 * Verify that we have any chance at all of being able to queue
+		 *      the packet or packet fragments
+		 */
+		if (qslots <= 0 || ((u_int)qslots * (mtu - hlen)
+		    < tlen  /* - hlen */)) {
+			error = ENOBUFS;
+			ip6stat.ip6s_odropped++;
+			goto bad;
+		}
+#endif
 
 		mnext = &m->m_nextpkt;
 
@@ -4851,7 +4882,7 @@ ip6_mloopback(ifp, m, dst)
 
 #ifdef __FreeBSD__
 #if (__FreeBSD_version >= 410000)
-	(void)if_simloop(ifp, copym, dst->sin6_family, NULL);
+	(void)if_simloop(ifp, copym, dst->sin6_family, 0);
 #else
 	(void)if_simloop(ifp, copym, (struct sockaddr *)dst, NULL);
 #endif

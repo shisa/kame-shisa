@@ -903,7 +903,10 @@ in6_control(so, cmd, data, ifp, p)
 		 * that is, this address might make other addresses detached.
 		 */
 		pfxlist_onlink_check();
-
+#if defined(__FreeBSD__) && __FreeBSD_version >= 503000
+		if (error == 0 && ia)
+			EVENTHANDLER_INVOKE(ifaddr_event, ifp);
+#endif
 		break;
 	}
 
@@ -925,6 +928,9 @@ in6_control(so, cmd, data, ifp, p)
 		in6_purgeaddr(&ia->ia_ifa);
 		if (pr && pr->ndpr_refcnt == 0)
 			prelist_remove(pr);
+#if defined(__FreeBSD__) && __FreeBSD_version >= 503000
+		EVENTHANDLER_INVOKE(ifaddr_event, ifp);
+#endif
 		break;
 	}
 

@@ -428,7 +428,7 @@ noreplaycheck:
 		s = splimp();
 #endif
 #if defined(__FreeBSD__) && __FreeBSD_version >= 500000
-		if (!IF_HANDOFF(&ipintrq, m, NULL)) {
+		if (netisr_queue(NETISR_IP, m)) {	/* (0) on success. */
 			ipsecstat.in_inval++;
 			m = NULL;
 			goto bad;
@@ -440,12 +440,10 @@ noreplaycheck:
 			goto bad;
 		}
 		IF_ENQUEUE(&ipintrq, m);
-#endif
-		m = NULL;
 		schednetisr(NETISR_IP); /* can be skipped but to make sure */
-#if !(defined(__FreeBSD__) && __FreeBSD_version >= 500000)
 		splx(s);
 #endif
+		m = NULL;
 		nxt = IPPROTO_DONE;
 	} else {
 		/*
@@ -864,7 +862,7 @@ noreplaycheck:
 #endif
 
 #if defined(__FreeBSD__) && __FreeBSD_version >= 500000
-		if (!IF_HANDOFF(&ip6intrq, m, NULL)) {
+		if (netisr_queue(NETISR_IPV6, m)) {	/* (0) on success. */
 			ipsec6stat.in_inval++;
 			m = NULL;
 			goto bad;
@@ -876,12 +874,10 @@ noreplaycheck:
 			goto bad;
 		}
 		IF_ENQUEUE(&ip6intrq, m);
-#endif
-		m = NULL;
 		schednetisr(NETISR_IPV6); /* can be skipped but to make sure */
-#if !(defined(__FreeBSD__) && __FreeBSD_version >= 500000)
 		splx(s);
 #endif
+		m = NULL;
 		nxt = IPPROTO_DONE;
 	} else {
 		/*

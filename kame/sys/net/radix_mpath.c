@@ -120,10 +120,17 @@ rt_mpath_matchgate(rt, gate)
  * check if we have the same key/mask/gateway on the table already.
  */
 int
+#ifdef __OpenBSD__
+rt_mpath_conflict(rnh, rt, netmask, mpathok)
+#else
 rt_mpath_conflict(rnh, rt, netmask)
+#endif
 	struct radix_node_head *rnh;
 	struct rtentry *rt;
 	struct sockaddr *netmask;
+#ifdef __OpenBSD__
+	int mpathok;
+#endif
 {
 	struct radix_node *rn, *rn1;
 	struct rtentry *rt1;
@@ -199,6 +206,10 @@ rt_mpath_conflict(rnh, rt, netmask)
 	}
 
  maskmatched:;
+#ifdef __OpenBSD__
+	if (!mpathok)
+		return EEXIST;
+#endif
 
 	/* key/mask were the same.  compare gateway for all multipaths */
 	do {

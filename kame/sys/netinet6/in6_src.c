@@ -974,8 +974,8 @@ int
 in6_pcbsetport(laddr, inp, p)
 	struct in6_addr *laddr;
 	struct inpcb *inp;
-#if __FreeBSD_version >= 500000
-	struct thread *p;
+#if __FreeBSD_version >= 503000
+	struct ucred *p;
 #else
 	struct proc *p;
 #endif
@@ -997,7 +997,11 @@ in6_pcbsetport(laddr, inp, p)
 		lastport = &pcbinfo->lasthi;
 	} else if (inp->inp_flags & INP_LOWPORT) {
 #ifdef __FreeBSD__
+#if __FreeBSD_version >= 503000
+		if ((error = suser_cred(p, 0)))
+#else
 		if (p && (error = suser(p)))
+#endif
 #else
 		if (p && (error = suser(p->p_ucred, &p->p_acflag)))
 #endif

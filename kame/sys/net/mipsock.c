@@ -1,4 +1,4 @@
-/* $Id: mipsock.c,v 1.4 2004/11/05 09:29:19 keiichi Exp $ */
+/* $Id: mipsock.c,v 1.5 2004/11/18 12:26:00 t-momose Exp $ */
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -98,7 +98,13 @@ mips_abort(struct socket *so)
 /* pru_accept is EOPNOTSUPP */
 
 static int
-mips_attach(struct socket *so, int proto, struct proc *p)
+mips_attach(struct socket *so, int proto,
+#if __FreeBSD_version >= 503000
+	    struct thread *td
+#else
+	    struct proc *p
+#endif
+	    )
 {
 	struct rawcb *rp;
 	int s, error;
@@ -138,7 +144,13 @@ mips_attach(struct socket *so, int proto, struct proc *p)
 }
 
 static int
-mips_bind(struct socket *so, struct sockaddr *nam, struct proc *p)
+mips_bind(struct socket *so, struct sockaddr *nam,
+#if __FreeBSD_version >= 503000
+	  struct thread *p
+#else
+	  struct proc *p
+#endif
+	  )
 {
 	int s, error;
 	s = splnet();
@@ -148,7 +160,13 @@ mips_bind(struct socket *so, struct sockaddr *nam, struct proc *p)
 }
 
 static int
-mips_connect(struct socket *so, struct sockaddr *nam, struct proc *p)
+mips_connect(struct socket *so, struct sockaddr *nam,
+#if __FreeBSD_version >= 503000
+	  struct thread *p
+#else
+	  struct proc *p
+#endif
+	  )
 {
 	int s, error;
 	s = splnet();
@@ -207,7 +225,13 @@ mips_peeraddr(struct socket *so, struct sockaddr **nam)
 
 static int
 mips_send(struct socket *so, int flags, struct mbuf *m, struct sockaddr *nam,
-	 struct mbuf *control, struct proc *p)
+	 struct mbuf *control,
+#if __FreeBSD_version >= 503000
+	  struct thread *p
+#else
+	  struct proc *p
+#endif
+	  )
 {
 	int s, error;
 	s = splnet();

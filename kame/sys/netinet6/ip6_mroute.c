@@ -2143,7 +2143,7 @@ pim6_input(mp, offp, proto)
 
 #ifdef __FreeBSD__
 		rc = if_simloop(mif6table[reg_mif_num].m6_ifp, m,
-		    dst.sin6_family, NULL);
+		    dst.sin6_family, 0);
 #else
 		rc = looutput(mif6table[reg_mif_num].m6_ifp, m,
 		    (struct sockaddr *)&dst, (struct rtentry *) NULL);

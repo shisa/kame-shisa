@@ -114,8 +114,6 @@ struct ip6protosw in6_gif_protosw =
 #endif
 };
 
-extern struct gif_softc_list gif_softc_list;
-
 #ifndef offsetof
 #define offsetof(s, e) ((int)&((s *)0)->e)
 #endif
