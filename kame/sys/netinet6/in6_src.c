@@ -330,7 +330,9 @@ in6_selectsrc(dstsock, opts, mopts, ro, laddr, ifpp, errorp)
 			continue;
 
 #if defined(MIP6) && NMIP > 0
-		if (ia->ia6_flags & IN6_IFF_DEREGISTERING)
+		/* avoid unusable home addresses. */
+		if ((ia->ia6_flags & IN6_IFF_HOME) &&
+		    !mip6_ifa6_is_addr_valid_hoa(ia))
 			continue;
 #endif /* MIP6 && NMIP > 0 */
 
@@ -371,24 +373,30 @@ in6_selectsrc(dstsock, opts, mopts, ro, laddr, ifpp, errorp)
 		if (!MIP6_IS_MN)
 			goto skip_rule4;
 
+		if ((ia_best->ia6_flags & IN6_IFF_HOME) == 0 &&
+		    (ia->ia6_flags & IN6_IFF_HOME) == 0) {
+			/* both address are not home addresses. */
+			goto skip_rule4;
+		}
+
 		/*
 		 * If SA is simultaneously a home address and care-of
 		 * address and SB is not, then prefer SA. Similarly,
 		 * if SB is simultaneously a home address and care-of
 		 * address and SA is not, then prefer SB.
 		 */
-		if (((ia_best->ia6_flags & IN6_IFF_HOME) != 0
-			&& ia_best->ia_ifp->if_type != IFT_MIP)
-		    && ((ia->ia6_flags & IN6_IFF_HOME) != 0
-			&& ia->ia_ifp->if_type == IFT_MIP)) {
+		if (((ia_best->ia6_flags & IN6_IFF_HOME) != 0 &&
+			ia_best->ia_ifp->if_type != IFT_MIP)
+		    &&
+		    ((ia->ia6_flags & IN6_IFF_HOME) != 0 &&
+			ia->ia_ifp->if_type == IFT_MIP))
 			NEXT(4);
-		}
-		if (((ia_best->ia6_flags & IN6_IFF_HOME) != 0
-			&& ia_best->ia_ifp->if_type == IFT_MIP)
-		    && ((ia->ia6_flags & IN6_IFF_HOME) != 0
-			&& ia->ia_ifp->if_type != IFT_MIP)) {
+		if (((ia_best->ia6_flags & IN6_IFF_HOME) != 0 &&
+			ia_best->ia_ifp->if_type == IFT_MIP)
+		    &&
+		    ((ia->ia6_flags & IN6_IFF_HOME) != 0 &&
+			ia->ia_ifp->if_type != IFT_MIP))
 			REPLACE(4);
-		}
 		if (ip6po_usecoa == 0) {
 			/*
 			 * If SA is just a home address and SB is just

@@ -184,6 +184,7 @@ void mip6_bul_remove_all(void);
 struct mip6_bul_internal *mip6_bul_get_home_agent(const struct in6_addr *);
 struct nd_prefixctl;
 int mip6_are_homeprefix(struct nd_prefixctl *);
+int mip6_ifa6_is_addr_valid_hoa(struct in6_ifaddr *);
 u_int8_t *mip6_create_hoa_opt(struct in6_addr *); 
 struct ip6_opt_home_address *mip6_search_hoa_in_destopt(u_int8_t *);
 void mip6_probe_routers(void);

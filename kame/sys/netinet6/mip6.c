@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.17 2004/10/20 03:40:31 keiichi Exp $	*/
+/*	$Id: mip6.c,v 1.18 2004/10/20 08:55:17 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -1212,6 +1212,28 @@ mip6_are_homeprefix(ndprctl)
 			return (TRUE);
 	}
 	return (FALSE);
+}
+
+int
+mip6_ifa6_is_addr_valid_hoa(ifa6)
+	struct in6_ifaddr *ifa6;
+{
+	struct mip6_bul_internal *mbul;
+
+	if ((ifa6->ia6_flags & IN6_IFF_HOME) == 0)
+		return (0);
+
+	if (ifa6->ia_ifp->if_type != IFT_MIP) {
+		/* the home address is home now. */
+		if ((ifa6->ia6_flags & IN6_IFF_DEREGISTERING) == 0)
+			return (1);
+	} else {
+		mbul = mip6_bul_get_home_agent(&ifa6->ia_addr.sin6_addr);
+		if (mbul != NULL)
+			return (1);
+	}
+
+	return (0);
 }
 
 int
