@@ -26,14 +26,14 @@
 #
 
 # PROVIDE: network_mip6
-# REQUIRE: routing
+# REQUIRE: routing network_ipv6
 # KEYWORD: FreeBSD
 
 . /etc/rc.subr
 . /etc/network.subr
 
 name="network_mip6"
-rcvar=`set_rcvar mip6`
+rcvar=`set_rcvar ipv6_mobile`
 start_cmd="network_mip6_start"
 
 network_mip6_start()
@@ -115,7 +115,7 @@ network_mip6_start()
 		;;
 	esac
 
-	echo ''
+	echo '.'
 }
 
 mobileip6_getprefixes() {
