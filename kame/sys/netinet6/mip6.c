@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.5 2004/10/08 05:48:12 keiichi Exp $	*/
+/*	$Id: mip6.c,v 1.6 2004/10/08 06:01:09 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -829,11 +829,14 @@ mip6_bul_remove(mbul)
 
 	LIST_REMOVE(mbul, mbul_entry);
 
-	/* close encaptab */
-	error = encap_detach(mbul->mbul_encap);
-	mbul->mbul_encap = NULL;
-	if (error) {
-		mip6log((LOG_ERR, "tunnel delete failed.\n"));
+	if ((mbul->mbul_flags & IP6_MH_BU_HOME) && 
+	    (mbul->mbul_flags & IP6_MH_BU_ROUTER) == 0) {
+		/* close encaptab */
+		error = encap_detach(mbul->mbul_encap);
+		mbul->mbul_encap = NULL;
+		if (error) {
+			mip6log((LOG_ERR, "tunnel delete failed.\n"));
+		}
 	}
 
 	FREE(mbul, M_TEMP);
