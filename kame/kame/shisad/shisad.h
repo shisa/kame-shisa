@@ -1,4 +1,4 @@
-/*	$Id: shisad.h,v 1.5 2004/10/25 13:06:53 keiichi Exp $	*/
+/*	$Id: shisad.h,v 1.6 2004/12/02 06:44:24 keiichi Exp $	*/
 /*
  * Copyright (C) 2004 WIDE Project.
  * All rights reserved.
@@ -424,13 +424,13 @@ void command_show_bul(int);
 void command_show_kbul(int);
 #ifndef MIP_MCOA
 struct binding_cache *mip6_bc_add(struct in6_addr *, struct in6_addr *, 
-    struct in6_addr *, u_int32_t, u_int8_t, u_int16_t);
+    struct in6_addr *, u_int32_t, u_int16_t, u_int16_t);
 struct binding_cache *mip6_bc_lookup(struct in6_addr *, struct in6_addr *);
 #else /* MIP_MCOA */
 struct binding_cache *mip6_bc_lookup(struct in6_addr *, struct in6_addr *, 
     u_int16_t);
 struct binding_cache *mip6_bc_add(struct in6_addr *, struct in6_addr *, 
-    struct in6_addr *, u_int32_t, u_int8_t, u_int16_t, u_int16_t);
+    struct in6_addr *, u_int32_t, u_int16_t, u_int16_t, u_int16_t);
 #endif /* MIP_MCOA */
 
 /* network.c */

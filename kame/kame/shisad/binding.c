@@ -1,4 +1,4 @@
-/*      $Id: binding.c,v 1.8 2004/10/20 03:37:07 keiichi Exp $  */
+/*      $Id: binding.c,v 1.9 2004/12/02 06:44:24 keiichi Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -111,14 +111,14 @@ struct binding_cache *
 mip6_bc_add(hoa, coa, recvaddr, lifetime, flags, seqno)
 	struct in6_addr *hoa, *coa, *recvaddr;
         u_int32_t lifetime;
-	u_int8_t flags;
+	u_int16_t flags;
         u_int16_t seqno;
 #else
 struct binding_cache *
 mip6_bc_add(hoa, coa, recvaddr, lifetime, flags, seqno, bid)
 	struct in6_addr *hoa, *coa, *recvaddr;
         u_int32_t lifetime;
-	u_int8_t flags;
+	u_int16_t flags;
         u_int16_t seqno, bid;
 #endif /* MIP_MCOA */
 {
