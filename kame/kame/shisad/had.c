@@ -1,4 +1,4 @@
-/*	$Id: had.c,v 1.1 2004/09/27 04:06:02 t-momose Exp $	*/
+/*	$Id: had.c,v 1.2 2004/10/02 13:00:45 t-momose Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -227,6 +227,9 @@ main(int argc, char **argv)
 
 	/* notify a kernel to behave as a home agent. */
 	mipsock_nodetype_request(MIP6_NODETYPE_HOME_AGENT, 1);
+
+	if (debug == 0)
+		daemon(0, 0);
 
 	while (1) {
 		clear_revents();
