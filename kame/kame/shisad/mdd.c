@@ -1,4 +1,4 @@
-/*      $Id: mdd.c,v 1.6 2004/10/28 12:34:28 keiichi Exp $  */
+/*      $Id: mdd.c,v 1.7 2004/11/02 14:02:25 ryuji Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -73,11 +73,14 @@ struct bl	bl_head;
 struct cifl	cifl_head;
 struct coacl	coacl_head;
 int sock_rt, sock_m, sock_dg6, sock_dg, poll_time = -1;
+#ifdef MIP_MCOA
+char ingressif[IFNAMSIZ];
+#endif /* MIP_MCOA */
 
 
 #ifdef MIP_MCOA
 static void dereg_detach_coa(struct ifa_msghdr *);
-static int mipsock_deregforeign(struct sockaddr_in6 *, struct sockaddr_in6 *, 
+int mipsock_deregforeign(struct sockaddr_in6 *, struct sockaddr_in6 *, 
 				struct sockaddr_in6 *, int, u_int16_t);
 extern void get_rtaddrs(int, struct sockaddr *, struct sockaddr **);
 extern int get_ifmsg(void);
@@ -98,6 +101,7 @@ usage()
 	fprintf(stderr, "\t[-b bid]   set Binding Unique Identifier");
 	fprintf(stderr, "\t           -b must be used with -i and - h option.\n");
 	fprintf(stderr, "\t           multiple mdds must be executed.\n");
+	fprintf(stderr, "\t[-x ifname]   set ingress interface name");
 #endif /* MIP6_MCOA */
 }
 
@@ -110,7 +114,9 @@ main(argc, argv, env)
 	int ch;
 	struct binding *bp = NULL;
 #ifdef MIP_MCOA
-	u_int16_t bid = 0;
+	u_int16_t bid = 0; 
+	
+	memset(ingressif, 0, sizeof(ingressif));
 #endif /* MIP_MCOA */
 
 	/*  Clear all parameters */
@@ -124,11 +130,14 @@ main(argc, argv, env)
 #ifndef MIP_MCOA
 	while ((ch=getopt(argc, argv, "i:dnh:mp:")) != -1)
 #else
-	while ((ch=getopt(argc, argv, "b:i:dnh:mp:")) != -1)
+        while ((ch=getopt(argc, argv, "x:b:i:dnh:mp:")) != -1) 
 #endif /* MIP_MCOA */
 	{
 		switch (ch) {
 #ifdef MIP_MCOA
+                case 'x':
+			strncpy(ingressif, optarg, strlen(optarg));
+			break;
 		case 'b':
 			bid = atoi(optarg);
 			if (bid <= 0) {
@@ -166,7 +175,6 @@ main(argc, argv, env)
 			mflag += 1;
 			break;
 		case 'p':
-			printf("pflag %s\n", optarg);
 			pflag += 1; 
 			poll_time = atoi(optarg);
 			break;
@@ -713,7 +721,8 @@ dereg_detach_coa(difam)
         if (if_indextoname(difam->ifam_index, ifname) == NULL)
                 return;
 
-        if (strncmp(ifname, "mip", 3) == 0) 
+	/* Skip mip interface */
+        if (strncmp(ifname, "mip", strlen("mip")) == 0) 
                 return;
 
         get_rtaddrs(difam->ifam_addrs, (struct sockaddr *) (difam + 1), rti_info);
@@ -721,7 +730,13 @@ dereg_detach_coa(difam)
 		return;
 
 	memset(&dsin6, 0, sizeof(dsin6));
-	memcpy(&dsin6, (struct sockaddr_in6 *) rti_info[RTAX_IFA], sizeof(dsin6));
+	memcpy(&dsin6, (struct sockaddr_in6 *) rti_info[RTAX_IFA], sizeof(dsin6)); 
+	
+	
+	/* Detached address must be global */
+	if (in6_addrscope(&dsin6.sin6_addr) !=  __IPV6_ADDR_SCOPE_GLOBAL) 
+		return;
+
 
 	memset(&ifr6, 0, sizeof(ifr6));
 	ifr6.ifr_addr = dsin6;
@@ -780,6 +795,12 @@ dereg_detach_coa(difam)
 				/* unknown interface !? */
 				if (if_indextoname(ifm->ifm_index, ifr6.ifr_name) == NULL) 
 					continue;
+				
+				/* Do not use an address attached to ingress interface */
+ 				if(strlen(ingressif) > 0 && 
+					(strncmp(ifr6.ifr_name, ingressif, 
+					strlen(ingressif)) == 0)) 
+                                         continue;
 
 				/* MUST be global */
 				if (in6_addrscope(&sin6->sin6_addr) !=  __IPV6_ADDR_SCOPE_GLOBAL) 
@@ -818,7 +839,7 @@ dereg_detach_coa(difam)
 	return;
 }
 
-static int
+int
 mipsock_deregforeign(hoa, deregcoa, newcoa, ifindex, bid)
 	struct sockaddr_in6 *hoa, *deregcoa, *newcoa;
 	int ifindex;

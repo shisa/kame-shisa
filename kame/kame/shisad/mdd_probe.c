@@ -3,9 +3,12 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <syslog.h>
+#include <sys/param.h>
 #include <sys/uio.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
+#include <sys/sysctl.h>
 #include <net/if.h>
 #include <net/if_dl.h>
 #include <net/if_media.h>
@@ -25,6 +28,16 @@ extern struct cifl     cifl_head;
 
 static int send_rs(struct cif  *);
 static void defrtrlists_flush(int);
+
+#ifdef MIP_MCOA
+static void send_dereg_link(struct cif  *);
+extern struct bl       bl_head;
+extern char ingressif[IFNAMSIZ];
+extern void get_rtaddrs(int, struct sockaddr *, struct sockaddr **);
+extern int mipsock_deregforeign(struct sockaddr_in6 *, struct sockaddr_in6 *, 
+                                struct sockaddr_in6 *, int, u_int16_t);
+#endif
+
 
 int
 probe_ifstatus(int s) {
@@ -47,13 +60,14 @@ probe_ifstatus(int s) {
 		switch (IFM_TYPE(ifmr.ifm_active)) {
 		case IFM_ETHER:
 			if (ifmr.ifm_status & IFM_ACTIVE) {
-				printf("active");
 				/*defrtrlists_flush(s);*/
 				send_rs(cifp);
-			} else {
-				printf("no carrier");
-				
+			} 
+#ifdef MIP_MCOA
+			else {
+				send_dereg_link(cifp);
 			}
+#endif /* MIP_MCOA */
 			break;
 			
 		case IFM_FDDI:
@@ -63,10 +77,14 @@ probe_ifstatus(int s) {
 			if (ifmr.ifm_status & IFM_ACTIVE) {
 				defrtrlists_flush(s);
 				send_rs(cifp);
-			} 
+			}
+#ifdef MIP_MCOA
+			else {
+                                send_dereg_link(cifp);
+			}
+#endif /* MIP_MCOA */
 			break;
 		}
-		printf("\n");
 		
 		cifp->cif_linkstatus = ifmr.ifm_status;
 	}
@@ -187,3 +205,129 @@ defrtrlists_flush(int s) {
 		perror("ioctl(SIOCSRTRFLUSH_IN6)");
 
 }
+
+#ifdef MIP_MCOA
+static void
+send_dereg_link(cifp)
+        struct cif  *cifp;
+{
+        int detachindex;
+        struct in6_ifreq ifr6;
+        struct sockaddr_in6 *sin6;
+        struct sockaddr *rti_info[RTAX_MAX];
+        char *next, *limit;
+        struct if_msghdr *ifm;
+        struct ifa_msghdr *ifam;
+        struct binding *bp;
+        char buf[1024];
+
+        detachindex = if_nametoindex(cifp->cif_name);
+        if (detachindex <= 0)
+                return;
+        
+        LIST_FOREACH(bp, &bl_head, binding_entries) 
+                break;
+
+        if (bp == NULL) 
+                return;
+
+
+        /* Detached address must be global */
+        if (in6_addrscope(&bp->coa.sin6_addr) != 
+		__IPV6_ADDR_SCOPE_GLOBAL) 
+                return;
+
+        syslog(LOG_INFO, "probe: Detached %s from LINK %s\n", 
+                inet_ntop(AF_INET6, &bp->coa.sin6_addr, buf, sizeof(buf)), cifp->cif_name);
+
+        /* 
+	 * address is now detached from the link, send
+         * dereg BU from foreign to mnd 
+         */
+        if (bp) {
+                int mib[6];
+                char *ifmsg = NULL;
+                int len;
+
+                mib[0] = CTL_NET;
+                mib[1] = PF_ROUTE;
+                mib[2] = 0;
+                mib[3] = AF_INET6;
+                mib[4] = NET_RT_IFLIST;
+                mib[5] = 0;
+
+                if (sysctl(mib, 6, NULL, &len, NULL, 0) < 0) {
+                        syslog(LOG_ERR, "sysctl %s\n", strerror(errno));
+                        return;
+                }
+                if ((ifmsg = malloc(len)) == NULL) {
+                        syslog(LOG_ERR, "malloc %s\n", strerror(errno));
+                        return;
+                }
+                if (sysctl(mib, 6, ifmsg, &len, NULL, 0) < 0) {
+                        syslog(LOG_ERR, "sysctl %s\n", strerror(errno));
+                        free(ifmsg);
+                        return;
+                }
+        
+                limit = ifmsg +  len;
+                for (next = ifmsg; next < limit; next += ifm->ifm_msglen) {
+
+                        ifm = (struct if_msghdr *) next;
+
+                        if (ifm->ifm_type == RTM_NEWADDR) {
+                                ifam = (struct ifa_msghdr *) next;
+
+                                get_rtaddrs(ifam->ifam_addrs,
+                                            (struct sockaddr *) (ifam + 1), rti_info);
+                                sin6 = (struct sockaddr_in6 *) rti_info[RTAX_IFA];
+                                memset(&ifr6, 0, sizeof(ifr6));
+                                ifr6.ifr_addr = *sin6;
+
+                                /* unknown interface !? */
+                                if (if_indextoname(ifm->ifm_index, 
+					ifr6.ifr_name) == NULL) 
+                                        continue;
+
+                                if(strlen(ingressif) > 0 && 
+					(strncmp(ifr6.ifr_name, ingressif, strlen(ingressif)) == 0)) {
+                                        continue;
+                                }
+
+                                if (ifm->ifm_index == detachindex)
+                                        continue;
+
+                                /* MUST be global */
+                                if (in6_addrscope(&sin6->sin6_addr) !=  
+					__IPV6_ADDR_SCOPE_GLOBAL) 
+                                        continue;
+                                        
+                                if (ioctl(sock_dg6, SIOCGIFAFLAG_IN6, &ifr6) < 0) {
+                        		syslog(LOG_ERR, 
+						"ioctl(SIOCGIFAFLAG_IN6) %s\n", 
+						strerror(errno));
+                                        continue;
+                                }
+                                if (ifr6.ifr_ifru.ifru_flags6 & IN6_IFF_READONLY) 
+                                        continue;
+
+                                fprintf(stderr, "send dereg from address is %s\n", 
+					inet_ntop(AF_INET6, &sin6->sin6_addr, buf, sizeof(buf))); 
+
+                                mipsock_deregforeign(&bp->hoa, &bp->coa, sin6, 
+					ifm->ifm_index, bp->bid);
+
+                                /* send bu to msock */
+                                free(ifmsg);
+                                return;
+                        }
+                }
+                if (ifmsg)
+                        free(ifmsg);
+        }
+
+        /* send bu to msock */
+        return;
+}
+#endif /* MCOA */
+
