@@ -31,8 +31,8 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  * 
- * $Id: dcons.h,v 1.1.1.1 2004/09/22 07:26:59 t-momose Exp $
- * $FreeBSD: src/sys/dev/dcons/dcons.h,v 1.1 2003/10/24 15:44:09 simokawa Exp $
+ * $Id: dcons.h,v 1.1.1.2 2004/11/18 04:48:58 t-momose Exp $
+ * $FreeBSD: src/sys/dev/dcons/dcons.h,v 1.2 2004/02/16 07:25:46 simokawa Exp $
  */
 
 #ifdef _KERNEL
@@ -90,8 +90,12 @@ struct dcons_ch {
 #define STATE2		2
 
 #ifdef _KERNEL
-extern struct dcons_buf *dcons_buf;
-extern size_t dcons_bufsize;
-extern bus_dma_tag_t dcons_dma_tag;
-extern bus_dmamap_t dcons_dma_map;
+struct dcons_global {
+	struct consdev *cdev;
+	struct dcons_buf *buf;
+	size_t size;
+	bus_dma_tag_t dma_tag;
+	bus_dmamap_t dma_map;
+};
+extern struct dcons_global *dcons_conf;
 #endif

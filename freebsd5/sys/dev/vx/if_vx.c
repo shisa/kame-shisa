@@ -31,7 +31,7 @@
  */
 
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: src/sys/dev/vx/if_vx.c,v 1.48 2003/10/31 18:32:06 brooks Exp $");
+__FBSDID("$FreeBSD: src/sys/dev/vx/if_vx.c,v 1.51 2004/08/14 00:12:42 rwatson Exp $");
 
 /*
  * Created from if_ep.c driver by Fred Gray (fgray@rice.edu) to support
@@ -155,19 +155,16 @@ vxattach(dev)
         sc->arpcom.ac_enaddr[(i << 1) + 1] = x;
     }
 
-    printf(" address %6D\n", sc->arpcom.ac_enaddr, ":");
-
     if_initname(ifp, device_get_name(dev), device_get_unit(dev));
     ifp->if_mtu = ETHERMTU;
-    IFQ_SET_MAXLEN(&ifp->if_snd, IFQ_MAXLEN);
-    ifp->if_flags = IFF_BROADCAST | IFF_SIMPLEX | IFF_MULTICAST;
-    ifp->if_output = ether_output;
+    ifp->if_snd.ifq_maxlen = IFQ_MAXLEN;
+    ifp->if_flags = IFF_BROADCAST | IFF_SIMPLEX | IFF_MULTICAST |
+	IFF_NEEDSGIANT;
     ifp->if_start = vxstart;
     ifp->if_ioctl = vxioctl;
     ifp->if_init = vxinit;
     ifp->if_watchdog = vxwatchdog;
     ifp->if_softc = sc;
-    IFQ_SET_READY(&ifp->if_snd);
 
     ether_ifattach(ifp, sc->arpcom.ac_enaddr);
 
@@ -404,10 +401,8 @@ vxstart(ifp)
 
 startagain:
     /* Sneak a peek at the next packet */
-    IFQ_LOCK(&ifp->if_snd);
-    IFQ_POLL_NOLOCK(&ifp->if_snd, m);
+    m = ifp->if_snd.ifq_head;
     if (m == NULL) {
-	IFQ_UNLOCK(&ifp->if_snd);
 	return;
     }
     
@@ -425,8 +420,7 @@ startagain:
     if (len + pad > ETHER_MAX_LEN) {
 	/* packet is obviously too large: toss it */
 	++ifp->if_oerrors;
-	IFQ_DEQUEUE_NOLOCK(&ifp->if_snd, m);
-	IFQ_UNLOCK(&ifp->if_snd);
+	IF_DEQUEUE(&ifp->if_snd, m);
 	m_freem(m);
 	goto readcheck;
     }
@@ -435,15 +429,13 @@ startagain:
 	CSR_WRITE_2(sc,  VX_COMMAND, SET_TX_AVAIL_THRESH | ((len + pad + 4) >> 2));
 	/* not enough room in FIFO */
 	if (CSR_READ_2(sc, VX_W1_FREE_TX) < len + pad + 4) { /* make sure */
-	    IFQ_UNLOCK(&ifp->if_snd);
 	    ifp->if_flags |= IFF_OACTIVE;
 	    ifp->if_timer = 1;
 	    return;
 	}
     }
     CSR_WRITE_2(sc,  VX_COMMAND, SET_TX_AVAIL_THRESH | (8188 >> 2));
-    IFQ_DEQUEUE_NOLOCK(&ifp->if_snd, m);
-    IFQ_UNLOCK(&ifp->if_snd);
+    IF_DEQUEUE(&ifp->if_snd, m);
     if (m == NULL) 		/* not really needed */
 	return;
 

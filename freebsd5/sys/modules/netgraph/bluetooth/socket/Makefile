@@ -1,5 +1,5 @@
-# $Id: Makefile,v 1.1.1.1 2004/09/22 07:29:21 t-momose Exp $
-# $FreeBSD: src/sys/modules/netgraph/bluetooth/socket/Makefile,v 1.4 2003/10/12 22:04:20 emax Exp $
+# $Id: Makefile,v 1.1.1.2 2004/11/18 04:52:31 t-momose Exp $
+# $FreeBSD: src/sys/modules/netgraph/bluetooth/socket/Makefile,v 1.5 2004/01/13 11:28:49 ru Exp $
 
 .PATH: ${.CURDIR}/../../../../netgraph/bluetooth/socket
 
@@ -11,6 +11,5 @@ SRCS=		ng_btsocket.c \
 		ng_btsocket_l2cap_raw.c \
 		ng_btsocket_l2cap.c \
 		ng_btsocket_rfcomm.c
-MAN4=		ng_btsocket.4
 
 .include <bsd.kmod.mk>

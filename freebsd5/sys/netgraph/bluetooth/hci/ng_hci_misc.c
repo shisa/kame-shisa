@@ -25,8 +25,8 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: ng_hci_misc.c,v 1.1.1.1 2004/09/22 07:29:49 t-momose Exp $
- * $FreeBSD: src/sys/netgraph/bluetooth/hci/ng_hci_misc.c,v 1.5 2003/10/12 22:04:20 emax Exp $
+ * $Id: ng_hci_misc.c,v 1.1.1.2 2004/11/18 04:53:21 t-momose Exp $
+ * $FreeBSD: src/sys/netgraph/bluetooth/hci/ng_hci_misc.c,v 1.7 2004/04/27 16:38:14 emax Exp $
  */
 
 #include <sys/param.h>
@@ -37,13 +37,13 @@
 #include <sys/queue.h>
 #include <netgraph/ng_message.h>
 #include <netgraph/netgraph.h>
-#include "ng_bluetooth.h"
-#include "ng_hci.h"
-#include "ng_hci_var.h"
-#include "ng_hci_cmds.h"
-#include "ng_hci_evnt.h"
-#include "ng_hci_ulpi.h"
-#include "ng_hci_misc.h"
+#include <netgraph/bluetooth/include/ng_bluetooth.h>
+#include <netgraph/bluetooth/include/ng_hci.h>
+#include <netgraph/bluetooth/hci/ng_hci_var.h>
+#include <netgraph/bluetooth/hci/ng_hci_cmds.h>
+#include <netgraph/bluetooth/hci/ng_hci_evnt.h>
+#include <netgraph/bluetooth/hci/ng_hci_ulpi.h>
+#include <netgraph/bluetooth/hci/ng_hci_misc.h>
 
 /******************************************************************************
  ******************************************************************************
@@ -111,7 +111,7 @@ ng_hci_node_is_up(node_p node, hook_p hook, void *arg1, int arg2)
 
 		bcopy(&unit->bdaddr, &ep->bdaddr, sizeof(ep->bdaddr));
 
-		NG_SEND_MSG_HOOK(error, node, msg, hook, NULL);
+		NG_SEND_MSG_HOOK(error, node, msg, hook, 0);
 	} else
 		error = ENOMEM;
 

@@ -25,8 +25,8 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: ng_h4.h,v 1.1.1.1 2004/09/22 07:29:49 t-momose Exp $
- * $FreeBSD: src/sys/netgraph/bluetooth/include/ng_h4.h,v 1.3 2003/11/14 03:45:29 emax Exp $
+ * $Id: ng_h4.h,v 1.1.1.2 2004/11/18 04:53:22 t-momose Exp $
+ * $FreeBSD: src/sys/netgraph/bluetooth/include/ng_h4.h,v 1.4 2004/05/10 02:24:55 emax Exp $
  * 
  * Based on:
  * ---------
@@ -45,13 +45,6 @@
 
 #ifndef _NETGRAPH_H4_H_
 #define _NETGRAPH_H4_H_
-
-/*
- * H4 line discipline 
- * XXX FIXME: does not belong here. Move to "ttycom.h" later
- */
-
-#define H4DISC			7
 
 /**************************************************************************
  **************************************************************************

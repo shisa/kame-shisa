@@ -25,8 +25,8 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: ng_btsocket.c,v 1.1.1.1 2004/09/22 07:29:50 t-momose Exp $
- * $FreeBSD: src/sys/netgraph/bluetooth/socket/ng_btsocket.c,v 1.5 2003/11/18 00:39:04 rwatson Exp $
+ * $Id: ng_btsocket.c,v 1.1.1.2 2004/11/18 04:53:24 t-momose Exp $
+ * $FreeBSD: src/sys/netgraph/bluetooth/socket/ng_btsocket.c,v 1.7 2004/06/25 23:03:33 emax Exp $
  */
 
 #include <sys/param.h>
@@ -36,6 +36,7 @@
 #include <sys/domain.h>
 #include <sys/kernel.h>
 #include <sys/lock.h>
+#include <sys/mbuf.h>
 #include <sys/mutex.h>
 #include <sys/protosw.h>
 #include <sys/socket.h>
@@ -44,13 +45,13 @@
 #include <sys/taskqueue.h>
 #include <netgraph/ng_message.h>
 #include <netgraph/netgraph.h>
-#include "ng_bluetooth.h"
-#include "ng_hci.h"
-#include "ng_l2cap.h"
-#include "ng_btsocket.h"
-#include "ng_btsocket_hci_raw.h"
-#include "ng_btsocket_l2cap.h"
-#include "ng_btsocket_rfcomm.h"
+#include <netgraph/bluetooth/include/ng_bluetooth.h>
+#include <netgraph/bluetooth/include/ng_hci.h>
+#include <netgraph/bluetooth/include/ng_l2cap.h>
+#include <netgraph/bluetooth/include/ng_btsocket.h>
+#include <netgraph/bluetooth/include/ng_btsocket_hci_raw.h>
+#include <netgraph/bluetooth/include/ng_btsocket_l2cap.h>
+#include <netgraph/bluetooth/include/ng_btsocket_rfcomm.h>
 
 static int			ng_btsocket_modevent (module_t, int, void *);
 extern struct domain		ng_btsocket_domain;

@@ -25,8 +25,8 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: ng_bt3c.h,v 1.1.1.1 2004/09/22 07:29:49 t-momose Exp $
- * $FreeBSD: src/sys/netgraph/bluetooth/include/ng_bt3c.h,v 1.2 2003/05/10 21:44:40 julian Exp $
+ * $Id: ng_bt3c.h,v 1.1.1.2 2004/11/18 04:53:21 t-momose Exp $
+ * $FreeBSD: src/sys/netgraph/bluetooth/include/ng_bt3c.h,v 1.3 2004/05/10 02:24:55 emax Exp $
  *
  * XXX XXX XX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX 
  *
@@ -39,11 +39,6 @@
 
 #ifndef _NG_BT3C_H_
 #define _NG_BT3C_H_
-
-/* XXX FIME: does not belong here. Move to pccarddevs.h later */
-#define PCMCIA_PRODUCT_3COM_3CRWB609	0x0040
-#define PCMCIA_STR_3COM_3CRWB609	"3Com Bluetooth PC Card 3CRWB60-A"
-#define PCMCIA_CIS_3COM_3CRWB609	{ NULL, NULL, NULL, NULL }
 
 /**************************************************************************
  **************************************************************************

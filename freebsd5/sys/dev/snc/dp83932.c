@@ -1,4 +1,4 @@
-/*	$FreeBSD: src/sys/dev/snc/dp83932.c,v 1.12 2003/11/01 23:24:38 brooks Exp $	*/
+/*	$FreeBSD: src/sys/dev/snc/dp83932.c,v 1.15 2004/08/13 23:47:01 rwatson Exp $	*/
 /*	$NecBSD: dp83932.c,v 1.5 1999/07/29 05:08:44 kmatsuda Exp $	*/
 /*	$NetBSD: if_snc.c,v 1.18 1998/04/25 21:27:40 scottr Exp $	*/
 
@@ -162,7 +162,6 @@ sncconfig(sc, media, nmedia, defmedia, myea)
 		camdump(sc);
 	}
 #endif
-	device_printf(sc->sc_dev, "address %6D\n", myea, ":");
 
 #ifdef SNCDEBUG
 	device_printf(sc->sc_dev,
@@ -175,15 +174,13 @@ sncconfig(sc, media, nmedia, defmedia, myea)
 	if_initname(ifp, device_get_name(sc->sc_dev),
 	    device_get_unit(sc->sc_dev));
 	ifp->if_ioctl = sncioctl;
-        ifp->if_output = ether_output;
 	ifp->if_start = sncstart;
 	ifp->if_flags =
-	    IFF_BROADCAST | IFF_SIMPLEX | IFF_MULTICAST;
+	    IFF_BROADCAST | IFF_SIMPLEX | IFF_MULTICAST | IFF_NEEDSGIANT;
 	ifp->if_watchdog = sncwatchdog;
         ifp->if_init = sncinit;
         ifp->if_mtu = ETHERMTU;
-	IFQ_SET_MAXLEN(&ifp->if_snd, IFQ_MAXLEN);
-	IFQ_SET_READY(&ifp->if_snd);
+        ifp->if_snd.ifq_maxlen = IFQ_MAXLEN;
 	bcopy(myea, sc->sc_ethercom.ac_enaddr, ETHER_ADDR_LEN);
 
 	/* Initialize media goo. */
@@ -341,12 +338,9 @@ outloop:
 		return;
 	}
 
-	IFQ_LOCK(&ifp->if_snd);
-	IFQ_POLL_NOLOCK(&ifp->if_snd, m);
-	if (m == 0) {
-		IFQ_UNLOCK(&ifp->if_snd);
+	IF_DEQUEUE(&ifp->if_snd, m);
+	if (m == 0)
 		return;
-	}
 
 	/* We need the header for m_pkthdr.len. */
 	M_ASSERTPKTHDR(m);
@@ -363,12 +357,9 @@ outloop:
 	 * it to the o/p queue.
 	 */
 	if ((sonicput(sc, m, mtd_next)) == 0) {
-		IFQ_UNLOCK(&ifp->if_snd);
+		IF_PREPEND(&ifp->if_snd, m);
 		return;
 	}
-
-	IFQ_DEQUEUE_NOLOCK(&ifp->if_snd, m);
-	IFQ_UNLOCK(&ifp->if_snd);
 
 	sc->mtd_prev = sc->mtd_free;
 	sc->mtd_free = mtd_next;

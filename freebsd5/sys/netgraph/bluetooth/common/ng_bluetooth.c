@@ -25,17 +25,18 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: ng_bluetooth.c,v 1.1.1.1 2004/09/22 07:29:48 t-momose Exp $
- * $FreeBSD: src/sys/netgraph/bluetooth/common/ng_bluetooth.c,v 1.2 2003/05/10 21:44:39 julian Exp $
+ * $Id: ng_bluetooth.c,v 1.1.1.2 2004/11/18 04:53:20 t-momose Exp $
+ * $FreeBSD: src/sys/netgraph/bluetooth/common/ng_bluetooth.c,v 1.4 2004/05/30 20:27:17 phk Exp $
  */
 
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/errno.h>
 #include <sys/kernel.h>
+#include <sys/module.h>
 #include <sys/sysctl.h>
 
-#include "ng_bluetooth.h"
+#include <netgraph/bluetooth/include/ng_bluetooth.h>
 
 /*
  * Bluetooth stack sysctl globals

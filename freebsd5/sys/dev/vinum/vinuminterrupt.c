@@ -1,7 +1,7 @@
 /* vinuminterrupt.c: bottom half of the driver */
 
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: src/sys/dev/vinum/vinuminterrupt.c,v 1.43 2003/11/24 04:06:56 grog Exp $");
+__FBSDID("$FreeBSD: src/sys/dev/vinum/vinuminterrupt.c,v 1.44 2004/07/10 21:17:04 marcel Exp $");
 
 /*-
  * Copyright (c) 1997, 1998, 1999
@@ -42,7 +42,7 @@ __FBSDID("$FreeBSD: src/sys/dev/vinum/vinuminterrupt.c,v 1.43 2003/11/24 04:06:5
  * otherwise) arising in any way out of the use of this software, even if
  * advised of the possibility of such damage.
  *
- * $Id: vinuminterrupt.c,v 1.1.1.1 2004/09/22 07:28:18 t-momose Exp $
+ * $Id: vinuminterrupt.c,v 1.1.1.2 2004/11/18 04:50:30 t-momose Exp $
  */
 
 #include <dev/vinum/vinumhdr.h>
@@ -210,7 +210,7 @@ complete_rqe(struct buf *bp)
 #ifdef VINUMDEBUG
 	if (debug & DEBUG_RESID) {
 	    if (ubp->b_resid != 0)			    /* still something to transfer? */
-		Debugger("resid");
+		kdb_enter("resid");
 	}
 #endif
 

@@ -25,8 +25,8 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: ng_hci.h,v 1.1.1.1 2004/09/22 07:29:49 t-momose Exp $
- * $FreeBSD: src/sys/netgraph/bluetooth/include/ng_hci.h,v 1.3 2003/11/14 03:45:29 emax Exp $
+ * $Id: ng_hci.h,v 1.1.1.2 2004/11/18 04:53:22 t-momose Exp $
+ * $FreeBSD: src/sys/netgraph/bluetooth/include/ng_hci.h,v 1.4 2004/08/10 00:38:50 emax Exp $
  */
 
 /*
@@ -1436,14 +1436,17 @@ typedef struct {
 #define NG_HCI_EVENT_INQUIRY_RESULT		0x02
 typedef struct {
 	u_int8_t	num_responses;      /* number of responses */
-/* these are repeated "num_responses" times 
-	bdaddr_t	bdaddr;                    --- unit address(es)
-	u_int8_t	page_scan_rep_mode;        --- page scan rep. mode(s) 
-	u_int8_t	page_scan_period_mode;     --- page scan period mode(s) 
-	u_int8_t	page_scan_mode;            --- page scan mode(s) 
-	u_int8_t	uclass[NG_HCI_CLASS_SIZE]; --- unit class(es) 
-	u_int16_t	clock_offset;              --- clock offset(s) */
+/*	ng_hci_inquiry_response[num_responses]   -- see below */
 } __attribute__ ((packed)) ng_hci_inquiry_result_ep;
+
+typedef struct {
+	bdaddr_t	bdaddr;                   /* unit address */
+	u_int8_t	page_scan_rep_mode;       /* page scan rep. mode */
+	u_int8_t	page_scan_period_mode;    /* page scan period mode */
+	u_int8_t	page_scan_mode;           /* page scan mode */
+	u_int8_t	class[NG_HCI_CLASS_SIZE]; /* unit class */
+	u_int16_t	clock_offset;             /* clock offset */
+} __attribute__ ((packed)) ng_hci_inquiry_response;
 
 #define NG_HCI_EVENT_CON_COMPL			0x03
 typedef struct {

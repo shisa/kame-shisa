@@ -30,12 +30,12 @@
  *	  been put here, except the chip spesific "PnP" setup.
  *
  *      last edit-date: [Tue Jan 23 16:03:33 2001]
- *      $Id: i4b_ihfc_pnp.c,v 1.1.1.1 2004/09/22 07:28:44 t-momose Exp $
+ *      $Id: i4b_ihfc_pnp.c,v 1.1.1.2 2004/11/18 04:51:31 t-momose Exp $
  *     
  *---------------------------------------------------------------------------*/
 
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: src/sys/i4b/layer1/ihfc/i4b_ihfc_pnp.c,v 1.8 2003/06/10 23:39:45 obrien Exp $");
+__FBSDID("$FreeBSD: src/sys/i4b/layer1/ihfc/i4b_ihfc_pnp.c,v 1.9 2004/03/17 17:50:50 njl Exp $");
 
 #include <sys/param.h>
 #include <sys/systm.h>
@@ -174,9 +174,9 @@ ihfc_pnp_probe(device_t dev)
 				0UL, ~0UL, 2, RF_ACTIVE
 				);
 
-			S_IRQ = bus_alloc_resource(
+			S_IRQ = bus_alloc_resource_any(
 				dev, SYS_RES_IRQ, &S_IRQRID,
-				0UL, ~0UL, 1, RF_ACTIVE
+				RF_ACTIVE
 				);
 
 			S_DLP     = IHFC_DLP;		/* set D-priority	*/

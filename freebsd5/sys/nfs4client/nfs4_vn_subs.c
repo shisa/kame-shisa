@@ -1,5 +1,5 @@
-/* $FreeBSD: src/sys/nfs4client/nfs4_vn_subs.c,v 1.1 2003/11/14 20:54:08 alfred Exp $ */
-/* $Id: nfs4_vn_subs.c,v 1.1.1.1 2004/09/22 07:30:00 t-momose Exp $ */
+/* $FreeBSD: src/sys/nfs4client/nfs4_vn_subs.c,v 1.2 2004/06/17 17:16:51 phk Exp $ */
+/* $Id: nfs4_vn_subs.c,v 1.1.1.2 2004/11/18 04:53:36 t-momose Exp $ */
 
 /*
  * copyright (c) 2003
@@ -83,7 +83,7 @@ nfs4_vnop_loadattrcache(struct vnode *vp, struct nfsv4_fattr *fap,
         vtyp = nv3tov_type[fap->fa4_type & 0x7];
         vmode = (fap->fa4_valid & FA4V_MODE) ? fap->fa4_mode : 0777;
         rdev = (fap->fa4_valid & FA4V_RDEV) ?
-	    makeudev(fap->fa4_rdev_major, fap->fa4_rdev_minor) : 0;
+	    makedev(fap->fa4_rdev_major, fap->fa4_rdev_minor) : 0;
         if (fap->fa4_valid & FA4V_MTIME)
                 mtime = fap->fa4_mtime;
         else

@@ -35,14 +35,14 @@
  */
 
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: src/sys/dev/txp/if_txp.c,v 1.21 2003/10/31 18:32:05 brooks Exp $");
+__FBSDID("$FreeBSD: src/sys/dev/txp/if_txp.c,v 1.27 2004/08/13 23:53:36 rwatson Exp $");
 
 /*
  * Driver for 3c990 (Typhoon) Ethernet ASIC
  */
 
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: src/sys/dev/txp/if_txp.c,v 1.21 2003/10/31 18:32:05 brooks Exp $");
+__FBSDID("$FreeBSD: src/sys/dev/txp/if_txp.c,v 1.27 2004/08/13 23:53:36 rwatson Exp $");
 
 #include <sys/param.h>
 #include <sys/systm.h>
@@ -50,6 +50,7 @@ __FBSDID("$FreeBSD: src/sys/dev/txp/if_txp.c,v 1.21 2003/10/31 18:32:05 brooks E
 #include <sys/mbuf.h>
 #include <sys/malloc.h>
 #include <sys/kernel.h>
+#include <sys/module.h>
 #include <sys/socket.h>
 
 #include <net/if.h>
@@ -93,7 +94,7 @@ __FBSDID("$FreeBSD: src/sys/dev/txp/if_txp.c,v 1.21 2003/10/31 18:32:05 brooks E
 
 #ifndef lint
 static const char rcsid[] =
-  "$FreeBSD: src/sys/dev/txp/if_txp.c,v 1.21 2003/10/31 18:32:05 brooks Exp $";
+  "$FreeBSD: src/sys/dev/txp/if_txp.c,v 1.27 2004/08/13 23:53:36 rwatson Exp $";
 #endif
 
 /*
@@ -226,37 +227,14 @@ txp_attach(dev)
 
 	mtx_init(&sc->sc_mtx, device_get_nameunit(dev), MTX_NETWORK_LOCK,
 	    MTX_DEF | MTX_RECURSE);
-#ifndef BURN_BRIDGES
-	/*
-	 * Handle power management nonsense.
-	 */
-	if (pci_get_powerstate(dev) != PCI_POWERSTATE_D0) {
-		u_int32_t		iobase, membase, irq;
-
-		/* Save important PCI config data. */
-		iobase = pci_read_config(dev, TXP_PCI_LOIO, 4);
-		membase = pci_read_config(dev, TXP_PCI_LOMEM, 4);
-		irq = pci_read_config(dev, TXP_PCI_INTLINE, 4);
-
-		/* Reset the power state. */
-		device_printf(dev, "chip is in D%d power mode "
-		    "-- setting to D0\n", pci_get_powerstate(dev));
-		pci_set_powerstate(dev, PCI_POWERSTATE_D0);
-
-		/* Restore PCI config data. */
-		pci_write_config(dev, TXP_PCI_LOIO, iobase, 4);
-		pci_write_config(dev, TXP_PCI_LOMEM, membase, 4);
-		pci_write_config(dev, TXP_PCI_INTLINE, irq, 4);
-	}
-#endif
 	/*
 	 * Map control/status registers.
 	 */
 	pci_enable_busmaster(dev);
 
 	rid = TXP_RID;
-	sc->sc_res = bus_alloc_resource(dev, TXP_RES, &rid,
-	    0, ~0, 1, RF_ACTIVE);
+	sc->sc_res = bus_alloc_resource_any(dev, TXP_RES, &rid,
+	    RF_ACTIVE);
 
 	if (sc->sc_res == NULL) {
 		device_printf(dev, "couldn't map ports/memory\n");
@@ -269,7 +247,7 @@ txp_attach(dev)
 
 	/* Allocate interrupt */
 	rid = 0;
-	sc->sc_irq = bus_alloc_resource(dev, SYS_RES_IRQ, &rid, 0, ~0, 1,
+	sc->sc_irq = bus_alloc_resource_any(dev, SYS_RES_IRQ, &rid,
 	    RF_SHAREABLE | RF_ACTIVE);
 
 	if (sc->sc_irq == NULL) {
@@ -334,9 +312,6 @@ txp_attach(dev)
 	sc->sc_arpcom.ac_enaddr[4] = ((u_int8_t *)&p2)[1];
 	sc->sc_arpcom.ac_enaddr[5] = ((u_int8_t *)&p2)[0];
 
-	printf("txp%d: Ethernet address %6D\n", unit,
-	    sc->sc_arpcom.ac_enaddr, ":");
-
 	sc->sc_cold = 0;
 
 	ifmedia_init(&sc->sc_ifmedia, 0, txp_ifmedia_upd, txp_ifmedia_sts);
@@ -357,15 +332,14 @@ txp_attach(dev)
 	ifp->if_softc = sc;
 	if_initname(ifp, device_get_name(dev), device_get_unit(dev));
 	ifp->if_mtu = ETHERMTU;
-	ifp->if_flags = IFF_BROADCAST | IFF_SIMPLEX | IFF_MULTICAST;
+	ifp->if_flags = IFF_BROADCAST | IFF_SIMPLEX | IFF_MULTICAST |
+	    IFF_NEEDSGIANT;
 	ifp->if_ioctl = txp_ioctl;
-	ifp->if_output = ether_output;
 	ifp->if_start = txp_start;
 	ifp->if_watchdog = txp_watchdog;
 	ifp->if_init = txp_init;
 	ifp->if_baudrate = 100000000;
-	IFQ_SET_MAXLEN(&ifp->if_snd, TX_ENTRIES);
-	IFQ_SET_READY(&ifp->if_snd);
+	ifp->if_snd.ifq_maxlen = TX_ENTRIES;
 	ifp->if_hwassist = 0;
 	txp_capabilities(sc);
 
@@ -1297,12 +1271,9 @@ txp_start(ifp)
 	cnt = r->r_cnt;
 
 	while (1) {
-		IFQ_LOCK(&ifp->if_snd);
-		IFQ_POLL_NOLOCK(&ifp->if_snd, m);
-		if (m == NULL) {
-			IFQ_UNLOCK(&ifp->if_snd);
+		IF_DEQUEUE(&ifp->if_snd, m);
+		if (m == NULL)
 			break;
-		}
 
 		firstprod = prod;
 		firstcnt = cnt;
@@ -1310,10 +1281,8 @@ txp_start(ifp)
 		sd = sc->sc_txd + prod;
 		sd->sd_mbuf = m;
 
-		if ((TX_ENTRIES - cnt) < 4) {
-			IFQ_UNLOCK(&ifp->if_snd);
+		if ((TX_ENTRIES - cnt) < 4)
 			goto oactive;
-		}
 
 		txd = r->r_desc + prod;
 
@@ -1327,10 +1296,8 @@ txp_start(ifp)
 		if (++prod == TX_ENTRIES)
 			prod = 0;
 
-		if (++cnt >= (TX_ENTRIES - 4)) {
-			IFQ_UNLOCK(&ifp->if_snd);
+		if (++cnt >= (TX_ENTRIES - 4))
 			goto oactive;
-		}
 
 		mtag = VLAN_OUTPUT_TAG(ifp, m);
 		if (mtag != NULL) {
@@ -1352,10 +1319,8 @@ txp_start(ifp)
 		for (m0 = m; m0 != NULL; m0 = m0->m_next) {
 			if (m0->m_len == 0)
 				continue;
-			if (++cnt >= (TX_ENTRIES - 4)) {
-				IFQ_UNLOCK(&ifp->if_snd);
+			if (++cnt >= (TX_ENTRIES - 4))
 				goto oactive;
-			}
 
 			txd->tx_numdesc++;
 
@@ -1374,10 +1339,6 @@ txp_start(ifp)
 
 		}
 
-		/* now we are committed to transmit the packet */
-		IFQ_DEQUEUE_NOLOCK(&ifp->if_snd, m);
-		IFQ_UNLOCK(&ifp->if_snd);
-
 		ifp->if_timer = 5;
 
 		BPF_MTAP(ifp, m);
@@ -1392,6 +1353,7 @@ oactive:
 	ifp->if_flags |= IFF_OACTIVE;
 	r->r_prod = firstprod;
 	r->r_cnt = firstcnt;
+	IF_PREPEND(&ifp->if_snd, m);
 	return;
 }
 

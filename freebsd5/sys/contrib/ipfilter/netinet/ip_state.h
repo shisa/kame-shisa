@@ -4,8 +4,8 @@
  * See the IPFILTER.LICENCE file for details on licencing.
  *
  * @(#)ip_state.h	1.3 1/12/96 (C) 1995 Darren Reed
- * $Id: ip_state.h,v 1.1.1.1 2004/09/22 07:26:36 t-momose Exp $
- * $FreeBSD: src/sys/contrib/ipfilter/netinet/ip_state.h,v 1.14 2002/08/28 13:41:36 darrenr Exp $
+ * $Id: ip_state.h,v 1.1.1.2 2004/11/18 04:48:15 t-momose Exp $
+ * $FreeBSD: src/sys/contrib/ipfilter/netinet/ip_state.h,v 1.15 2004/06/21 22:46:36 darrenr Exp $
  */
 #ifndef	__IP_STATE_H__
 #define	__IP_STATE_H__
@@ -63,6 +63,7 @@ typedef struct ipstate {
 	frentry_t	*is_rule;
 	U_QUAD_T	is_pkts;
 	U_QUAD_T	is_bytes;
+	U_QUAD_T	is_icmppkts;
 	union	i6addr	is_src;
 	union	i6addr	is_dst;
 	void	*is_ifp[4];

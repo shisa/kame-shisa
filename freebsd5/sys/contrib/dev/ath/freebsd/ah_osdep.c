@@ -33,13 +33,14 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGES.
  *
- * $Id: ah_osdep.c,v 1.1.1.1 2004/09/22 07:26:30 t-momose Exp $
+ * $Id: ah_osdep.c,v 1.1.1.2 2004/11/18 04:48:09 t-momose Exp $
  */
 #include "opt_ah.h"
 
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/kernel.h>
+#include <sys/module.h>
 #include <sys/sysctl.h>
 #include <sys/bus.h>
 #include <sys/malloc.h>

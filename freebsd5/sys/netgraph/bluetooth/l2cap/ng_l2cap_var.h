@@ -25,8 +25,8 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: ng_l2cap_var.h,v 1.1.1.1 2004/09/22 07:29:50 t-momose Exp $
- * $FreeBSD: src/sys/netgraph/bluetooth/l2cap/ng_l2cap_var.h,v 1.3 2003/11/14 03:45:29 emax Exp $
+ * $Id: ng_l2cap_var.h,v 1.1.1.2 2004/11/18 04:53:23 t-momose Exp $
+ * $FreeBSD: src/sys/netgraph/bluetooth/l2cap/ng_l2cap_var.h,v 1.4 2004/04/09 23:01:40 emax Exp $
  */
 
 #ifndef _NETGRAPH_L2CAP_VAR_H_
@@ -51,7 +51,7 @@ MALLOC_DECLARE(M_NETGRAPH_L2CAP);
 		if ((m)->m_len < (s)) \
 			(m) = m_pullup((m), (s)); \
 		if ((m) == NULL) \
-			NG_L2CAP_ALERT("%s: %s - m_pullup(%d) failed\n", \
+			NG_L2CAP_ALERT("%s: %s - m_pullup(%zd) failed\n", \
 				__func__, NG_NODE_NAME(l2cap->node), (s)); \
 	} while (0)
 

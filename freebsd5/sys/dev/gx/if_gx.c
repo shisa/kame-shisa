@@ -28,7 +28,7 @@
  */
 
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: src/sys/dev/gx/if_gx.c,v 1.13 2003/10/31 18:32:01 brooks Exp $");
+__FBSDID("$FreeBSD: src/sys/dev/gx/if_gx.c,v 1.19 2004/05/30 20:08:32 phk Exp $");
 
 #include <sys/param.h>
 #include <sys/systm.h>
@@ -36,6 +36,7 @@ __FBSDID("$FreeBSD: src/sys/dev/gx/if_gx.c,v 1.13 2003/10/31 18:32:01 brooks Exp
 #include <sys/mbuf.h>
 #include <sys/malloc.h>
 #include <sys/kernel.h>
+#include <sys/module.h>
 #include <sys/socket.h>
 #include <sys/queue.h>
 
@@ -272,13 +273,13 @@ gx_attach(device_t dev)
 	}
 
 	rid = GX_PCI_LOMEM;
-	gx->gx_res = bus_alloc_resource(dev, SYS_RES_MEMORY, &rid,
-	    0, ~0, 1, RF_ACTIVE);
+	gx->gx_res = bus_alloc_resource_any(dev, SYS_RES_MEMORY, &rid,
+	    RF_ACTIVE);
 #if 0
 /* support PIO mode */
 	rid = PCI_LOIO;
-	gx->gx_res = bus_alloc_resource(dev, SYS_RES_IOPORT, &rid,
-	    0, ~0, 1, RF_ACTIVE);
+	gx->gx_res = bus_alloc_resource_any(dev, SYS_RES_IOPORT, &rid,
+	    RF_ACTIVE);
 #endif
 
 	if (gx->gx_res == NULL) {
@@ -292,7 +293,7 @@ gx_attach(device_t dev)
 
 	/* Allocate interrupt */
 	rid = 0;
-	gx->gx_irq = bus_alloc_resource(dev, SYS_RES_IRQ, &rid, 0, ~0, 1,
+	gx->gx_irq = bus_alloc_resource_any(dev, SYS_RES_IRQ, &rid,
 	    RF_SHAREABLE | RF_ACTIVE);
 
 	if (gx->gx_irq == NULL) {
@@ -320,8 +321,6 @@ gx_attach(device_t dev)
 		error = ENXIO;
 		goto fail;
 	}
-	device_printf(dev, "Ethernet address: %6D\n",
-	    gx->arpcom.ac_enaddr, ":");
 
 	/* Allocate the ring buffers. */
 	gx->gx_rdata = contigmalloc(sizeof(struct gx_ring_data), M_DEVBUF,
@@ -344,20 +343,18 @@ gx_attach(device_t dev)
 	if_initname(ifp, device_get_name(dev), device_get_unit(dev));
 	ifp->if_flags = IFF_BROADCAST | IFF_SIMPLEX | IFF_MULTICAST;
 	ifp->if_ioctl = gx_ioctl;
-	ifp->if_output = ether_output;
 	ifp->if_start = gx_start;
 	ifp->if_watchdog = gx_watchdog;
 	ifp->if_init = gx_init;
 	ifp->if_mtu = ETHERMTU;
-	IFQ_SET_MAXLEN(&ifp->if_snd, GX_TX_RING_CNT - 1);
-	IFQ_SET_READY(&ifp->if_snd);
-	ifp->if_capabilities |= IFCAP_VLAN_HWTAGGING;
+	ifp->if_snd.ifq_maxlen = GX_TX_RING_CNT - 1;
+	ifp->if_capabilities = IFCAP_VLAN_HWTAGGING;
 
 	/* see if we can enable hardware checksumming */
-	if (gx->gx_vflags & GXF_CSUM) {
-		ifp->if_capabilities = IFCAP_HWCSUM;
-		ifp->if_capenable = ifp->if_capabilities;
-	}
+	if (gx->gx_vflags & GXF_CSUM)
+		ifp->if_capabilities |= IFCAP_HWCSUM;
+
+	ifp->if_capenable = ifp->if_capabilities;
 
 	/* figure out transciever type */
 	if (gx->gx_vflags & GXF_FORCE_TBI ||
@@ -481,6 +478,8 @@ gx_init(void *xsc)
 	/* setup transmit checksum control */
 	if (ifp->if_capenable & IFCAP_TXCSUM)
 	        ifp->if_hwassist = GX_CSUM_FEATURES;
+	else
+		ifp->if_hwassist = 0;
 
 	ctrl |= GX_RXC_STRIP_ETHERCRC;		/* not on 82542? */
 	CSR_WRITE_4(gx, GX_RX_CONTROL, ctrl);
@@ -1448,7 +1447,7 @@ gx_intr(void *xsc)
 	/* Turn interrupts on. */
 	CSR_WRITE_4(gx, GX_INT_MASK_SET, GX_INT_WANTED);
 
-	if (ifp->if_flags & IFF_RUNNING && !IFQ_IS_EMPTY(&ifp->if_snd))
+	if (ifp->if_flags & IFF_RUNNING && ifp->if_snd.ifq_head != NULL)
 		gx_start(ifp);
 
 	splx(s);
@@ -1533,7 +1532,7 @@ printf("overflow(2): %d, %d\n", cnt, GX_TX_RING_CNT);
 		tx->tx_addr = vtophys(mtod(m, vm_offset_t));
 		tx->tx_status = 0;
 		tx->tx_len = m->m_len;
-		if (gx->arpcom.ac_if.if_hwassist) {
+		if (gx->arpcom.ac_if.if_capenable & IFCAP_TXCSUM) {
 			tx->tx_type = 1;
 			tx->tx_command = GX_TXTCP_EXTENSION;
 			tx->tx_options = csumopts;
@@ -1583,12 +1582,9 @@ gx_start(struct ifnet *ifp)
 	gx = ifp->if_softc;
 
 	for (;;) {
-		IFQ_LOCK(&ifp->if_snd);
-		IFQ_POLL_NOLOCK(&ifp->if_snd, m_head);
-		if (m_head == NULL) {
-			IFQ_UNLOCK(&ifp->if_snd);
+		IF_DEQUEUE(&ifp->if_snd, m_head);
+		if (m_head == NULL)
 			break;
-		}
 
 		/*
 		 * Pack the data into the transmit ring. If we
@@ -1596,13 +1592,10 @@ gx_start(struct ifnet *ifp)
 		 * for the NIC to drain the ring.
 		 */
 		if (gx_encap(gx, m_head) != 0) {
-			IFQ_UNLOCK(&ifp->if_snd);
+			IF_PREPEND(&ifp->if_snd, m_head);
 			ifp->if_flags |= IFF_OACTIVE;
 			break;
 		}
-
-		IFQ_DEQUEUE_NOLOCK(&ifp->if_snd, m_head);
-		IFQ_UNLOCK(&ifp->if_snd);
 
 		/*
 		 * If there's a BPF listener, bounce a copy of this frame
