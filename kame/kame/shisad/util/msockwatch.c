@@ -117,6 +117,8 @@ main(int argc,char **argv) {
 		case MIPM_BUL_CHANGE:
 		case MIPM_BUL_REMOVE: {
 			struct mipm_bul_info *mipu;
+
+			mipu = (struct mipm_bul_info *)msg;
 			if (mipu->mipu_msglen < 
 			    sizeof(struct mipm_bul_info) + sizeof(struct sockaddr_in6) * 3) {
 				printf("received buffer size is somehow small %d\n", mipu->mipu_msglen);
