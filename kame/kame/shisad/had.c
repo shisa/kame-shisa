@@ -1,4 +1,4 @@
-/*	$Id: had.c,v 1.4 2004/10/14 06:47:31 t-momose Exp $	*/
+/*	$Id: had.c,v 1.5 2004/10/19 12:27:12 t-momose Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -604,8 +604,11 @@ send_haadrep(dst, anycastaddr, dhreq, ifindex)
 
 		syslog(LOG_INFO, "add %s into DHAAD reply \n", ip6_sprintf(&hal->hal_ip6addr));
 		memcpy((buf + reqlen), &hal->hal_ip6addr, sizeof(struct in6_addr));
+
 		if ((hal->hal_flag == MIP6_HAL_OWN) && !src_decided) {
 			pi->ipi6_addr = hal->hal_ip6addr;
+			syslog(LOG_INFO, "Src addr was deceided as [%s]\n",
+				ip6_sprintf(&pi->ipi6_addr));
 			src_decided = 1;
 		}
 		reqlen += sizeof(struct in6_addr);
