@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.22 2004/10/26 06:26:18 keiichi Exp $	*/
+/*	$Id: mip6.c,v 1.23 2004/10/28 02:44:34 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -1592,54 +1592,55 @@ mip6_get_logical_src_dst(m, src, dst)
 	struct mbuf *m;
 	struct in6_addr *src, *dst;
 {
-	struct ip6_hdr *ip6;
-	struct ip6_dest *ip6d;
-	struct ip6_rthdr *ip6r;
-	struct ip6_rthdr2 *ip6r2;
+	struct ip6_hdr ip6;
+	struct ip6_dest ip6d;
+	u_int8_t *ip6dbuf;
+	struct ip6_rthdr ip6r;
 	u_int8_t *ip6o;
-	int off, proto, nxt, ip6dlen, ip6olen, ip6r2len;
+	int off, proto, nxt, ip6dlen, ip6olen;
 
-	if (m == NULL || src == NULL || dst == NULL)
+	if (m == NULL || src == NULL || dst == NULL) {
+		mip6log((LOG_ERR, "mip6_get_logical_src_dst: "
+		    "invalid argument (m, src, dst) = (%p, %p, %p).\n",
+		    m, src, dst));
 		return (-1);
+	}
 
-#ifndef PULLDOWN_TEST
-	IP6_EXTHDR_CHECK(m, 0, sizeof(struct ip6_hdr), -1);
-	ip6 = (struct ip6_hdr *)mtod(m, caddr_t);
-#else
-	IP6_EXTHDR_GET(ip6, struct ip6_hdr *, m, 0, sizeof(struct ip6_hdr));
-	if (ip6 == NULL)
-		return (-1);
-#endif
-	*src = ip6->ip6_src;
-	*dst = ip6->ip6_dst;
+	/* IPv6 header may be safe to mtod(), but be conservative. */
+	m_copydata(m, 0, sizeof(struct ip6_hdr), (caddr_t)&ip6);
+	*src = ip6.ip6_src;
+	*dst = ip6.ip6_dst;
 
 	off = 0;
 	proto = IPPROTO_IPV6;
 
+	/*
+	 * extract src and dst addresses from HAO and type 2 routing
+	 * header.  note that we cannot directly access to mbuf
+	 * (e.g. by using IP6_EXTHDR_CHECK/GET), since we use this
+	 * function in both input/output pathes.  In a output path,
+	 * the packet is not located on a contiguous memory.
+	 */
 	while ((off = ip6_nexthdr(m, off, proto, &nxt)) != -1) {
 		proto = nxt;
 		if (nxt == IPPROTO_DSTOPTS) {
-#ifndef PULLDOWN_TEST
-			IP6_EXTHDR_CHECK(m, off, sizeof(struct ip6_dest), -1);
-			ip6d = (struct ip6_dest *)(mtod(m, caddr_t) + off);
-#else
-			IP6_EXTHDR_GET(ip6d, struct ip6_dest *, m, off,
-			    sizeof(struct ip6_dest));
-			if (ip6d == NULL)
+			m_copydata(m, off, sizeof(struct ip6_dest),
+			    (caddr_t)&ip6d);
+			ip6dlen = (ip6d.ip6d_len + 1) << 3;
+
+			/* copy entire destopt header. */
+			MALLOC(ip6dbuf, u_int8_t *, ip6dlen, M_IP6OPT,
+			    M_NOWAIT);
+			if (ip6dbuf == NULL) {
+				mip6log((LOG_ERR, "mip6_get_logical_src_dst: "
+				    "failed to allocate memory to copy "
+				    "destination option.\n"));
 				return (-1);
-#endif
-			ip6dlen = (ip6d->ip6d_len + 1) << 3;
-#ifndef PULLDOWN_TEST
-			IP6_EXTHDR_CHECK(m, off, ip6dlen, -1);
-			ip6d = (struct ip6_dest *)(mtod(m, caddr_t) + off);
-#else
-			IP6_EXTHDR_GET(ip6d, struct ip6_dest *, m, off,
-			    ip6dlen);
-			if (ip6d == NULL)
-				return (-1);
-#endif
+			}
+			m_copydata(m, off, ip6dlen, ip6dbuf);
+
 			ip6dlen -= sizeof(struct ip6_dest);
-			ip6o = (u_int8_t *)ip6d + sizeof(struct ip6_dest);
+			ip6o = ip6dbuf + sizeof(struct ip6_dest);
 			for (ip6olen = 0; ip6dlen > 0;
 			     ip6dlen -= ip6olen, ip6o += ip6olen) {
 				if (*ip6o != IP6OPT_PAD1 &&
@@ -1648,6 +1649,7 @@ mip6_get_logical_src_dst(m, src, dst)
 					mip6log((LOG_ERR,
 					    "mip6_get_logical_src_dst: "
 					    "destopt too small.\n"));
+					FREE(ip6dbuf, M_IP6OPT);
 					return (-1);
 				}
 				if (*ip6o == IP6OPT_PAD1) {
@@ -1659,6 +1661,7 @@ mip6_get_logical_src_dst(m, src, dst)
 						mip6log((LOG_ERR,
 						    "mip6_get_logical_src_dst: "
 						    "invalid HAO length.\n"));
+						FREE(ip6dbuf, M_IP6OPT);
 						return (-1);
 					}
 					bcopy(ip6o + 2, src,
@@ -1668,38 +1671,25 @@ mip6_get_logical_src_dst(m, src, dst)
 					ip6olen = 2 + *(ip6o + 1);
 				}
 			}
+			FREE(ip6dbuf, M_IP6OPT);
 		}
 		if (nxt == IPPROTO_ROUTING) {
-#ifndef PULLDOWN_TEST
-			IP6_EXTHDR_CHECK(m, off, sizeof(struct ip6_rthdr), -1);
-			ip6r = (struct ip6_rthdr *)(mtod(m, caddr_t) + off);
-#else
-			IP6_EXTHDR_GET(ip6r, struct ip6_rthdr *, m, off,
-			    sizeof(struct ip6_rthdr));
-			if (ip6r == NULL)
-				return (-1);
-#endif
-			if (ip6r->ip6r_type != IPV6_RTHDR_TYPE_2)
+			m_copydata(m, off, sizeof(struct ip6_rthdr),
+			    (caddr_t)&ip6r);
+			/*
+			 * only type 2 routing header need to be
+			 * checked.
+			 */
+			if (ip6r.ip6r_type != IPV6_RTHDR_TYPE_2)
 				continue;
-			if (ip6r->ip6r_len != 2)
+			if (ip6r.ip6r_len != 2)
 				continue;
-			if (ip6r->ip6r_segleft != 1)
+			if (ip6r.ip6r_segleft != 1)
 				continue;
-			ip6r2len = (ip6r->ip6r_len + 1) << 3;
-#ifndef PULLDOWN_TEST
-			IP6_EXTHDR_CHECK(m, off, ip6r2len, -1);
-			ip6r2 = (struct ip6_rthdr2 *)(mtod(m, caddr_t) + off);
-#else
-			IP6_EXTHDR_GET(ip6r2, struct ip6_rthdr2 *, m, off,
-			    ip6r2len);
-			if (ip6r2 == NULL)
-				return (-1);
-#endif
-			bcopy((caddr_t)(ip6r2 + 1), dst,
-			    sizeof(struct in6_addr));
+			m_copydata(m, off + sizeof(struct ip6_rthdr2),
+			    sizeof(struct in6_addr), (caddr_t)dst);
 		}
 	}
-
 	return (0);
 }
 #endif /* NMIP > 0 */
