@@ -1,4 +1,4 @@
-/*      $Id: binding.c,v 1.3 2004/10/08 07:53:08 keiichi Exp $  */
+/*      $Id: binding.c,v 1.4 2004/10/08 07:54:47 keiichi Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -604,6 +604,7 @@ bul_create(peeraddr, coa, flags, hoainfo)
 		memcpy(&bul->bul_peeraddr, peeraddr, sizeof(*peeraddr));
 	if (coa)
 		memcpy(&bul->bul_coa, coa, sizeof(*coa));
+	bul->bul_seqno = random();
 	bul->bul_flags = flags;
 	bul->bul_hoainfo = hoainfo;
 
