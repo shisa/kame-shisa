@@ -1,4 +1,4 @@
-/*      $Id: binding.c,v 1.6 2004/10/14 17:24:01 t-momose Exp $  */
+/*      $Id: binding.c,v 1.7 2004/10/19 12:22:11 t-momose Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -256,9 +256,9 @@ command_show_bc(s)
 		sprintf(buff, "%s ", ip6_sprintf(&bc->bc_hoa));
 		sprintf(buff + strlen(buff), "%s ", ip6_sprintf(&bc->bc_coa));
 		sprintf(buff + strlen(buff), "%s ", ip6_sprintf(&bc->bc_myaddr));
-		sprintf(buff + strlen(buff), "%d %d %c%c%c%c %d\n",
-			bc->bc_lifetime,
+		sprintf(buff + strlen(buff), "%d/%d %c%c%c%c %d\n",
 			(int)(bc->bc_expire - now),
+			bc->bc_lifetime,
 			(bc->bc_flags & IP6_MH_BU_ACK)  ? 'A' : '-',
 			(bc->bc_flags & IP6_MH_BU_HOME) ? 'H' : '-',
 			(bc->bc_flags & IP6_MH_BU_LLOCAL) ? 'L' : '-',
