@@ -1,4 +1,4 @@
-/* $Id: mipsock.c,v 1.1 2004/09/27 09:58:55 t-momose Exp $ */
+/* $Id: mipsock.c,v 1.2 2004/10/04 11:24:07 keiichi Exp $ */
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -381,7 +381,6 @@ mipus_output(m, va_alist)
 				error = EINVAL;
 			mip6_nodetype &= ~mipmni->mipmni_nodetype;
 		}
-		log(LOG_INFO, "mips_output(): nodetype = %x\n", mip6_nodetype);
 		break;
 
 #if NMIP > 0
