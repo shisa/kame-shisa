@@ -2469,6 +2469,7 @@ static int
 if2idlen(ifp)
 	struct ifnet *ifp;
 {
+#if 0
 	switch (ifp->if_type) {
 	case IFT_ETHER:		/* RFC2464 */
 #ifdef IFT_PROPVIRTUAL
@@ -2498,6 +2499,10 @@ if2idlen(ifp)
 	default:
 		return (-1);	/* unknown link type */
 	}
+#else
+	/* XXX when the function is called, if_type is not initialized. */
+	return (64);
+#endif
 }
 
 void *
