@@ -1,4 +1,4 @@
-/*      $Id: mh.c,v 1.4 2004/10/07 09:26:11 keiichi Exp $  */
+/*      $Id: mh.c,v 1.5 2004/10/08 13:59:28 t-momose Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -1779,7 +1779,7 @@ sendmessage(mhdata, mhdatalen, ifindex, src, dst, hoa, rtaddr)
 
 	if (sendmsg(mhsock, &msg, 0) < 0){
 		perror("mh sendmsg ()");
-		syslog(LOG_ERR, "sendmsg error");
+		syslog(LOG_ERR, "sendmsg error %s", strerror(errno));
 		fprintf(stderr, "%s -> %s\n",
 			ip6_sprintf(src), ip6_sprintf(dst));
 	}

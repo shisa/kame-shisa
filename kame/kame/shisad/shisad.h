@@ -1,4 +1,4 @@
-/*	$Id: shisad.h,v 1.1 2004/09/27 04:06:05 t-momose Exp $	*/
+/*	$Id: shisad.h,v 1.2 2004/10/08 13:59:28 t-momose Exp $	*/
 /*
  * Copyright (C) 2004 WIDE Project.
  * All rights reserved.
@@ -109,6 +109,7 @@ struct mip6_hpfxl {
                                                 contail full IPv6
                                                 address) */
 	u_int8_t            hpfx_prefixlen;  /* home prefix length */
+	u_int8_t	    hpfx_flags;
 	struct home_agent_list_head hpfx_hal_head;   /* home agent list head */
 
 	/* mn exclusive field: it is used when mn receives MPA */
@@ -489,7 +490,7 @@ int had_is_ha_if(u_int16_t);
 struct mip6_hpfxl *had_is_myhomenet(struct in6_addr *);
 int send_haadrep(struct in6_addr *, struct in6_addr *, 
 		 struct mip6_dhaad_req *, u_short);
-int send_mpa(struct in6_addr *, struct mip6_prefix_solicit *, u_short);
+int send_mpa(struct in6_addr *, u_int16_t, u_short);
 
 /* nemo_var.c */
 #ifdef MIP_NEMO

@@ -1,4 +1,4 @@
-/*      $Id: common.c,v 1.2 2004/10/07 09:26:11 keiichi Exp $  */
+/*      $Id: common.c,v 1.3 2004/10/08 13:59:28 t-momose Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -136,8 +136,6 @@ icmp6sock_open()
 	int on = 1;
 	int error = 0;
 	struct icmp6_filter filter;	
-
-	icmp6sock = -1;
 
 	icmp6sock = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
 	if (icmp6sock < 0) {
@@ -329,7 +327,6 @@ hal_set_expire_timer(hal, tick)
         struct home_agent_list *hal;
         int tick;
 {
-
         remove_callout_entry(hal->hal_expire);
         hal->hal_expire = new_callout_entry(tick, hal_expire_timer, (void *)hal);
 }
@@ -339,7 +336,6 @@ void
 hal_stop_expire_timer(hal)
         struct home_agent_list *hal;
 {
-
         remove_callout_entry(hal->hal_expire);
 }
 
@@ -355,8 +351,6 @@ hal_expire_timer(arg)
 	free(hal);
 	hal = NULL;
 }
-
-
 
 void
 mip6_delete_hpfxlist(home_prefix, home_prefixlen, hpfxhead) 
@@ -555,7 +549,8 @@ icmp6_input_common(fd)
 	case ND_ROUTER_ADVERT:
 		ra = (struct nd_router_advert *)icp;
 		
-		syslog(LOG_INFO, "ra lifetime = %d\n", ntohs(ra->nd_ra_router_lifetime));
+		syslog(LOG_INFO,
+		       "ra lifetime = %d\n", ntohs(ra->nd_ra_router_lifetime));
 
 		/* parse nd_options */ 
 		memset(&ndopts, 0, sizeof(ndopts));
@@ -679,8 +674,13 @@ icmp6_input_common(fd)
 		break;
 		
 	case MIP6_PREFIX_SOLICIT: 
-		error = send_mpa(&from.sin6_addr, (struct mip6_prefix_solicit *)msg.msg_iov[0].iov_base, receivedifindex);
+	{
+		struct mip6_prefix_solicit *mps;
+
+		mps = (struct mip6_prefix_solicit *)msg.msg_iov[0].iov_base;
+		error = send_mpa(&from.sin6_addr, mps->mip6_ps_id, receivedifindex);
 		break;
+	}
 		
 #endif /* MIP_HA */
 

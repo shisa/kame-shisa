@@ -1,4 +1,4 @@
-/*	$Id: had.c,v 1.2 2004/10/02 13:00:45 t-momose Exp $	*/
+/*	$Id: had.c,v 1.3 2004/10/08 13:59:28 t-momose Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -459,8 +459,10 @@ had_add_hal(hpfx_entry, gladdr, lladdr, lifetime, preference, flag)
 		}
 	} 
 
-	halnew = NULL;
 	halnew = malloc(sizeof(*halnew));
+	if (halnew == NULL) {
+		return (NULL);
+	}
 	memset(halnew, 0, sizeof(*halnew));
 
 	halnew->hal_ip6addr = *gladdr;
@@ -493,7 +495,7 @@ had_add_hal(hpfx_entry, gladdr, lladdr, lifetime, preference, flag)
 		syslog(LOG_INFO, "Home Agent (%s, %d %d) added into home agent list\n", 
 		       ip6_sprintf(gladdr), lifetime, preference);
 		
-	return halnew;
+	return (halnew);
 }
 
 
@@ -507,9 +509,11 @@ had_add_hpfxlist(home_prefix, home_prefixlen)
 
 	hpfx = mip6_get_hpfxlist(home_prefix, home_prefixlen, &hpfx_head);
 	if (hpfx)
-		return hpfx;
+		return (hpfx);
 
 	hpfx = malloc(sizeof(*hpfx));
+	if (hpfx == NULL)
+		return (NULL);
 	memset(hpfx, 0, sizeof(*hpfx));
 
 	hpfx->hpfx_prefix = *home_prefix;
@@ -521,7 +525,7 @@ had_add_hpfxlist(home_prefix, home_prefixlen)
 		       ip6_sprintf(home_prefix), home_prefixlen);
 	
 	LIST_INSERT_HEAD(&hpfx_head, hpfx, hpfx_entry);
-	return hpfx;
+	return (hpfx);
 }
 
 int
@@ -691,9 +695,9 @@ terminate(dummy)
 
 
 int
-send_mpa(dst, mps, ifindex)
+send_mpa(dst, mps_id, ifindex)
 	struct in6_addr *dst;
-        struct mip6_prefix_solicit *mps;
+	u_int16_t mps_id;
 	u_short ifindex;
 {
 	struct nd_opt_prefix_info *ndopt_pi;
@@ -741,11 +745,15 @@ send_mpa(dst, mps, ifindex)
 	mpa->mip6_pa_type = MIP6_PREFIX_ADVERT;
 	mpa->mip6_pa_code = 0; 
 	mpa->mip6_pa_cksum = 0; 
-	mpa->mip6_pa_id = mps->mip6_ps_id;
+	mpa->mip6_pa_id = mps_id;
 
 	ndopt_pi = (struct nd_opt_prefix_info *)mpa;	
 	LIST_FOREACH(hpfx, &hpfx_head, hpfx_entry) {
 		/* filling the address */
+		ndopt_pi->nd_opt_pi_type = ND_OPT_PREFIX_INFORMATION;
+		ndopt_pi->nd_opt_pi_len = 4;
+		ndopt_pi->nd_opt_pi_prefix_len = hpfx->hpfx_prefixlen;
+		ndopt_pi->nd_opt_pi_flags_reserved = 0;
 		
 
 		ndopt_pi += sizeof(struct nd_opt_prefix_info);
