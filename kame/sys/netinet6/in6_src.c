@@ -133,6 +133,14 @@
 extern struct ifnet loif[NLOOP];
 #endif
 
+#if defined(__FreeBSD__) && __FreeBSD_version >= 502010
+static struct mtx addrsel_lock;
+#define ADDRSEL_LOCK_INIT()     mtx_init(&addrsel_lock, "addrsel_lock", NULL, MTX_DEF)
+#define ADDRSEL_LOCK()          mtx_lock(&addrsel_lock)
+#define ADDRSEL_UNLOCK()        mtx_unlock(&addrsel_lock)
+#define ADDRSEL_LOCK_ASSERT()   mtx_assert(&addrsel_lock, MA_OWNED)
+#endif /* __FreeBSD__ && __FreeBSD_version >= 502010 */
+
 #define ADDR_LABEL_NOTAPP (-1)
 struct in6_addrpolicy defaultaddrpolicy;
 
@@ -1178,6 +1186,10 @@ in6_clearscope(addr)
 void
 addrsel_policy_init()
 {
+#if defined(__FreeBSD__) && (__FreeBSD_version >= 502010)
+	ADDRSEL_LOCK_INIT();
+#endif /* __FreeBSD__ && __FreeBSD_version >= 502010 */
+
 	init_policy_queue();
 
 	/* initialize the "last resort" policy */
@@ -1191,12 +1203,18 @@ lookup_addrsel_policy(key)
 {
 	struct in6_addrpolicy *match = NULL;
 
+#if defined(__FreeBSD__) && (__FreeBSD_version >= 502010)
+	ADDRSEL_LOCK();
+#endif /* __FreeBSD__ && __FreeBSD_version >= 502010 */
 	match = match_addrsel_policy(key);
 
 	if (match == NULL)
 		match = &defaultaddrpolicy;
 	else
 		match->use++;
+#if defined(__FreeBSD__) && (__FreeBSD_version >= 502010)
+	ADDRSEL_UNLOCK();
+#endif /* __FreeBSD__ && __FreeBSD_version >= 502010 */
 
 	return (match);
 }
@@ -1349,6 +1367,10 @@ add_addrsel_policyent(newpolicy)
 {
 	struct addrsel_policyent *new, *pol;
 
+#if defined(__FreeBSD__) && (__FreeBSD_version >= 502010)
+	ADDRSEL_LOCK();
+#endif /* __FreeBSD__ && __FreeBSD_version >= 502010 */
+
 	/* duplication check */
 	for (pol = TAILQ_FIRST(&addrsel_policytab); pol;
 	     pol = TAILQ_NEXT(pol, ape_entry)) {
@@ -1356,6 +1378,9 @@ add_addrsel_policyent(newpolicy)
 		    &pol->ape_policy.addr.sin6_addr) &&
 		    IN6_ARE_ADDR_EQUAL(&newpolicy->addrmask.sin6_addr,
 		    &pol->ape_policy.addrmask.sin6_addr)) {
+#if defined(__FreeBSD__) && (__FreeBSD_version >= 502010)
+			ADDRSEL_UNLOCK();
+#endif /* __FreeBSD__ && __FreeBSD_version >= 502010 */
 			return (EEXIST);	/* or override it? */
 		}
 	}
@@ -1368,6 +1393,9 @@ add_addrsel_policyent(newpolicy)
 	new->ape_policy = *newpolicy;
 
 	TAILQ_INSERT_TAIL(&addrsel_policytab, new, ape_entry);
+#if defined(__FreeBSD__) && (__FreeBSD_version >= 502010)
+	ADDRSEL_UNLOCK();
+#endif /* __FreeBSD__ && __FreeBSD_version >= 502010 */
 
 	return (0);
 }
@@ -1377,6 +1405,10 @@ delete_addrsel_policyent(key)
 	struct in6_addrpolicy *key;
 {
 	struct addrsel_policyent *pol;
+
+#if defined(__FreeBSD__) && (__FreeBSD_version >= 502010)
+	ADDRSEL_LOCK();
+#endif /* __FreeBSD__ && __FreeBSD_version >= 502010 */
 
 	/* search for the entry in the table */
 	for (pol = TAILQ_FIRST(&addrsel_policytab); pol;
@@ -1388,10 +1420,17 @@ delete_addrsel_policyent(key)
 			break;
 		}
 	}
-	if (pol == NULL)
+	if (pol == NULL) {
+#if defined(__FreeBSD__) && (__FreeBSD_version >= 502010)
+		ADDRSEL_UNLOCK();
+#endif /* __FreeBSD__ && __FreeBSD_version >= 502010 */
 		return (ESRCH);
+	}
 
 	TAILQ_REMOVE(&addrsel_policytab, pol, ape_entry);
+#if defined(__FreeBSD__) && (__FreeBSD_version >= 502010)
+	ADDRSEL_UNLOCK();
+#endif /* __FreeBSD__ && __FreeBSD_version >= 502010 */
 
 	return (0);
 }
@@ -1404,11 +1443,21 @@ walk_addrsel_policy(callback, w)
 	struct addrsel_policyent *pol;
 	int error = 0;
 
+#if defined(__FreeBSD__) && (__FreeBSD_version >= 502010)
+	ADDRSEL_LOCK();
+#endif /* __FreeBSD__ && __FreeBSD_version >= 502010 */
 	for (pol = TAILQ_FIRST(&addrsel_policytab); pol;
 	     pol = TAILQ_NEXT(pol, ape_entry)) {
-		if ((error = (*callback)(&pol->ape_policy, w)) != 0)
+		if ((error = (*callback)(&pol->ape_policy, w)) != 0) {
+#if defined(__FreeBSD__) && (__FreeBSD_version >= 502010)
+			ADDRSEL_UNLOCK();
+#endif /* __FreeBSD__ && __FreeBSD_version >= 502010 */
 			return (error);
+		}
 	}
+#if defined(__FreeBSD__) && (__FreeBSD_version >= 502010)
+	ADDRSEL_UNLOCK();
+#endif /* __FreeBSD__ && __FreeBSD_version >= 502010 */
 
 	return (error);
 }
