@@ -1,4 +1,4 @@
-/*      $Id: mh.c,v 1.5 2004/10/08 13:59:28 t-momose Exp $  */
+/*      $Id: mh.c,v 1.6 2004/10/12 14:05:01 t-momose Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -860,6 +860,18 @@ receive_bu(src, dst, hoa, rtaddr, bu, mhlen)
 			mip6_bc_delete(bc);
 			syslog(LOG_INFO,
 			       "binding cache has been deleted\n");
+		} else {
+#ifdef MIP_HA
+			/* 10.3.2 */
+/*
+   o  If the receiving node has no entry marked as a home registration
+      in its Binding Cache for this mobile node, then this node MUST
+      reject the Binding Update and SHOULD return a Binding
+      Acknowledgement to the mobile node, in which the Status field is
+      set to 133 (not home agent for this mobile node).
+*/
+			statuscode = IP6_MH_BAS_NOT_HA;
+#endif /* MIP_HA */
 		}
 			
 		lifetime = 0;	/* Returned lifetime in BA must be zero */
