@@ -174,7 +174,7 @@ dest6_input(mp, offp, proto)
 #else
 				(bce = mip6_bce_get(&home, &ip6->ip6_dst, &ip6->ip6_src, 0))
 #endif /* MIP6_MCOA */
-				&& IN6_ARE_ADDR_EQUAL(&bce->mbc_coa, &ip6->ip6_src))
+				&& IN6_ARE_ADDR_EQUAL(&bce->mbc_coa, &ip6->ip6_src)) {
 				/*
 				 * we have a corresponding binding
 				 * cache entry for the home address
