@@ -1,4 +1,4 @@
-/*	$Id: mnd.c,v 1.9 2004/10/28 06:22:18 keiichi Exp $	*/
+/*	$Id: mnd.c,v 1.10 2004/11/02 08:53:00 ryuji Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -192,8 +192,13 @@ main(int argc, char **argv)
 
  startmn:
 	/* open syslog infomation. */
+#ifndef MIP_NEMO
 	openlog("shisad(mnd)", 0, LOG_DAEMON);
-	syslog(LOG_INFO, "Start Mobile Node/Router\n");
+	syslog(LOG_INFO, "Start Mobile Node\n");
+#else
+	openlog("shisad(mrd)", 0, LOG_DAEMON);
+	syslog(LOG_INFO, "Start Mobile Router\n");
+#endif
 
 	if (optind >= argc) {
 		mn_usage();
@@ -925,7 +930,7 @@ send_haadreq(hoainfo, hoa_plen, src)
         char adata[512], buf[1024];
 	struct mip6_dhaad_req dhreq;
 #if defined(MIP_MN) && defined(MIP_NEMO)
-	struct sockaddr_in6 *ar_sin6, ar_sin6_orig;
+	struct sockaddr_in6 *ar_sin6 = NULL, ar_sin6_orig;
 #endif
 
 
@@ -946,8 +951,10 @@ send_haadreq(hoainfo, hoa_plen, src)
         msg.msg_control = (void *) adata;
         msg.msg_controllen = CMSG_SPACE(sizeof(struct in6_pktinfo));
 #if defined(MIP_MN) && defined(MIP_NEMO)
-	msg.msg_controllen += 
-		CMSG_SPACE(sizeof(struct sockaddr_in6));
+	ar_sin6 = nemo_ar_get(src, &ar_sin6_orig);
+	if (ar_sin6)
+		msg.msg_controllen += 
+			CMSG_SPACE(sizeof(struct sockaddr_in6));
 #endif /*MIP_NEMO */
 
 
@@ -962,21 +969,16 @@ send_haadreq(hoainfo, hoa_plen, src)
 	cmsgptr = CMSG_NXTHDR(&msg, cmsgptr);
 	
 #if defined(MIP_MN) && defined(MIP_NEMO)
-	ar_sin6 = nemo_ar_get(src, &ar_sin6_orig);
-	if (ar_sin6 == NULL) {
-		syslog(LOG_ERR, "can't send message due to no AR\n");
-		/* XXX send RS */
-		return (-1);
-	} else {
+	if (ar_sin6) { 
 		if (debug)
 			syslog(LOG_INFO, "send ICMP msg via %s/%d\n", 
 				ip6_sprintf(&ar_sin6->sin6_addr), ar_sin6->sin6_scope_id);
+		cmsgptr->cmsg_len = CMSG_LEN(sizeof(struct sockaddr_in6));
+		cmsgptr->cmsg_level = IPPROTO_IPV6;
+		cmsgptr->cmsg_type = IPV6_NEXTHOP;
+		memcpy(CMSG_DATA(cmsgptr), ar_sin6, sizeof(struct sockaddr_in6));
+		cmsgptr = CMSG_NXTHDR(&msg, cmsgptr);
 	}
-	cmsgptr->cmsg_len = CMSG_LEN(sizeof(struct sockaddr_in6));
-	cmsgptr->cmsg_level = IPPROTO_IPV6;
-	cmsgptr->cmsg_type = IPV6_NEXTHOP;
-	memcpy(CMSG_DATA(cmsgptr), ar_sin6, sizeof(struct sockaddr_in6));
-	cmsgptr = CMSG_NXTHDR(&msg, cmsgptr);
 #endif
 
 	bzero(buf, sizeof(buf));

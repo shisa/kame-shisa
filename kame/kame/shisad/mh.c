@@ -1,4 +1,4 @@
-/*      $Id: mh.c,v 1.10 2004/10/19 12:24:53 t-momose Exp $  */
+/*      $Id: mh.c,v 1.11 2004/11/02 08:53:00 ryuji Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -1713,8 +1713,10 @@ sendmessage(mhdata, mhdatalen, ifindex, src, dst, hoa, rtaddr)
 		msg.msg_controllen += 
 			CMSG_SPACE(sizeof(struct ip6_rthdr2) + sizeof(struct in6_addr));
 #if defined(MIP_MN) && defined(MIP_NEMO)
-	msg.msg_controllen += 
-		CMSG_SPACE(sizeof(struct sockaddr_in6));
+	ar_sin6 = nemo_ar_get(hoa, &ar_sin6_orig);
+	if (ar_sin6) 
+		msg.msg_controllen += 
+			CMSG_SPACE(sizeof(struct sockaddr_in6));
 #endif /*MIP_NEMO */
         iov.iov_base = mhdata;
         iov.iov_len = mhdatalen;
@@ -1731,21 +1733,16 @@ sendmessage(mhdata, mhdatalen, ifindex, src, dst, hoa, rtaddr)
 	cmsgptr = CMSG_NXTHDR(&msg, cmsgptr);
 
 #if defined(MIP_MN) && defined(MIP_NEMO)
-	ar_sin6 = nemo_ar_get(hoa, &ar_sin6_orig);
-	if (ar_sin6 == NULL) {
-		syslog(LOG_ERR, "can't send message due to no AR\n");
-		/* XXX send RS */
-		return (-1);
-	} else {
+	if (ar_sin6) { 
 		if (debug) 
 			syslog(LOG_INFO, "sendmsg via %s/%d\n", 
 				ip6_sprintf(&ar_sin6->sin6_addr), ar_sin6->sin6_scope_id);
+		cmsgptr->cmsg_len = CMSG_LEN(sizeof(struct sockaddr_in6));
+		cmsgptr->cmsg_level = IPPROTO_IPV6;
+		cmsgptr->cmsg_type = IPV6_NEXTHOP;
+		memcpy(CMSG_DATA(cmsgptr), ar_sin6, sizeof(struct sockaddr_in6));
+		cmsgptr = CMSG_NXTHDR(&msg, cmsgptr);
 	}
-	cmsgptr->cmsg_len = CMSG_LEN(sizeof(struct sockaddr_in6));
-	cmsgptr->cmsg_level = IPPROTO_IPV6;
-	cmsgptr->cmsg_type = IPV6_NEXTHOP;
-	memcpy(CMSG_DATA(cmsgptr), ar_sin6, sizeof(struct sockaddr_in6));
-	cmsgptr = CMSG_NXTHDR(&msg, cmsgptr);
 #endif
 
 	/* Destination Option */
