@@ -828,10 +828,11 @@ defrouter_select()
 	 * such cases here for safety.
 	 */
 #if defined(MIP6) && NMIP > 0
-	if ((ip6_forwarding || !ip6_accept_rtadv) && !MIP6_IS_MR) {
+	if ((ip6_forwarding || !ip6_accept_rtadv) && !MIP6_IS_MR) 
 #else
-	if (ip6_forwarding || !ip6_accept_rtadv) {
+	if (ip6_forwarding || !ip6_accept_rtadv) 
 #endif
+	{
 		nd6log((LOG_WARNING,
 		    "defrouter_select: called unexpectedly (forwarding=%d, "
 		    "accept_rtadv=%d)\n", ip6_forwarding, ip6_accept_rtadv));
@@ -854,10 +855,11 @@ defrouter_select()
 		 * clear.
 		 */
 #if defined(MIP6) && NMIP > 0
-		if (!ip6_forwarding || MIP6_IS_MR) {
+		if (!ip6_forwarding || MIP6_IS_MR) 
 #else
-		if (!ip6_forwarding) {
+		if (!ip6_forwarding)
 #endif
+		{
 			if (nd6_defifp) {
 				/*
 				 * Install a route to the default interface
@@ -1795,7 +1797,7 @@ pfxlist_onlink_check()
 		     * even when we don't have autoconfigured
 		     * addresses.
 		     */
-		    && !(ifa->ia6_flags & IN6_IFF_HOME)
+	  	    && !((ifa->ia6_flags & IN6_IFF_HOME) && (ifa->ia_ifp->if_type == IFT_MIP)) 
 #endif /* MIP6 && NMIP > 0 */
 			)
 			continue;
