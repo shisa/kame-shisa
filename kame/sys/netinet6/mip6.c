@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.25 2004/11/04 17:53:19 mitsuya Exp $	*/
+/*	$Id: mip6.c,v 1.26 2004/11/04 18:38:44 mitsuya Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -795,13 +795,13 @@ mip6_bul_create(peeraddr, hoa, coa, flags, state, sc, bid)
 
 int
 #ifndef MIP6_MCOA
-mip6_bul_update(peeraddr, hoa, coa, hoa_ifindex, flags, state)
+mip6_bul_add(peeraddr, hoa, coa, hoa_ifindex, flags, state)
 	const struct in6_addr *peeraddr, *hoa, *coa;
 	u_short hoa_ifindex;
 	u_int16_t flags;
 	u_int8_t state;
 #else
-mip6_bul_update(peeraddr, hoa, coa, hoa_ifindex, flags, state, bid)
+mip6_bul_add(peeraddr, hoa, coa, hoa_ifindex, flags, state, bid)
 	const struct in6_addr *peeraddr, *hoa, *coa;
 	u_short hoa_ifindex;
 	u_int16_t flags;
