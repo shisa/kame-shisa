@@ -199,9 +199,8 @@ extern int ipsec_ipcomp_default_level;
 #if NMIP > 0
 #include <netinet/ip6mh.h>
 #endif /* NMIP > 0*/
- #endif /* MIP6 */
+#endif /* MIP6 */
  
-
 #include <net/net_osdep.h>
 
 #if defined(__NetBSD__) && defined(PFIL_HOOKS)
@@ -380,7 +379,7 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 		/* Destination options header(1st part) */
 		if (opt->ip6po_rthdr
 #ifdef MIP6
-		|| opt->ip6po_rthdr2
+			|| opt->ip6po_rthdr2
 #endif /* MIP6 */
 		    ) {
 			/*

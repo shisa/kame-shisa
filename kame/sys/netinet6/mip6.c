@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.1 2004/09/27 02:12:22 t-momose Exp $	*/
+/*	$Id: mip6.c,v 1.2 2004/10/01 10:42:17 t-momose Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -85,7 +85,7 @@ struct mip6_bc_list mip6_bc_list = LIST_HEAD_INITIALIZER(mip6_bc_list);
 #include "mip.h"
 
 struct mip6stat mip6stat;
-u_int8_t mip6_nodetype;
+u_int8_t mip6_nodetype = MIP6_NODETYPE_NONE;
 
 /* sysctl parameters. */
 int mip6ctl_use_ipsec = 1;

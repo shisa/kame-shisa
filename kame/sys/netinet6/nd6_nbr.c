@@ -532,6 +532,7 @@ nd6_ns_output(ifp, daddr6, taddr6, ln, dad)
 		 */
 		{
 			struct in6_ifaddr *ia6;
+
 			ia6 = in6ifa_ifpwithaddr(ifp, src);
 			if (ia6 == NULL)
 				goto bad;

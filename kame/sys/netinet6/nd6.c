@@ -910,10 +910,11 @@ nd6_purge(ifp)
 		nd6_setdefaultiface(0);
 
 #if defined(MIP6) && NMIP > 0
-	if (MIP6_IS_MR || (!ip6_forwarding && ip6_accept_rtadv)) { /* XXX: too restrictive? */
+	if (MIP6_IS_MR || (!ip6_forwarding && ip6_accept_rtadv)) /* XXX: too restrictive? */
 #else
-	if (!ip6_forwarding && ip6_accept_rtadv) { /* XXX: too restrictive? */
+	if (!ip6_forwarding && ip6_accept_rtadv) /* XXX: too restrictive? */
 #endif
+	{
 		/* refresh default router list */
 		defrouter_select();
 	}
