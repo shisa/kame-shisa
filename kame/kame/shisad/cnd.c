@@ -1,4 +1,4 @@
-/*	$Id: cnd.c,v 1.2 2004/09/27 08:50:43 t-momose Exp $	*/
+/*	$Id: cnd.c,v 1.3 2004/10/07 09:26:11 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -95,7 +95,9 @@ cn_usage(path)
 
 
 int
-main(int argc, char **argv)
+main(argc, argv)
+	int argc;
+	char **argv;
 {
 	int pfds;
 	int pid;
@@ -108,7 +110,7 @@ main(int argc, char **argv)
         if (argc < 2) {
 		cn_usage(argv[0]);
 		/* Not reach */
-		return EINVAL;
+		return (EINVAL);
 	}
 #endif
 
@@ -194,7 +196,7 @@ main(int argc, char **argv)
 }
 
 static void
-cn_lists_init()
+cn_lists_init(void)
 {
 	mip6_bc_init();
 
@@ -203,7 +205,8 @@ cn_lists_init()
 
 
 int
-mipsock_input(struct mip_msghdr *miphdr)
+mipsock_input(miphdr)
+	struct mip_msghdr *miphdr;
 {
 
 	int err = 0;
@@ -216,7 +219,7 @@ mipsock_input(struct mip_msghdr *miphdr)
 		break;
 	}
 
-	return err;
+	return (err);
 }
 
 static void

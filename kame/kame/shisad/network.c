@@ -1,4 +1,4 @@
-/*      $Id: network.c,v 1.3 2004/10/01 11:30:44 t-momose Exp $  */
+/*      $Id: network.c,v 1.4 2004/10/07 09:26:11 keiichi Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -198,15 +198,15 @@ nemo_tun_set(src, dst, gifindex, nxthop_enable)
 	char if_name[IFNAMSIZ];
 
 	if (src->sa_family != dst->sa_family) 
-		return EINVAL;
+		return (EINVAL);
 
 	if (src->sa_family != AF_INET6)
-		return 0;
+		return (0);
 
 	if((ioctls = socket(AF_INET6, SOCK_DGRAM, 0)) < 0) {
 		syslog(LOG_ERR, "%s socket() %s",  
 		       __FUNCTION__, strerror(errno));
-		return errno;
+		return (errno);
 	}
 	
 	/* Check Gif tunnel */
@@ -214,12 +214,12 @@ nemo_tun_set(src, dst, gifindex, nxthop_enable)
 		syslog(LOG_ERR, "%s if_indextoname() %s",  
 		       __FUNCTION__, strerror(errno));
 		close (ioctls);
-		return errno;
+		return (errno);
 	}
 
 	if (nemo_gif_init(if_name) > 0) {
 		close (ioctls);
-		return EINVAL;
+		return (EINVAL);
 	}
 	
 	src6 = (struct sockaddr_in6 *)src;
@@ -240,7 +240,7 @@ nemo_tun_set(src, dst, gifindex, nxthop_enable)
 		syslog(LOG_ERR, "%s ioctl(SIOCSIFPHYADDR_IN6) %s",  
 		       __FUNCTION__, strerror(errno));
 		close (ioctls);
-		return errno;
+		return (errno);
 	}
 
 	if (nxthop_enable) {
@@ -277,7 +277,7 @@ nemo_tun_del(gifname)
 	if((ioctls = socket(AF_INET6, SOCK_DGRAM, 0)) < 0) {
 		syslog(LOG_ERR, "%s socket() %s",  
 		       __FUNCTION__, strerror(errno));
-		return errno;
+		return (errno);
 	}
 
 	memset(&ifr_del, 0, sizeof(ifr_del));
@@ -291,7 +291,7 @@ nemo_tun_del(gifname)
 		syslog(LOG_ERR, "%s ioctl(SIOCDIFPHYADDR) %s",  
 		       __FUNCTION__, strerror(errno));
 		close(ioctls);
-		return errno;
+		return (errno);
 	}
 
 
@@ -301,7 +301,9 @@ nemo_tun_del(gifname)
 
 
 static int
-nemo_gif_init(char *gifname) {
+nemo_gif_init(gifname)
+	char *gifname;
+{
 	int flags;
 
 	flags = nemo_ifflag_get(gifname);
@@ -322,18 +324,20 @@ nemo_gif_init(char *gifname) {
 	if((flags & IFF_UP) == 0) 
 		nemo_ifflag_set(gifname, (flags |= IFF_UP));
 	
-	return 0;
+	return (0);
 }
 
 int
-nemo_ifflag_get(char *ifname) {
+nemo_ifflag_get(ifname)
+	char *ifname;
+{
 	int s;
 	struct ifreq ifreq;
 
 	if((s = socket(AF_INET6, SOCK_DGRAM, 0)) < 0) {
 		syslog(LOG_ERR, "%s socket() %s",  
 		       __FUNCTION__, strerror(errno));
-		return -1;
+		return (-1);
 	}
 
 	memset(&ifreq, 0, sizeof(ifreq));
@@ -343,23 +347,26 @@ nemo_ifflag_get(char *ifname) {
 		perror("ioctl: SIOCGIFFLAGS");
 		
 		syslog(LOG_ERR, "%s is not available\n", ifname);
-		return -1;
+		return (-1);
 	}
 
 	close (s);
 
-	return ifreq.ifr_flags;
+	return (ifreq.ifr_flags);
 }
 
 int
-nemo_ifflag_set(char *ifname, short flags) {
+nemo_ifflag_set(ifname, flags)
+	char *ifname;
+	short flags;
+{
 	int s;
 	struct ifreq ifreq;
 
 	if((s = socket(AF_INET6, SOCK_DGRAM, 0)) < 0) {
 		syslog(LOG_ERR, "%s socket() %s",  
 		       __FUNCTION__, strerror(errno));
-		return errno;
+		return (errno);
 	}
 
 	memset(&ifreq, 0, sizeof(ifreq));
@@ -369,12 +376,12 @@ nemo_ifflag_set(char *ifname, short flags) {
 	if (ioctl(s, SIOCSIFFLAGS, (caddr_t)&ifreq) < 0 ) {
 		perror("ioctl SIOCSIFFLAGS\n");
 		close (s);
-		return errno;
+		return (errno);
 	}
 
 	close (s);
 
-	return 0;
+	return (0);
 }
 
 int
@@ -433,7 +440,7 @@ route_add(dest, gate, mask, pfxlen, gifindex)
 		so_gate.sin6.sin6_addr = *gate;
 	else {
 		close (s);
-		return -1;
+		return (-1);
 	}
 	so_dl.sdl.sdl_family = AF_LINK;
 	so_dl.sdl.sdl_len = sizeof(struct sockaddr_dl);
@@ -559,12 +566,12 @@ route_del(u_int16_t gifindex){
 
 static int
 prefixlen(pfxlen_tmp, sin6_tmp)
-        int                     pfxlen_tmp;
-        struct sockaddr_in6     *sin6_tmp;
+        int pfxlen_tmp;
+        struct sockaddr_in6 *sin6_tmp;
 {
-        int     len = pfxlen_tmp;
-        int     pfxmsk, tmpnum, maxlen;
-        char    *tgtaddrp;
+        int len = pfxlen_tmp;
+        int pfxmsk, tmpnum, maxlen;
+        char *tgtaddrp;
 
         maxlen = 128;
         tgtaddrp = (char *)&sin6_tmp->sin6_addr;
@@ -579,14 +586,16 @@ prefixlen(pfxlen_tmp, sin6_tmp)
                 *((u_char *)tgtaddrp + pfxmsk) = (0xff00 >> tmpnum) &  0xff;
 
         if( maxlen == len )
-                return -1;
+                return (-1);
         else
                 return(len);
 }
 
 
 struct sockaddr_in6 *
-nemo_ar_get(struct in6_addr *coa, struct sockaddr_in6 *ret6)
+nemo_ar_get(coa, ret6)
+	struct in6_addr *coa;
+	struct sockaddr_in6 *ret6;
 {
 	int s;
 	struct in6_ifreq dstaddrreq;
@@ -602,7 +611,7 @@ nemo_ar_get(struct in6_addr *coa, struct sockaddr_in6 *ret6)
 
 	ifindex = get_ifindex_from_address(coa);
 	if (ifindex == 0)
-		return NULL;
+		return (NULL);
 
 	if (sysctl(mib, sizeof(mib) / sizeof(mib[0]), NULL, &l, NULL, 0) < 0) {
 		perror("sysctl(ICMPV6CTL_ND6_PRLIST)");
@@ -657,7 +666,7 @@ nemo_ar_get(struct in6_addr *coa, struct sockaddr_in6 *ret6)
 						ret6->sin6_scope_id = p->if_index;
 						ret6->sin6_addr = sin6->sin6_addr;
 						free(buf);
-						return ret6;
+						return (ret6);
 					default:
 						break;
 					}
@@ -679,7 +688,7 @@ nemo_ar_get(struct in6_addr *coa, struct sockaddr_in6 *ret6)
 
 	ifindex = get_ifindex_from_address(coa);
 	if (ifindex == 0)
-		return NULL;
+		return (NULL);
 
 	gettimeofday(&time, 0);
 
@@ -759,7 +768,7 @@ nemo_ar_get(struct in6_addr *coa, struct sockaddr_in6 *ret6)
 						sin6.sin6_scope_id = PR.if_index;
 
 						close (s);
-						return &sin6;
+						return (&sin6);
 					default:
 						break;
 						;
@@ -799,11 +808,14 @@ nemo_ar_get(struct in6_addr *coa, struct sockaddr_in6 *ret6)
 	}
 	close (s);
 
-	return NULL;
+	return (NULL);
 }
 
 int
-nemo_gif_ar_set(char *tunnel, struct in6_addr *coa) {
+nemo_gif_ar_set(tunnel, coa)
+	char *tunnel;
+	struct in6_addr *coa;
+{
         int arsock;
         struct in6_ifreq ifreq6;
         struct sockaddr_in6 *ar_sin6, ar_sin6_orig;
@@ -811,7 +823,7 @@ nemo_gif_ar_set(char *tunnel, struct in6_addr *coa) {
         ar_sin6 = nemo_ar_get(coa, &ar_sin6_orig);
         if (ar_sin6 == NULL) {
                 printf("sorry no AR\n");
-                return -1;
+                return (-1);
         }
 
         memset(&ifreq6, 0, sizeof(ifreq6));
@@ -821,13 +833,13 @@ nemo_gif_ar_set(char *tunnel, struct in6_addr *coa) {
         arsock = socket(AF_INET6, SOCK_DGRAM, 0);
         if (arsock < 0) {
                 perror("socket");
-                return errno;
+                return (errno);
         }
 
         if (ioctl(arsock, SIOCSIFPHYNEXTHOP_IN6, &ifreq6) < 0) {
                 perror("ioctl");
 		close(arsock);
-                return errno;
+                return (errno);
         }
 
 	close(arsock);
@@ -877,7 +889,7 @@ get_ifindex_from_address(address)
 
 	if (getifaddrs(&ifap) != 0) {
 		syslog(LOG_ERR, "%s\n", strerror(errno));
-		return 0;
+		return (0);
 	}
 	for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
 		sa = ifa->ifa_addr;
@@ -892,18 +904,21 @@ get_ifindex_from_address(address)
 		if (IN6_ARE_ADDR_EQUAL(&((struct sockaddr_in6 *)ifa->ifa_addr)->sin6_addr, address)) {
 			index = if_nametoindex(ifa->ifa_name);
 			freeifaddrs(ifap);
-			return index;
+			return (index);
 		}
 	}
 	freeifaddrs(ifap);
-	return 0;
+	return (0);
 }
 
 
 
 #if 0
 int
-send_na(struct in6_addr *dest, struct mobileip6_ifinfo *mif) {
+send_na(dest, mif)
+	struct in6_addr *dest;
+	struct mobileip6_ifinfo *mif;
+{
         struct msghdr msg;
         struct iovec iov;
         struct cmsghdr  *cmsgptr = NULL;
@@ -918,7 +933,7 @@ send_na(struct in6_addr *dest, struct mobileip6_ifinfo *mif) {
 
         memset(&to, 0, sizeof(to));
         if (inet_pton(AF_INET6, "ff02::1",&to.sin6_addr) != 1) 
-                return -1;
+                return (-1);
 	to.sin6_family = AF_INET6;
 	to.sin6_port = 0;
 	to.sin6_scope_id = 0;
@@ -973,7 +988,7 @@ send_na(struct in6_addr *dest, struct mobileip6_ifinfo *mif) {
 		nalen += ROUNDUP8(ETHER_ADDR_LEN + 2);
 		break;
 	default:
-		return -1;
+		return (-1);
 	}
 
 	iov.iov_base = buf;
@@ -986,7 +1001,7 @@ send_na(struct in6_addr *dest, struct mobileip6_ifinfo *mif) {
 		syslog(LOG_ERR, "%s sendmsg() %s",  
 		       __FUNCTION__, strerror(errno));
 
-	return errno;
+	return (errno);
 }
 
 #endif
@@ -1026,7 +1041,7 @@ ip6_sprintf(addr)
 
 	if (getnameinfo((struct sockaddr *)&sin6, sizeof(sin6),
 			ip6buf[ip6round], NI_MAXHOST, NULL, 0, flags) != 0)
-		return "?";
+		return ("?");
 
-	return ip6buf[ip6round];
+	return (ip6buf[ip6round]);
 }

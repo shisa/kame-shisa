@@ -1,4 +1,4 @@
-/*      $Id: mdd.c,v 1.3 2004/10/06 07:16:20 keiichi Exp $  */
+/*      $Id: mdd.c,v 1.4 2004/10/07 09:26:11 keiichi Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -56,8 +56,8 @@
 
 #include "mdd.h"
 
-void reload(int);
-void terminate(int);
+static void reload(int);
+static void terminate(int);
 
 static char *cmd;
 int ver_major = 0;
@@ -83,7 +83,7 @@ extern int get_ifmsg(void);
 #endif /* MIP_MCOA */
 
 void
-usage(void)
+usage()
 {
 	fprintf(stderr, "%s\n", cmd);
 	fprintf(stderr, "movement detection daemon for mobile router\n");
@@ -101,7 +101,10 @@ usage(void)
 }
 
 int
-main(int argc, char *argv[], char *env[])
+main(argc, argv, env)
+	int argc;
+	char **argv;
+	char **env;
 {
 	int ch;
 	struct binding *bp = NULL;
@@ -118,10 +121,11 @@ main(int argc, char *argv[], char *env[])
 
 	/*  Option processing */
 #ifndef MIP_MCOA
-	while ((ch=getopt(argc, argv, "i:dnh:mp:")) != -1) {
+	while ((ch=getopt(argc, argv, "i:dnh:mp:")) != -1)
 #else
-	while ((ch=getopt(argc, argv, "b:i:dnh:mp:")) != -1) {
+	while ((ch=getopt(argc, argv, "b:i:dnh:mp:")) != -1)
 #endif /* MIP_MCOA */
+	{
 		switch (ch) {
 #ifdef MIP_MCOA
 		case 'b':
@@ -269,11 +273,12 @@ main(int argc, char *argv[], char *env[])
 	mainloop();
 
 	/* not reached */
-	return 0;
+	return (0);
 }
 
-void
-reload(int dummy)
+static void
+reload(dummy)
+	int dummy;
 {
 	struct binding *bp;
 	struct cif *cifp;
@@ -307,8 +312,9 @@ reload(int dummy)
 }
 
 
-void
-terminate(int dummy)
+static void
+terminate(dummy)
+	int dummy;    
 {
 
 	if (debug) {
@@ -325,14 +331,16 @@ terminate(int dummy)
 }
 
 struct binding *
-set_hoa(struct in6_addr	*ia6, int prefixlen)
+set_hoa(ia6, prefixlen)
+	struct in6_addr *ia6;
+	int prefixlen;
 {
 	struct binding *bp;
 
 	bp = (struct binding *) malloc(sizeof(struct binding));
 	if (bp == NULL) {
 		perror("malloc:");
-		return NULL;
+		return (NULL);
 	}
 	memset(bp, 0, sizeof(*bp));
 	bp->hoa.sin6_len	= sizeof(bp->hoa);
@@ -344,11 +352,12 @@ set_hoa(struct in6_addr	*ia6, int prefixlen)
 	bp->flags 		= BF_INUSE;
 	LIST_INSERT_HEAD(&bl_head, bp, binding_entries);
 
-	return bp;
+	return (bp);
 }
 
 struct binding *
-set_hoa_str(char *addr)
+set_hoa_str(addr)
+	char *addr;
 {
 	struct in6_addr	ia6;
 	char *cp;
@@ -363,19 +372,21 @@ set_hoa_str(char *addr)
 	}
 
 	if (inet_pton(AF_INET6, addr, &ia6) < 0) {
-		return NULL;
+		return (NULL);
 	}
-	return set_hoa(&ia6, prefixlen);
+	return (set_hoa(&ia6, prefixlen));
 }
 
 void
-get_hoalist(void)
+get_hoalist()
 {
+
 	_get_hoalist();
 }
 
 void
-set_coaif(char *ifname)
+set_coaif(ifname)
+	char *ifname;
 {
 	struct cif *cifp;
 
@@ -386,7 +397,7 @@ set_coaif(char *ifname)
 }
 
 void
-get_coaiflist(void)
+get_coaiflist()
 {
 	struct cif *cifp;
 	struct ifreq ifr;
@@ -412,10 +423,8 @@ get_coaiflist(void)
 	}
 }
 
-
-
 void
-get_coacandidate(void)
+get_coacandidate()
 {
 	struct coac *cp;
 	char buf[PA_BUFSIZE];
@@ -452,29 +461,32 @@ get_coacandidate(void)
 
 
 int
-in6_matchlen(struct in6_addr *a1, struct in6_addr *a2)
+in6_matchlen(a1, a2)
+	struct in6_addr *a1;
+	struct in6_addr *a2;
 {
-	int bytes = sizeof(struct in6_addr)/sizeof(u_int8_t);
+	int bytes;
 	int i, j;
 	u_int8_t mask;
 
+	bytes = sizeof(struct in6_addr)/sizeof(u_int8_t);
 	for (i=0; i<bytes; i++) {
 		mask = 0;
 		for (j=0; j<8; j++) {
 			mask |= 0x80 >> j;
 			if ((mask & a1->s6_addr[i]) != (mask & a2->s6_addr[i]))
-				return 8 * i + j;
+				return (8 * i + j);
 		}
 	}
 
 	/* same address */
-	return 8*i;
+	return (8 * i);
 }
 
 
 
 void
-set_coa(void)
+set_coa()
 {
 	struct coac *cp;
 	struct binding *bp;
@@ -520,7 +532,7 @@ set_coa(void)
 }
 
 void
-sync_binding(void)
+sync_binding()
 {
 	struct binding *bp;
 
@@ -543,7 +555,8 @@ sync_binding(void)
 }
 
 void
-print_bl(FILE *fp)
+print_bl(fp)
+	FILE *fp;
 {
 	char buf[PA_BUFSIZE];
 	struct binding *bp;
@@ -562,7 +575,8 @@ print_bl(FILE *fp)
 }
 
 void
-print_coaiflist(FILE *fp)
+print_coaiflist(fp)
+	FILE *fp;
 {
 	struct cif *cifp;
 
@@ -572,19 +586,23 @@ print_coaiflist(FILE *fp)
 }
 
 void
-mainloop(void)
+mainloop()
 {
 	char buf[BUFSIZE];
-	struct if_msghdr *ifm = (struct if_msghdr *) buf;
-	struct mip_msghdr *mhdr= (struct mip_msghdr *) buf;
-	struct mipm_home_hint *m = (struct mipm_home_hint *) buf;
+	struct if_msghdr *ifm;
+	struct mip_msghdr *mhdr;
+	struct mipm_home_hint *m;
 	struct timeval tv;
 	fd_set fds, tfds;
 	int nfds;
 	int cc;
 
+	ifm = (struct if_msghdr *)buf;
+	mhdr= (struct mip_msghdr *)buf;
+	m = (struct mipm_home_hint *)buf;
+
 	if (pflag) {
-		memset(&tv, 0, sizeof(tv));
+		memset(&tv, 0, sizeof(struct timeval));
 		tv.tv_sec = poll_time;
 		tv.tv_usec = 0;
 	}
@@ -796,7 +814,7 @@ mipsock_deregforeign(hoa, deregcoa, newcoa, ifindex, bid)
 	len = sizeof(*mdinfo) + sizeof(*hoa) + sizeof(*deregcoa) + sizeof(*newcoa);
 	mdinfo = (struct mipm_md_info *) malloc(len);
 	if (mdinfo == NULL) 
-		return -1;
+		return (-1);
 
 	memset(mdinfo, 0, len);
 	mdinfo->mipm_md_hdr.miph_msglen	= len;
@@ -815,7 +833,7 @@ mipsock_deregforeign(hoa, deregcoa, newcoa, ifindex, bid)
 	if (!mflag) {
 		if (write(sock_m, mdinfo, len) < 0) {
 			perror("wirte");
-			return -1;
+			return (-1);
 		}
 	}
 
@@ -828,7 +846,7 @@ mipsock_deregforeign(hoa, deregcoa, newcoa, ifindex, bid)
 							buf, sizeof(buf)));
  	}
 
-	return 0;
+	return (0);
 }
 #endif /* MIP_MCOA */
 
@@ -848,7 +866,8 @@ chbinding(hoa, coa, bid)
 
 	len = sizeof(*mdinfo) + sizeof(*hoa) + sizeof(*coa);
 	mdinfo = (struct mipm_md_info *) malloc(len);
-	if (mdinfo == NULL) return -1;
+	if (mdinfo == NULL)
+		return (-1);
 
 	memset(mdinfo, 0, len);
 	mdinfo->mipm_md_hdr.miph_msglen	= len;
@@ -866,7 +885,7 @@ chbinding(hoa, coa, bid)
 	if (!mflag) {
 		if (write(sock_m, mdinfo, len) < 0) {
 			perror("wirte");
-			return -1;
+			return (-1);
 		}
 	}
 
@@ -879,12 +898,15 @@ chbinding(hoa, coa, bid)
 							buf, sizeof(buf)));
 	}
 
-	return 0;
+	return (0);
 }
 
 
 int
-returntohome(struct sockaddr_in6 *hoa, struct sockaddr_in6 *coa, int ifindex)
+returntohome(hoa, coa, ifindex)
+	struct sockaddr_in6 *hoa;
+	struct sockaddr_in6 *coa;
+	int ifindex;
 {
 	int len;
 	struct mipm_md_info *mdinfo;
@@ -892,7 +914,8 @@ returntohome(struct sockaddr_in6 *hoa, struct sockaddr_in6 *coa, int ifindex)
 
 	len = sizeof(*mdinfo) + sizeof(*hoa) + sizeof(*coa);
 	mdinfo = (struct mipm_md_info *) malloc(len);
-	if (mdinfo == NULL) return -1;
+	if (mdinfo == NULL)
+		return (-1);
 
 	memset(mdinfo, 0, len);
 	mdinfo->mipm_md_hdr.miph_msglen	= len;
@@ -908,7 +931,7 @@ returntohome(struct sockaddr_in6 *hoa, struct sockaddr_in6 *coa, int ifindex)
 	if (!mflag) {
 		if (write(sock_m, mdinfo, len) < 0) {
 			perror("wirte");
-			return -1;
+			return (-1);
 		}
 	}
 
@@ -918,11 +941,14 @@ returntohome(struct sockaddr_in6 *hoa, struct sockaddr_in6 *coa, int ifindex)
 							buf, sizeof(buf)));
  	}
 
-	return 0;
+	return (0);
 }
 
 void
-recv_home_hint(int ifindex, struct sockaddr_in6 *sin6, int prefixlen)
+recv_home_hint(ifindex, sin6, prefixlen)
+	int ifindex;
+	struct sockaddr_in6 *sin6;
+	int prefixlen;
 {
 	struct binding *bp;
 	int matchlen;

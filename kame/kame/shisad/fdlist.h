@@ -41,10 +41,10 @@ struct fd_list {
 extern struct pollfd fdl_fds[];
 extern int fdl_nfds;
 
-void fdlist_init();
+void fdlist_init(void);
 struct fd_list *new_fd_list(int, short, int (*)(int));
 void delete_fd_list_entry(int);
-int pollfd_array();
-void clear_revents();
+int pollfd_array(void);
+void clear_revents(void);
 void dispatch_fdfunctions(struct pollfd *, int);
 

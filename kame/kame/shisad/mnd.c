@@ -1,4 +1,4 @@
-/*	$Id: mnd.c,v 1.3 2004/10/01 11:30:44 t-momose Exp $	*/
+/*	$Id: mnd.c,v 1.4 2004/10/07 09:26:11 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -102,13 +102,13 @@ static struct mip6_mipif *mnd_add_mipif(char *);
 static void terminate(int);
 #ifndef MIP_MCOA
 static int mipsock_md_dereg_bul_fl(struct in6_addr *, struct in6_addr *, 
-				   struct in6_addr *, u_int16_t);
+    struct in6_addr *, u_int16_t);
 #else
 static int mipsock_md_dereg_bul_fl(struct in6_addr *, struct in6_addr *, 
-				   struct in6_addr *, u_int16_t, u_int16_t);
+    struct in6_addr *, u_int16_t, u_int16_t);
 #endif /* !MIP_MCOA */
 
-static void noro_show(int s);
+static void noro_show(int);
 static void noro_init(void);
 static void noro_sync(void);
 
@@ -182,7 +182,7 @@ main(int argc, char **argv)
 	
 	mn_usage();
 
-	return -1;
+	return (-1);
 
  startmn:
 	/* open syslog infomation. */
@@ -191,7 +191,7 @@ main(int argc, char **argv)
 
 	if (optind >= argc) {
 		mn_usage();
-		return -1;
+		return (-1);
 	}
 
 	mhsock_open();
@@ -230,23 +230,23 @@ main(int argc, char **argv)
 
 	/* let's insert NULL binding update list to each binding update list */
 	for (hoainfo = LIST_FIRST(&hoa_head); hoainfo;
-		hoainfo = LIST_NEXT(hoainfo, hinfo_entry)) {
+	     hoainfo = LIST_NEXT(hoainfo, hinfo_entry)) {
 #ifndef MIP_NEMO
 #ifndef MIP_MCOA 
-		bul = bul_insert(hoainfo, NULL, NULL, 
-				 IP6_MH_BU_HOME | IP6_MH_BU_ACK);
+		bul = bul_insert(hoainfo, NULL, NULL,
+		    (IP6_MH_BU_HOME|IP6_MH_BU_ACK));
 #else
 		bul = bul_insert(hoainfo, NULL, NULL, 
-				 (IP6_MH_BU_HOME | IP6_MH_BU_ACK | IP6_MH_BU_MCOA), 0);
+		    (IP6_MH_BU_HOME|IP6_MH_BU_ACK|IP6_MH_BU_MCOA), 0);
 #endif /* !MIP_MCOA */
 #else /* !MIP_NEMO */
 #ifndef MIP_MCOA
 		bul = bul_insert(hoainfo, NULL, NULL, 
-				 (IP6_MH_BU_HOME | IP6_MH_BU_ACK | IP6_MH_BU_ROUTER));
+		    (IP6_MH_BU_HOME|IP6_MH_BU_ACK|IP6_MH_BU_ROUTER));
 #else
 		/* XXX how should bid be handled here ... */ 
 		bul = bul_insert(hoainfo, NULL, NULL, 
-				 (IP6_MH_BU_HOME | IP6_MH_BU_ACK | IP6_MH_BU_ROUTER | IP6_MH_BU_MCOA), 0);
+		    (IP6_MH_BU_HOME|IP6_MH_BU_ACK|IP6_MH_BU_ROUTER|IP6_MH_BU_MCOA), 0);
 #endif /* !MIP_MCOA */
 #endif /* !MIP_NEMO */
 		if (bul == NULL) {
@@ -299,8 +299,9 @@ main(int argc, char **argv)
 
 
 static void
-mn_lists_init(void)
+mn_lists_init()
 {
+
 	LIST_INIT(&hoa_head);
 	LIST_INIT(&mipifhead);
 	LIST_INIT(&noro_head);
@@ -319,10 +320,10 @@ mipsock_bul_request (bul, command)
 	struct sockaddr_in6 hoa_s6, coa_s6, peer_s6;
 
 	if (command < MIPM_BUL_ADD || command > MIPM_BUL_REMOVE)
-		return EOPNOTSUPP;
+		return (EOPNOTSUPP);
 
 	if (bul->bul_hoainfo == NULL) 
-		return EINVAL;
+		return (EINVAL);
 
 	memset(&hoa_s6, 0, sizeof(hoa_s6));
 	memset(&coa_s6, 0, sizeof(coa_s6));
@@ -508,7 +509,7 @@ mipsock_md_dereg_bul(hoa, coa, ifindex)
 		}
 	}
 
-	return 0;
+	return (0);
 
 }
 
@@ -596,7 +597,7 @@ mipsock_md_dereg_bul_fl(hoa, oldcoa, newcoa, ifindex, bid)
 		}
 	}
 
-	return 0;
+	return (0);
 }
 
 
@@ -762,7 +763,7 @@ mipsock_recv_rr_hint(miphdr)
 		
 		syslog(LOG_INFO, 
 		       "MN cannot start RO for %s\n", ip6_sprintf(&sin6->sin6_addr));
-		return 0;		
+		return (0);		
 	}
 
 	bul = bul_get(fsmmsg.fsmm_dst, fsmmsg.fsmm_src);
@@ -797,7 +798,7 @@ mipsock_recv_rr_hint(miphdr)
 
 		bulhome = bul_get_homeflag(&hoainfo->hinfo_hoa);
 		if (bulhome == NULL)
-			return -1;
+			return (-1);
 		
 		if (LIST_EMPTY(&bulhome->bul_mcoa_head)) {
 			error = bul_kick_fsm(bul, 
@@ -829,7 +830,9 @@ mipsock_recv_rr_hint(miphdr)
 }
 
 int
-mipsock_input(struct mip_msghdr *miphdr) {
+mipsock_input(miphdr)
+	struct mip_msghdr *miphdr;
+{
 	int err = 0;
 
 	switch (miphdr->miph_type) {
@@ -853,7 +856,7 @@ mipsock_input(struct mip_msghdr *miphdr) {
 	default:
 		break;
 	}
-	return err;
+	return (err);
 }
 
 
@@ -912,7 +915,7 @@ send_haadreq(hoainfo, hoa_plen, src)
 	if (ar_sin6 == NULL) {
 		syslog(LOG_ERR, "can't send message due to no AR\n");
 		/* XXX send RS */
-		return -1;
+		return (-1);
 	} else {
 		if (debug)
 			syslog(LOG_INFO, "send ICMP msg via %s/%d\n", 
@@ -944,7 +947,7 @@ send_haadreq(hoainfo, hoa_plen, src)
 
 	syslog(LOG_INFO, "send DHAAD REQUEST\n");
 
-	return errno;
+	return (errno);
 }
 
 struct home_agent_list *
@@ -958,7 +961,7 @@ mnd_add_hal(hpfx_entry, gladdr, flag)
 	hal = mip6_get_hal(hpfx_entry, gladdr);
 	if (hal && (hal->hal_flag != flag)) { 
 		hal->hal_flag = flag;
-		return hal;
+		return (hal);
 	} 
 
 	halnew = NULL;
@@ -984,7 +987,7 @@ mnd_add_hal(hpfx_entry, gladdr, flag)
 		syslog(LOG_INFO, "Home Agent (%s) added into home agent list\n", 
 		       ip6_sprintf(gladdr));
 		
-	return hal;
+	return (hal);
 }
 
 
@@ -1003,7 +1006,7 @@ mnd_add_hpfxlist(home_prefix, home_prefixlen, hpfx_mnoption, hpfxhead)
 			memcpy(&hpfx->hpfx_for_mn, 
 				hpfx_mnoption, sizeof(hpfx->hpfx_for_mn));
 		/* need timer XXX */
-		return hpfx;
+		return (hpfx);
 	}
 
 	hpfx = malloc(sizeof(*hpfx));
@@ -1025,11 +1028,12 @@ mnd_add_hpfxlist(home_prefix, home_prefixlen, hpfx_mnoption, hpfxhead)
 	
 	LIST_INSERT_HEAD(hpfxhead, hpfx, hpfx_entry);
 
-	return hpfx;
+	return (hpfx);
 }
 
 static struct mip6_mipif *
-mnd_add_mipif(char *ifname)
+mnd_add_mipif(ifname)
+	char *ifname;
 {
 	struct mip6_mipif *mif = NULL;
 	u_int16_t ifindex;
@@ -1037,12 +1041,12 @@ mnd_add_mipif(char *ifname)
 	ifindex = if_nametoindex(ifname);
 	if (ifindex == 0) {
 		syslog(LOG_ERR, "%s %s\n", ifname, strerror(errno));
-		return NULL;
+		return (NULL);
 	}
 	
 	mif = mnd_get_mipif(ifindex);
 	if (mif)
-		return mif;
+		return (mif);
 	
 	mif = malloc(sizeof(*mif));
 	memset(mif, 0, sizeof(*mif));
@@ -1060,7 +1064,7 @@ mnd_add_mipif(char *ifname)
 		syslog(LOG_ERR, "%s is added successfully\n", ifname);
 
 	
-	return mif;
+	return (mif);
 }
 
 void
@@ -1072,16 +1076,17 @@ mnd_delete_mipif(u_int16_t ifindex)
 
 
 struct mip6_mipif *
-mnd_get_mipif(u_int16_t ifindex)
+mnd_get_mipif(ifindex)
+	u_int16_t ifindex;
 {
 	struct mip6_mipif *mif;
 
 	LIST_FOREACH(mif, &mipifhead, mipif_entry) {
 		if (mif->mipif_ifindex == ifindex) 
-			return mif;
+			return (mif);
 	}
 
-	return NULL;
+	return (NULL);
 }
 
 
@@ -1201,12 +1206,14 @@ terminate(dummy)
 
 	exit(-1);
 }
+
 /* 
  * Entry for hosts not supporting Route Optimization.  This entry is
  * also used to tell shisad not to run RO for specified host in file.  
  */
 static void
-noro_init() { 
+noro_init()
+{ 
         FILE *file;
 	char buf[256], *bl;
 	struct in6_addr noro_addr;
@@ -1251,7 +1258,9 @@ noro_init() {
 };
 
 void
-noro_add(struct in6_addr *tgt) { 
+noro_add(tgt)
+	struct in6_addr *tgt;
+{ 
 	struct noro_host_list *noro = NULL;
 
 	noro = noro_get(tgt);
@@ -1272,22 +1281,26 @@ noro_add(struct in6_addr *tgt) {
 
 
 struct noro_host_list *
-noro_get(struct in6_addr *tgt) { 
+noro_get(tgt)
+	struct in6_addr *tgt;
+{ 
 	struct noro_host_list *noro = NULL;
 
         for (noro = LIST_FIRST(&noro_head); noro; 
 	     noro = LIST_NEXT(noro, noro_entry)) {
 		
 		if (IN6_ARE_ADDR_EQUAL(tgt, &noro->noro_host)) 
-			return noro;
+			return (noro);
 	}
 
-	return NULL;
+	return (NULL);
 };
 
 
 static void
-noro_show(int s) { 
+noro_show(s)
+	int s;
+{ 
 	char buff[2048];
 	struct noro_host_list *noro = NULL;
 
@@ -1300,7 +1313,8 @@ noro_show(int s) {
 };
 
 static void
-noro_sync () { 
+noro_sync()
+{ 
         FILE *file;
 	struct noro_host_list *noro = NULL;
 	
@@ -1318,7 +1332,9 @@ noro_sync () {
 
 
 static void
-command_show_hal(int s) {
+command_show_hal(s)
+	int s;
+{
 	char buff[2048];
         struct home_agent_list *hal = NULL, *haln = NULL;
         struct mip6_hpfxl *hpfx;

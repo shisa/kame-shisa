@@ -1,4 +1,4 @@
-/*      $Id: common.c,v 1.1 2004/09/27 04:06:01 t-momose Exp $  */
+/*      $Id: common.c,v 1.2 2004/10/07 09:26:11 keiichi Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -119,14 +119,14 @@ mipsock_input_common(fd)
         n = read(mipsock, msg, sizeof(msg));
 	if (n < 0) {
 		err = errno;
-		return err;
+		return (err);
 	}
 	
         miphdr = (struct mip_msghdr *)msg;
 	if (miphdr->miph_version != MIP_VERSION) 
 		return EOPNOTSUPP;
 
-	return mipsock_input(miphdr);
+	return (mipsock_input(miphdr));
 }	
 
 
@@ -216,11 +216,11 @@ mip6_get_nd6options(ndoptions, options, total)
 			ndoptions->ndpi = (struct nd_opt_prefix_info *)hdr;
 			if (IN6_IS_ADDR_MULTICAST(&ndoptions->ndpi->nd_opt_pi_prefix) ||
 			    IN6_IS_ADDR_LINKLOCAL(&ndoptions->ndpi->nd_opt_pi_prefix))
-				return EINVAL;
+				return (EINVAL);
 			
                          /* aggregatable unicast address, rfc2374 XXX */
 			if (ndoptions->ndpi->nd_opt_pi_prefix_len != 64)
-				return EINVAL;
+				return (EINVAL);
 			
 			
 
@@ -236,7 +236,7 @@ mip6_get_nd6options(ndoptions, options, total)
 		}
 	}
 
-	return 0;
+	return (0);
 }
 #endif /* MIP6_CN */ 
 
@@ -252,16 +252,16 @@ mip6_find_hal(hoainfo)
 
 	mipif = mnd_get_mipif(hoainfo->hinfo_ifindex);
 	if (mipif == NULL)
-		return NULL;
+		return (NULL);
 
 	LIST_FOREACH(hpfx, &mipif->mipif_hprefx_head, hpfx_entry) {
 		if (mip6_are_prefix_equal(&hoainfo->hinfo_hoa, 
 					  &hpfx->hpfx_prefix, hpfx->hpfx_prefixlen)) {
-			return LIST_FIRST(&hpfx->hpfx_hal_head);
+			return (LIST_FIRST(&hpfx->hpfx_hal_head));
 		}
 	}
 
-	return NULL;
+	return (NULL);
 }
 #endif /* MIP_MN */
 
@@ -317,10 +317,10 @@ mip6_get_hal(hpfx, global)
                 haln =  LIST_NEXT(hal, hal_entry);
 		
 		if (IN6_ARE_ADDR_EQUAL(&hal->hal_ip6addr, global))
-			return hal;
+			return (hal);
 	}
 
-	return NULL;
+	return (NULL);
 }
 
 
@@ -329,6 +329,7 @@ hal_set_expire_timer(hal, tick)
         struct home_agent_list *hal;
         int tick;
 {
+
         remove_callout_entry(hal->hal_expire);
         hal->hal_expire = new_callout_entry(tick, hal_expire_timer, (void *)hal);
 }
@@ -338,6 +339,7 @@ void
 hal_stop_expire_timer(hal)
         struct home_agent_list *hal;
 {
+
         remove_callout_entry(hal->hal_expire);
 }
 
@@ -345,7 +347,6 @@ void
 hal_expire_timer(arg)
         void *arg;
 {
-
         struct home_agent_list *hal = (struct home_agent_list *)arg;
 
 	hal_stop_expire_timer(hal);
@@ -402,16 +403,16 @@ mip6_get_hpfxlist(prefix, prefixlen, hpfxhead)
 			continue;
 
 		if (mip6_are_prefix_equal(prefix, &hpl->hpfx_prefix, prefixlen))
-			return hpl;
+			return (hpl);
 			
 	}
-	return NULL;
+	return (NULL);
 }
 
 
 int
 icmp6_input_common(fd)
-     int fd;
+	int fd;
 {
 	register struct in6_addr *in6_lladdr = NULL, *in6_gladdr = NULL;
 	int error = 0;
@@ -464,7 +465,7 @@ icmp6_input_common(fd)
         readlen = recvmsg(fd, &msg, 0);
         if (readlen < 0) {
                 perror("recvmsg");
-                return -1;
+                return (-1);
         }
 
         for (cmsgptr = CMSG_FIRSTHDR(&msg); 
@@ -494,7 +495,7 @@ icmp6_input_common(fd)
 	 * interface 
 	 */
 	if (had_is_ha_if(receivedifindex) == 0)
-		return 0;
+		return (0);
 	/* XXX This check must be done with destination address */
 #endif
 #endif /* MIP_HA */
@@ -718,7 +719,7 @@ icmp6_input_common(fd)
 
 		mipif = mnd_get_mipif(hoainfo->hinfo_ifindex);
 		if (mipif == NULL)
-			return 0;
+			return (0);
 
 		LIST_FOREACH(hpfx, &mipif->mipif_hprefx_head, hpfx_entry) {
 			if (mip6_are_prefix_equal(&hoainfo->hinfo_hoa, 
@@ -772,7 +773,7 @@ icmp6_input_common(fd)
 			break;
 		case ICMP6_PARAMPROB_HEADER:
 		case ICMP6_PARAMPROB_OPTION:
-			return 0;
+			return (0);
 		}
 
 		/* when multiple coa is supported, MN/MR can not
@@ -799,7 +800,7 @@ icmp6_input_common(fd)
 		break;
 	}
 
-	return error;
+	return (error);
 }
 
 
@@ -895,14 +896,16 @@ in6_mask2len(mask, lim0)
                                 return (-1);
         }
 
-        return x * 8 + y;
+        return (x * 8 + y);
 }
 
 
 
 #ifdef MIP_MN
 int
-send_na_home(struct in6_addr *hoa, u_int16_t ifindex)
+send_na_home(hoa, ifindex)
+	struct in6_addr *hoa;
+	u_int16_t ifindex;
 {
         struct msghdr msg;
         struct iovec iov;
@@ -918,7 +921,7 @@ send_na_home(struct in6_addr *hoa, u_int16_t ifindex)
 
         memset(&to, 0, sizeof(to));
         if (inet_pton(AF_INET6, "ff02::1",&to.sin6_addr) != 1) 
-                return -1;
+                return (-1);
 	to.sin6_family = AF_INET6;
 	to.sin6_port = 0;
 	to.sin6_scope_id = 0;
@@ -964,7 +967,7 @@ send_na_home(struct in6_addr *hoa, u_int16_t ifindex)
 
 	memset(&sockdl, 0, sizeof(sockdl));
 	if  (get_sockdl_from_ifindex(&sockdl, ifindex) == NULL)
-		return -1;
+		return (-1);
 
 	switch(sockdl.sdl_type) {
 	case IFT_ETHER:
@@ -980,7 +983,7 @@ send_na_home(struct in6_addr *hoa, u_int16_t ifindex)
 #undef ROUNDUP8
 		break;
 	default:
-		return -1;
+		return (-1);
 	}
 
 	iov.iov_base = buf;
@@ -992,7 +995,7 @@ send_na_home(struct in6_addr *hoa, u_int16_t ifindex)
 	if (sendmsg(icmp6sock, &msg, 0) < 0)
 		perror ("sendmsg icmp6");
 
-	return errno;
+	return (errno);
 }
 
 
@@ -1015,18 +1018,18 @@ get_sockdl_from_ifindex(sdl, ifindex)
         
         if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0) {
                 perror("sysctl");
-		return NULL;
+		return (NULL);
 	}
 
         if ((buf = malloc(needed)) == NULL) {
                 perror("malloc");
-		return NULL;
+		return (NULL);
 	}
 
         if (sysctl(mib, 6, buf, &needed, NULL, 0) < 0) {
                 perror("sysctl");
 		free(buf);
-		return NULL;
+		return (NULL);
 	}
 
         for (next = buf; next < buf + needed; 
@@ -1041,12 +1044,12 @@ get_sockdl_from_ifindex(sdl, ifindex)
 		memcpy(sdl, (struct sockaddr_dl *)(ifm + 1), sizeof(*sdl));
 			
 		free(buf);
-		return sdl;
+		return (sdl);
 	}
 
         free(buf); 
 	
-	return NULL;
+	return (NULL);
 }
 #endif /* MIP_MN */
 
@@ -1627,7 +1630,9 @@ static const char *binding_error_status_desc[] = {
 
 
 void
-command_show_stat(int s) {
+command_show_stat(s)
+	int s;
+{
 	int i;
 	char buff[2048];
 

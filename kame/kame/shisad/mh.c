@@ -1,4 +1,4 @@
-/*      $Id: mh.c,v 1.3 2004/10/06 11:46:30 keiichi Exp $  */
+/*      $Id: mh.c,v 1.4 2004/10/07 09:26:11 keiichi Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -89,7 +89,7 @@ static char *hexdump(void *, size_t);
 static int sendmessage(char *, int, u_int, struct in6_addr *, struct in6_addr *, 
 	struct in6_addr *, struct in6_addr *);
 
-uint16_t checksum_p(uint16_t *, uint16_t *, uint16_t *, int, int);
+u_int16_t checksum_p(u_int16_t *, u_int16_t *, u_int16_t *, int, int);
  
 char *mh_name[] = {
 	"Binding Refresh Request Message", 
@@ -118,7 +118,7 @@ static struct ip6_opt_home_address *mip6_search_hoa_in_destopt(u_int8_t *);
 /* Calculation pad length to be appended */
 /* xn + y; x must be 2^m */
 #define MIP6_PADLEN(cur_offset, x, y)	\
-	((x + y) - ((cur_offset) & (x - 1))) & (x - 1)
+	((((x) + (y)) - ((cur_offset) & ((x) - 1))) & ((x) - 1))
 #define MIP6_FILL_PADDING(buf, padlen)			\
 	do {						\
 		bzero((buf), (padlen));			\
@@ -243,7 +243,7 @@ mh_input_common(fd)
 	i = recvmsg(fd, &msg, 0);
 	if (i < 0) {
 		perror("recvmsg");
-		return -1;
+		return (-1);
 	}
 
         for (cmsgptr = CMSG_FIRSTHDR(&msg); 
@@ -431,7 +431,7 @@ get_bid_option(ip6mh, hlen, ip6mhlen)
 			if (debug)
 				syslog(LOG_INFO, "BID (%d) is found in MH\n", bid);
 
-			return bid;
+			return (bid);
 		default:
 			break;
                 }
@@ -493,7 +493,7 @@ mh_input(src, dst, hoa, rtaddr, mh, mhlen)
 	case IP6_MH_TYPE_HOTI:
 		/* section 9.4.1 Check Home Address Option */
 		if (hoa != NULL) 
-			return -1;
+			return (-1);
 
 		hoti = (struct ip6_mh_home_test_init *)mh;
 		
@@ -502,12 +502,12 @@ mh_input(src, dst, hoa, rtaddr, mh, mhlen)
 		   field isn't zero . Found by v6pc testtool */
 		
 		if (send_hot(hoti, src, dst) > 0)
-			return -1;
+			return (-1);
 		break;
 	case IP6_MH_TYPE_COTI:
 		/* section 9.4.2 Check Home Address Option */
 		if (hoa != NULL) 
-			return -1;
+			return (-1);
 
 		coti = (struct ip6_mh_careof_test_init *)mh;
 
@@ -516,7 +516,7 @@ mh_input(src, dst, hoa, rtaddr, mh, mhlen)
 		   field isn't zero . Found by v6pc testtool */
                 
 		if (send_cot(coti, src, dst) > 0) 
-			return 0;
+			return (0);
 		break;
 #endif /* MIP_CN */
 #ifdef MIP_HA
@@ -584,7 +584,7 @@ receive_bu(src, dst, hoa, rtaddr, bu, mhlen)
 	    || IN6_IS_ADDR_LOOPBACK(coa)
 	    || IN6_IS_ADDR_V4MAPPED(coa)
 	    || IN6_IS_ADDR_UNSPECIFIED(coa))
-		return -1;
+		return (-1);
 
 	/* If hoa is not global, ignore */
 	if (IN6_IS_ADDR_LINKLOCAL(hoa)
@@ -592,7 +592,7 @@ receive_bu(src, dst, hoa, rtaddr, bu, mhlen)
 	    || IN6_IS_ADDR_LOOPBACK(hoa)
 	    || IN6_IS_ADDR_V4MAPPED(hoa)
 	    || IN6_IS_ADDR_UNSPECIFIED(hoa))
-		return -1;
+		return (-1);
 
 	seqno = ntohs(bu->ip6mhbu_seqno);
 	lifetime = ntohs(bu->ip6mhbu_lifetime) << 2;
@@ -686,7 +686,7 @@ receive_bu(src, dst, hoa, rtaddr, bu, mhlen)
 				       hexdump(kbm, MIP6_KBM_SIZE));
 			}
 			
-			return EINVAL;
+			return (EINVAL);
 		}
 		if (lifetime > MIP6_MAX_RR_BINDING_LIFE)
 			lifetime = MIP6_MAX_RR_BINDING_LIFE;
@@ -714,7 +714,7 @@ receive_bu(src, dst, hoa, rtaddr, bu, mhlen)
 		syslog(LOG_INFO, "BID Option is found %d\n", bid);
 		/* zero bid is invalid */
 		if (bid == 0) 
-			return -1; /* XXX */
+			return (-1); /* XXX */
 	}
 #endif /* MIP_MCOA */
 
@@ -726,15 +726,16 @@ receive_bu(src, dst, hoa, rtaddr, bu, mhlen)
 	 */
 	if (!IN6_ARE_ADDR_EQUAL(coa, hoa) &&
 #ifndef MIP_MCOA
-	    mip6_bc_lookup(coa, NULL))
+	    mip6_bc_lookup(coa, NULL)
 #else
-	    mip6_bc_lookup(coa, NULL, bid))
+	    mip6_bc_lookup(coa, NULL, bid)
 #endif
-		return -1;
+	)
+		return (-1);
 
 	/* Get Binding Cache entry */
 #ifndef MIP_MCOA
-		bc = mip6_bc_lookup(hoa, dst);
+	bc = mip6_bc_lookup(hoa, dst);
 #else
 	bc = mip6_bc_lookup(hoa, dst, bid);
 #endif /* MIP_MCOA */
@@ -816,7 +817,7 @@ receive_bu(src, dst, hoa, rtaddr, bu, mhlen)
 		
 		/* when flags are incorrect,  just ignore this BU?? */
 		if ((flags & (IP6_MH_BU_HOME | IP6_MH_BU_ROUTER)) == 0) 
-			return -1; 
+			return (-1); 
 
 		/*
 		 *  verify prefix with prefixtable (explicit mode only)
@@ -891,7 +892,9 @@ receive_bu(src, dst, hoa, rtaddr, bu, mhlen)
 
 /* BRR */
 int 
-send_brr(struct in6_addr *src, struct in6_addr *dst)
+send_brr(src, dst)
+	struct in6_addr *src;
+	struct in6_addr *dst;
 {
         struct ip6_mh_binding_request brr;
 
@@ -909,13 +912,15 @@ send_brr(struct in6_addr *src, struct in6_addr *dst)
         brr.ip6mhbr_hdr.ip6mh_cksum = checksum_p((uint16_t *)src, (uint16_t *)dst, 
 						 (uint16_t *)&brr, sizeof(brr), IPPROTO_MH);
 
-        return sendmessage((char *)&brr, sizeof(brr), 0, src, dst, NULL, NULL);
+        return (sendmessage((char *)&brr, sizeof(brr), 0, src, dst, NULL,
+	    NULL));
 }
 
 #ifdef MIP_MN
 /* HoTI */
 int 
-send_hoti(struct binding_update_list *bul)
+send_hoti(bul)
+	struct binding_update_list *bul;
 { 
 	struct ip6_mh_home_test_init hoti;
 	int err = 0;
@@ -946,12 +951,13 @@ send_hoti(struct binding_update_list *bul)
 	err = sendmessage((char *)&hoti, sizeof(hoti), 0,
 	    &bul->bul_hoainfo->hinfo_hoa, &bul->bul_peeraddr, NULL, NULL);
 
-	return err;
+	return (err);
 }
 
 /* CoTI */
 int 
-send_coti(struct binding_update_list *bul)
+send_coti(bul)
+	struct binding_update_list *bul;
 { 
 	struct ip6_mh_careof_test_init coti;
 	int err = 0;
@@ -982,7 +988,7 @@ send_coti(struct binding_update_list *bul)
 	err = sendmessage((char *)&coti, sizeof(coti),
 		0, &bul->bul_coa, &bul->bul_peeraddr, NULL, NULL);
 
-	return err;
+	return (err);
 }
 #endif /* MIP_MN */
 
@@ -1018,7 +1024,7 @@ send_hot(hoti, dst, src)
 
 	nonce = get_nonces(0);
 	if (nonce == NULL)
-		return EINVAL;
+		return (EINVAL);
 	hot.ip6mhht_nonce_index = htons(nonce->nonce_index);
 	create_keygentoken(dst, nonce, (u_int8_t *)hot.ip6mhht_keygen, 0);
 
@@ -1029,7 +1035,7 @@ send_hot(hoti, dst, src)
 
 	err = sendmessage((char *)&hot, sizeof(hot), 0, src, dst, NULL, NULL);
 
-	return err;
+	return (err);
 }
 
 /* CoT */
@@ -1061,7 +1067,7 @@ send_cot(coti, dst, src)
 	/* get nonces set */
 	nonce = get_nonces(0);
 	if (nonce == NULL)
-		return EINVAL;
+		return (EINVAL);
 	cot.ip6mhct_nonce_index = htons(nonce->nonce_index);
 	create_keygentoken(dst, nonce, (u_int8_t *)cot.ip6mhct_keygen, 1);
 
@@ -1073,13 +1079,14 @@ send_cot(coti, dst, src)
 
 	err = sendmessage((char *)&cot, sizeof(cot), 0, src, dst, NULL, NULL);
 
-	return err;
+	return (err);
 }
 #endif
 
 #ifdef MIP_MN
 int
-send_bu(struct binding_update_list *bul)
+send_bu(bul)
+	struct binding_update_list *bul;
 {
 	char buf[1024];
 	register char *bufp = buf; 
@@ -1099,7 +1106,7 @@ send_bu(struct binding_update_list *bul)
 
 	if (!LIST_EMPTY(&bul->bul_mcoa_head)) {
 		/*syslog(LOG_INFO, "this bul has multiple CoAs, ignore root %d\n", bul->bul_bid);*/
-		return 0;
+		return (0);
 	} 
 #endif /* MIP_MCOA */
 
@@ -1174,7 +1181,7 @@ send_bu(struct binding_update_list *bul)
 
 		/* R flag MUST be always set only to Home Registration */
 		if ((bul->bul_flags & IP6_MH_BU_HOME) == (int)NULL) 
-			return EINVAL;
+			return (EINVAL);
 
 		mpt = LIST_FIRST(&bul->bul_hoainfo->hinfo_mpt_head); 
 		for (; mpt; mpt = mptn) {
@@ -1215,7 +1222,7 @@ send_bu(struct binding_update_list *bul)
 #ifdef MIP_NEMO
 		/* R flag MUST be always set to Home Registration */
 		if ((bul->bul_flags & IP6_MH_BU_ROUTER) == (int)NULL) 
-			return EINVAL;
+			return (EINVAL);
 #endif /* MIP_NEMO */
 
 		goto skip_rr;
@@ -1330,7 +1337,7 @@ send_bu(struct binding_update_list *bul)
 	if (error == 0)
 		time(&bul->bul_bu_lastsent);
 
-	return error;
+	return (error);
 }
 #endif
 
@@ -1383,7 +1390,7 @@ send_ba(src, coa, acoa, hoa, recv_bu, kbm_p, status, seqno, lifetime, refresh, b
             || IN6_IS_ADDR_LOOPBACK(hoa)
             || IN6_IS_ADDR_V4MAPPED(hoa)
             || IN6_IS_ADDR_UNSPECIFIED(hoa)))
-		return EINVAL;
+		return (EINVAL);
 
 	 memset(buf, 0, sizeof(buf));
 	 bap = (struct ip6_mh_binding_ack *)buf;
@@ -1503,9 +1510,9 @@ send_ba(src, coa, acoa, hoa, recv_bu, kbm_p, status, seqno, lifetime, refresh, b
 	 }
 
 	 if (IN6_ARE_ADDR_EQUAL(hoa, coa))
-	 	return sendmessage(bufp, buflen, 0, src, hoa, NULL, NULL);
+	 	return (sendmessage(bufp, buflen, 0, src, hoa, NULL, NULL));
 	 else
-	 	return sendmessage(bufp, buflen, 0, src, hoa, NULL, coa);
+	 	return (sendmessage(bufp, buflen, 0, src, hoa, NULL, coa));
 
 }
 #endif /* MIP_MN */
@@ -1548,32 +1555,34 @@ send_be(dst, src, home, status)
 	err =  sendmessage((char *)&be, sizeof(be), 
 			   0, src, dst, NULL, NULL);
 
-	return err;
+	return (err);
 }
 
 
 #if (defined(MIP_MCOA) || defined(MIP_NEMO)) && !defined(MIP_HA)
 #if 0
-static int 
-mhopt_calculatepad(u_int8_t type, int offset) 
-{ 
-	switch(type) { 
-	case IP6_MHOPT_NONCEID:        /* 2n     */ 
+static int
+mhopt_calculatepad(type, offset)
+	u_int8_t type;
+	int offset;
+{
+	switch(type) {
+	case IP6_MHOPT_NONCEID:        /* 2n     */
 #ifdef MIP_MCOA
 	case IP6_MHOPT_BID:
 #endif /* MIP_MCOA */
-		return (offset) & 1; 
+		return ((offset) & 1);
 	case IP6_MHOPT_ALTCOA:       	/* 8n + 6 */
 	case IP6_MHOPT_PREFIX:
-		return (6 - (offset)) & 7; 
+		return ((6 - (offset)) & 7);
 	case IP6_MHOPT_BAUTH:			/* 8n + 2 */
-		return (2 - (offset)) & 7;
-	case IP6_MHOPT_PAD1:                 	/* no pad */ 
-	case IP6_MHOPT_PADN: 
-		return 0; 
+		return ((2 - (offset)) & 7);
+	case IP6_MHOPT_PAD1:                 	/* no pad */
+	case IP6_MHOPT_PADN:
+		return (0);
 	default:
-		return 0; 
-	} 
+		return (0);
+	}
 }
 
 static void
@@ -1597,15 +1606,16 @@ mhopt_add_pads(buf, padlen)
 #endif
 #endif /* MIP_HA */
 
-uint16_t
-checksum_p(uint16_t *src, uint16_t *dst,
-           uint16_t *addr, int len, int nxt)
+u_int16_t
+checksum_p(src, dst, addr, len, nxt)
+	u_int16_t *src, *dst, *addr;
+	int len, nxt;
 {
         int sum;
-        uint16_t s;
+        u_int16_t s;
 
 	if (src == NULL || dst == NULL || addr == NULL)
-		return -1;
+		return (-1);
 
         sum = 0;
 
@@ -1636,7 +1646,7 @@ checksum_p(uint16_t *src, uint16_t *dst,
         while (sum >> 16)
                 sum  = (sum >> 16) + (sum & 0xffff);
 
-        return ~sum;
+        return (~sum);
 }
 
 
@@ -1706,7 +1716,7 @@ sendmessage(mhdata, mhdatalen, ifindex, src, dst, hoa, rtaddr)
 	if (ar_sin6 == NULL) {
 		syslog(LOG_ERR, "can't send message due to no AR\n");
 		/* XXX send RS */
-		return -1;
+		return (-1);
 	} else {
 		if (debug) 
 			syslog(LOG_INFO, "sendmsg via %s/%d\n", 
@@ -1774,7 +1784,7 @@ sendmessage(mhdata, mhdatalen, ifindex, src, dst, hoa, rtaddr)
 			ip6_sprintf(src), ip6_sprintf(dst));
 	}
 
-	return 0;
+	return (0);
 }
 
 #ifndef MIP_HA
@@ -1883,7 +1893,7 @@ hexdump(addr_arg, len)
 
 #ifdef MIP_CN
 void 
-init_nonces ()
+init_nonces()
 {
 	int i;
 
@@ -1905,7 +1915,8 @@ init_nonces ()
 
 
 struct mip6_nonces_info *
-generate_nonces(struct mip6_nonces_info *ninfo)
+generate_nonces(ninfo)
+	struct mip6_nonces_info *ninfo;
 {
 	(void)RAND_pseudo_bytes(ninfo->node_key, MIP6_NODEKEY_SIZE);
 	(void)RAND_pseudo_bytes(ninfo->nonce, MIP6_NONCE_SIZE);
@@ -1913,13 +1924,14 @@ generate_nonces(struct mip6_nonces_info *ninfo)
 	ninfo->nonce_index = (nonces_head->nonce_index + 1); /* incremented */
 	time(&ninfo->nonce_lasttime); /* timestamp */
 
-	return ninfo;
+	return (ninfo);
 };
 
 
 
 struct mip6_nonces_info *
-get_nonces(u_int16_t index)
+get_nonces(index)
+	u_int16_t index;
 {
         time_t now;
 	int i;
@@ -1937,7 +1949,7 @@ get_nonces(u_int16_t index)
 		    >= MIP6_NONCE_REFRESH)
 			nonces_head = generate_nonces((nonces_head->next));
 
-		return nonces_head;
+		return (nonces_head);
 	}
 	
 	/* 
@@ -1952,10 +1964,10 @@ get_nonces(u_int16_t index)
                 if (nonces_array[i].nonce_index == index &&
 		    ((now - nonces_array[i].nonce_lasttime) 
 		     <= MIP6_MAX_NONCE_LIFE))
-			return &nonces_array[i];
+			return (&nonces_array[i]);
 	}
 
-        return NULL;
+        return (NULL);
 };
 
 void
