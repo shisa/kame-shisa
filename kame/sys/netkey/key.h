@@ -85,9 +85,9 @@ extern void key_sa_routechange __P((struct sockaddr *));
 extern void key_sa_stir_iv __P((struct secasvar *));
 
 #ifdef MIP6
-int key_mip6_update_mobile_node_ipsecdb(struct sockaddr_in6 *,
+void key_mip6_update_mobile_node_ipsecdb(struct sockaddr_in6 *,
     struct sockaddr_in6 *, struct sockaddr_in6 *, struct sockaddr_in6 *);
-int key_mip6_update_home_agent_ipsecdb(struct sockaddr_in6 *,
+void key_mip6_update_home_agent_ipsecdb(struct sockaddr_in6 *,
     struct sockaddr_in6 *, struct sockaddr_in6 *, struct sockaddr_in6 *);
 #endif /* MIP6 */
 

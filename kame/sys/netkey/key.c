@@ -8306,7 +8306,7 @@ key_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 
 #ifdef MIP6
 #if NMIP > 0
-int
+void
 key_mip6_update_mobile_node_ipsecdb(haddr, ocoa, ncoa, haaddr)
 	struct sockaddr_in6 *haddr;
 	struct sockaddr_in6 *ocoa;   /* not used.  may be NULL. */
@@ -8371,8 +8371,13 @@ key_mip6_update_mobile_node_ipsecdb(haddr, ocoa, ncoa, haaddr)
 
 		/* announce the update. */
 		m = key_setdumpsp(sp, SADB_X_SPDUPDATE, 0, 0);
-		if (m == NULL)
+		if (m == NULL) {
+			mip6log((LOG_ERR,
+			    "key_mip6_update_mobile_node_ipsecdb: "
+			    "failed to allocate a mbuf for "
+			    "SADB_X_SPDUPDATE in INBOUND processing.\n"));
 			continue;
+		}
 		key_sendup_mbuf(NULL, m, KEY_SENDUP_REGISTERED);
 	}
 
@@ -8421,16 +8426,19 @@ key_mip6_update_mobile_node_ipsecdb(haddr, ocoa, ncoa, haaddr)
 
 		/* announce the update. */
 		m = key_setdumpsp(sp, SADB_X_SPDUPDATE, 1, 0);
-		if (m == NULL)
+		if (m == NULL) {
+			mip6log((LOG_ERR,
+			    "key_mip6_update_mobile_node_ipsecdb: "
+			    "failed to allocate a mbuf for "
+			    "SADB_X_SPDUPDATE in OUTBOUND processing.\n"));
 			continue;
+		}
 		key_sendup_mbuf(NULL, m, KEY_SENDUP_REGISTERED);
 	}
-
-	return (0);
 }
 #endif /* NMIP > 0 */
 
-int
+void
 key_mip6_update_home_agent_ipsecdb(haddr, ocoa, ncoa, haaddr)
 	struct sockaddr_in6 *haddr;
 	struct sockaddr_in6 *ocoa;
@@ -8489,8 +8497,13 @@ key_mip6_update_home_agent_ipsecdb(haddr, ocoa, ncoa, haaddr)
 
 		/* announce the update */
 		m = key_setdumpsp(sp, SADB_X_SPDUPDATE, 0, 0);
-		if (m == NULL)
+		if (m == NULL) {
+			mip6log((LOG_ERR,
+			    "key_mip6_update_home_agent_ipsecdb: "
+			    "failed to allocate a mbuf for "
+			    "SADB_X_SPDUPDATE in INBOUND processing.\n"));
 			continue;
+		}
 		key_sendup_mbuf(NULL, m, KEY_SENDUP_REGISTERED);
 	}
 
@@ -8545,12 +8558,15 @@ key_mip6_update_home_agent_ipsecdb(haddr, ocoa, ncoa, haaddr)
 	
 		/* announce the update */
 		m = key_setdumpsp(sp, SADB_X_SPDUPDATE, 1, 0);
-		if (m == NULL)
+		if (m == NULL) {
+			mip6log((LOG_ERR,
+			    "key_mip6_update_home_agent_ipsecdb: "
+			    "failed to allocate a mbuf for "
+			    "SADB_X_SPDUPDATE in OUTBOUND processing.\n"));
 			continue;
+		}
 		key_sendup_mbuf(NULL, m, KEY_SENDUP_REGISTERED);
 	}
-
-	return (0);
 }
 
 #if 0

@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.18 2004/10/20 08:55:17 keiichi Exp $	*/
+/*	$Id: mip6.c,v 1.19 2004/10/20 12:25:08 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -597,14 +597,8 @@ mip6_bce_update(cnaddr, hoa, coa, flags, bid)
 		haaddr_sa.sin6_family = AF_INET6;
 		haaddr_sa.sin6_addr = bce->mbc_cnaddr;
 
-		if (key_mip6_update_home_agent_ipsecdb(&hoa_sa, NULL, &coa_sa,
-		    &haaddr_sa)) {
-			mip6log((LOG_ERR,
-			    "failed to update ipsec databse "
-			    "on a home agent.\n"));
-			error = EIO; /* XXX ? */
-			goto done;
-		}
+		key_mip6_update_home_agent_ipsecdb(&hoa_sa, NULL, &coa_sa,
+		    &haaddr_sa);
 #endif /* IPSEC && !__OpenBSD__ */
 	}
 
@@ -909,13 +903,8 @@ mip6_bul_update(peeraddr, hoa, coa, hoa_ifindex, flags, state, bid)
 		haaddr_sa.sin6_family = AF_INET6;
 		haaddr_sa.sin6_addr = mbul->mbul_peeraddr;
 
-		if (key_mip6_update_mobile_node_ipsecdb(&hoa_sa, NULL, &coa_sa,
-		    &haaddr_sa)) {
-			mip6log((LOG_ERR,
-			    "failed to update ipsec databse "
-			    "on a mobile node.\n"));
-			return (EINVAL);
-		}
+		key_mip6_update_mobile_node_ipsecdb(&hoa_sa, NULL, &coa_sa,
+		    &haaddr_sa);
 #endif
 	}
 	
