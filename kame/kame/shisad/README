@@ -1,0 +1,144 @@
+/*Data Structure */
+mip6_hal (Home Agent List) [MN, HA] 
+	mip6_home_agent_list
+	hal_xx
+mip6_hpfxl (Home Prefix List) [MN, HA]
+	mip6_home_prefix_list
+	hpl_xxx
+
+mip6_bul (Binding Update List) [MN]
+	mip6_binding_update_list
+	bul_xxx
+mip6_hoainfo (Home Address Information) [MN]
+	mip6_hoa_info
+	hoa_xxx
+mip6_mipif (MIP interface Information) [MN]
+	mip6_mipif_info
+	mipif_xxx
+
+mip6_bc (Binding Cache) [CN, HA]
+	mip6_binding_cache
+	bc_xxx
+mip6_nonces_info (Nonce Info) [CN]
+	mip6_nonces_info
+	nonce_xxx
+
+mip6_mpfx (Mobile Network Prefix List) [MR] 
+	nemo_mobile_prefix_list
+	mpl_xxx
+mip6_pt (Prefix Table) [HA-NEMO]
+	nemo_prefix_table
+	pt_xxx
+
+
+***** NEMO design ***** 
+
+MRD + MDD
+
+MRD: bu send/ba recvのみ
+     ba recv時にMIPと同じくカーネルにBUL_ADDする。
+MDD-NEMO:  MRDへHoA-CoAのトリガー
+           BUL_ADDを見るとトンネルの設定と経路設定
+
+トンネル設定と経路設定はMRDの外でやる。
+一時的に、MDDのなかでやっているが、外に出すことも可能。(実装デザインによる)
+
+MR側でNEMOの経路は以下のみ
+default -> gif
+BUやDHAADはsocketのNEXTHOPを使って直接出すので、HAへのホスト経路は無し
+
+***** naming rules ***** 
+構造体変数関連
+
+- 構造体からmip6のprefixは全て消す
+- 構造体の名前は、極力展開する
+	ex. bc -> binding_cache 
+	ex. bul-> binding_update_list
+- 中身のfieldは構造体のshortname_変数
+	ex bc_coa, bc_hoa, bul_coa, bul_hoa
+
+- 後から追加のモジュールはprefixは必須
+	ex. FMIPは"fmip_xxx"と全ての構造体を定義する
+        メンバは基本的に構造体の名前のshortname
+
+
+マクロ
+- MIP6_/MOBILEIP6_ は全て消す
+
+関数名
+
+-構造体を操作するのは "構造体shortname + action"
+ ex. bul_remove(), bul_add()
+     bc_get_by_coa()?
+ 
+-それ以外は 
+	- 動詞＋名詞 (ex. send_bu)
+
+-追加モジュールは "prefix+as_you_wish"
+	ex. nemo_init(), nemo_tun_add()
+
+
+
+** correspondent node **
+
+1. simply start correspondent node daemon
+  % cnd -d -i fxp0
+
+** home agent (legacy) **
+
+1. enable forwarding
+  % sysctl -w net.inet6.ip6.fowarding=1
+2. start home agent daemon
+  % had -d -i fxp0 -p 3
+3. start correspondent node daemon*1
+  % cnd -d -i fxp0
+
+*1 Note that had does not have any functions for CN's part.  If your
+   home agent wants to have binding cache for your correspondent
+   mobile node, running cnd is required.
+
+** home agent (nemo) **
+
+1. enable forwarding
+  % sysctl -w net.inet6.ip6.fowarding=1
+2. start home agent daemon
+  % had -d -f prefixtablefilename -i fxp0 -p 3
+3. start correspondent node daemon
+  % cnd -d -i fxp0
+
+** mobile node **
+
+1. configure home address to mip virutal interface
+  % ifconfig mip0 inet6 HoA/64 home
+2. start mobile node daemon
+  % mnd -d -i mip0
+3. start movement detection daemon
+  % mdd -d -i fxp0 -p 1
+4. start correspondent node daemon*2
+  % cnd -d -i fxp0
+
+*2 Note that mnd does not have any functions for CN's part.  If your
+   mobile node wants to have binding cache for your correspondent
+   mobile node, running cnd is required.
+
+** mobile router **
+
+1. configure home address to mip virutal interface
+  % ifconfig mip0 inet6 HoA/64 home
+
+2. generate an address from mobile network prefixes 
+   and assign it to ingress interface
+
+3. network setting
+   %sysctl -w net.inet6.ip6.forwarding=1
+   %sysctl -w net.inet6.ip6.accept_rtadv=1
+
+4. start mobile node daemon
+  % mnd -d -f conffile -i mip0
+
+5. start movement detection daemon
+  % mdd -d -f conffile -i fxp0 -p 1
+6. start correspondent node daemon*2
+  % cnd -d -i fxp0
+
+Note: you can statically configure HA in conffile

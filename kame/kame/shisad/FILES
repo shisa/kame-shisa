@@ -1,0 +1,52 @@
+filename: descriptions (who will use this)
+
+* Core
+mnd.c: Mobile Node
+	- mipsock realted
+		- bu add/delete
+	- nonce management for MN
+	- keygen token management for MN
+	- dhaad request send/reply receive
+	- mps send/mpa receive
+	- icmp
+		- unreach host/net
+	- telnet tools
+cnd.c: Correspondent Node
+	- mipsock realted
+		- bc add/delete
+	- nodekey management
+	- nonce management for MN
+	- keygen token management for MN
+	- telnet tools
+had.c: Home Agent
+	- mipsock realted
+		- bc add/delete
+	- home registration
+	- dhaad reply send/request receive
+	- mpa send/mps receive
+	- telnet tools
+
+shisa.h: Common definitions
+
+* Binding related Management files
+binding.c: Binding Cache / Binding Update List
+
+* MN related files
+fsm.c: finite state machine of BU.
+
+* related to Mobility Header 
+
+mh.c: All output routines (MN, CN, HA)
+	preprocessing of MH input
+
+* related to MIPsocket 
+mipsock.c: mipsocket related common functions.
+
+* related to Return Routability
+rr.c
+	- authentication data calculation
+
+network.c (network related functions) 
+
+* shisa's kernel control utility
+shisaconfig.c
