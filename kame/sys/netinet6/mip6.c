@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.20 2004/10/25 05:13:34 keiichi Exp $	*/
+/*	$Id: mip6.c,v 1.21 2004/10/25 09:09:24 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -1592,6 +1592,9 @@ mip6_get_logical_src_dst(m, src, dst)
 	struct ip6_rthdr2 *ip6r2;
 	u_int8_t *ip6o;
 	int off, proto, nxt, ip6dlen, ip6olen, ip6r2len;
+
+	if (m == NULL || src == NULL || dst == NULL)
+		return (-1);
 
 #ifndef PULLDOWN_TEST
 	IP6_EXTHDR_CHECK(m, 0, sizeof(struct ip6_hdr), -1);

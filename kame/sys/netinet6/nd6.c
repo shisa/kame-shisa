@@ -2180,19 +2180,21 @@ nd6_output(ifp, origifp, m0, dst, rt0)
 #if defined(MIP6) && NMIP > 0
 	struct ip6_hdr *ip6;
 	struct in6_ifaddr *src_ia6;
-	struct sockaddr_in6 src;
+	struct sockaddr_in6 sin6_src;
+	struct in6_addr in6_src, in6_dst;
 	struct mip6_bul_internal *bul, *cnbul;
 #endif /* MIP6 && NMIP > 0 */
 
 #if defined(MIP6) && NMIP > 0
 	ip6 = mtod(m0, struct ip6_hdr *);
 
-	bzero(&src, sizeof(src));
-	src.sin6_len = sizeof(src);
-	src.sin6_family = AF_INET6;
-	src.sin6_addr = ip6->ip6_src;
+	bzero(&sin6_src, sizeof(struct sockaddr_in6));
+	sin6_src.sin6_len = sizeof(struct sockaddr_in6);
+	sin6_src.sin6_family = AF_INET6;
+	sin6_src.sin6_addr = ip6->ip6_src;
 
-	src_ia6 = (struct in6_ifaddr *)ifa_ifwithaddr((struct sockaddr *)&src);
+	src_ia6 = (struct in6_ifaddr *)ifa_ifwithaddr(
+	    (struct sockaddr *)&sin6_src);
 
 	if (src_ia6 && ((src_ia6->ia6_flags & IN6_IFF_DEREGISTERING) == 0)) {
 		/* 
@@ -2204,16 +2206,22 @@ nd6_output(ifp, origifp, m0, dst, rt0)
 			(bul->mbul_flags & IP6_MH_BU_ROUTER) == 0) {
 			if (ip6->ip6_nxt == IPPROTO_MH)
 				goto dontstartrr;
-			if (IN6_IS_ADDR_MULTICAST(&ip6->ip6_dst))
+			if (mip6_get_logical_src_dst(m, &in6_src, &in6_dst)) {
+				mip6log((LOG_ERR, "nd6_output: "
+				    "failed to get logical source and "
+				    "destination addresses.\n"));
+				senderr(EIO); /* XXX ? */
+			}
+			if (IN6_IS_ADDR_MULTICAST(&in6_dst))
 				goto dontstartrr;
-			if (IN6_IS_ADDR_LINKLOCAL(&ip6->ip6_dst))
+			if (IN6_IS_ADDR_LINKLOCAL(&in6_dst))
 				goto dontstartrr;
-			cnbul = mip6_bul_get(&ip6->ip6_src, &ip6->ip6_dst);
+			cnbul = mip6_bul_get(&in6_src, &in6_dst);
 			if (cnbul != NULL)
 				goto dontstartrr;
 
 			/* send a hint to start RR to this node. */
-			mip6_notify_rr_hint(&ip6->ip6_src, &ip6->ip6_dst);
+			mip6_notify_rr_hint(&in6_src, &in6_dst);
 
 		dontstartrr:
 			/* send this packet via bi-directional tunnel. */
