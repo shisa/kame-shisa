@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2004/09/22 07:26:49 t-momose Exp $
+# $Id: Makefile,v 1.1.1.1 2004/09/22 07:26:49 t-momose Exp $
 #
 # $FreeBSD: src/sys/dev/aic7xxx/aicasm/Makefile,v 1.16 2002/09/26 21:46:19 gibbs Exp $
 

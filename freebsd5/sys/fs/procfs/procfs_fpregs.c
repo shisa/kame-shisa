@@ -37,7 +37,7 @@
  *	@(#)procfs_fpregs.c	8.2 (Berkeley) 6/15/94
  *
  * From:
- *	$Id: procfs_fpregs.c,v 1.1 2004/09/22 07:28:25 t-momose Exp $
+ *	$Id: procfs_fpregs.c,v 1.1.1.1 2004/09/22 07:28:25 t-momose Exp $
  * $FreeBSD: src/sys/fs/procfs/procfs_fpregs.c,v 1.29 2003/10/02 15:00:55 nectar Exp $
  */
 

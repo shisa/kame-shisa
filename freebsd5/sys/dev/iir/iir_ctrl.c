@@ -35,7 +35,7 @@
  * Written by: Achim Leubner <achim_leubner@adaptec.com>
  * Fixes/Additions: Boji Tony Kannanthanam <boji.t.kannanthanam@intel.com>
  *
- * $Id: iir_ctrl.c,v 1.1 2004/09/22 07:27:27 t-momose Exp $"
+ * $Id: iir_ctrl.c,v 1.1.1.1 2004/09/22 07:27:27 t-momose Exp $"
  */
 
 #include <sys/cdefs.h>

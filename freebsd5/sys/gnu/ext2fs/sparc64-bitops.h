@@ -1,4 +1,4 @@
-/* $Id: sparc64-bitops.h,v 1.1 2004/09/22 07:28:29 t-momose Exp $
+/* $Id: sparc64-bitops.h,v 1.1.1.1 2004/09/22 07:28:29 t-momose Exp $
  * bitops.h: Bit string operations on the V9.
  *
  * Copyright 1996, 1997 David S. Miller (davem@caip.rutgers.edu)

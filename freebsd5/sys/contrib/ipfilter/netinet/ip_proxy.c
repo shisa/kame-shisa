@@ -76,7 +76,7 @@
 #endif
 
 #if !defined(lint)
-/* static const char rcsid[] = "@(#)$Id: ip_proxy.c,v 1.1 2004/09/22 07:26:36 t-momose Exp $"; */
+/* static const char rcsid[] = "@(#)$Id: ip_proxy.c,v 1.1.1.1 2004/09/22 07:26:36 t-momose Exp $"; */
 static const char rcsid[] = "@(#)$FreeBSD: src/sys/contrib/ipfilter/netinet/ip_proxy.c,v 1.22 2003/02/15 06:23:45 darrenr Exp $";
 #endif
 

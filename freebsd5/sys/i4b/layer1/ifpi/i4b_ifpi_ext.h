@@ -27,7 +27,7 @@
  *      i4b_ifpi - Fritz!Card PCI for split layers
  *      ------------------------------------------
  *
- *	$Id: i4b_ifpi_ext.h,v 1.1 2004/09/22 07:28:43 t-momose Exp $
+ *	$Id: i4b_ifpi_ext.h,v 1.1.1.1 2004/09/22 07:28:43 t-momose Exp $
  *
  * $FreeBSD: src/sys/i4b/layer1/ifpi/i4b_ifpi_ext.h,v 1.1 2000/10/09 13:28:54 hm Exp $
  *

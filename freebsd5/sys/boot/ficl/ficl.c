@@ -3,7 +3,7 @@
 ** Forth Inspired Command Language - external interface
 ** Author: John Sadler (john_sadler@alum.mit.edu)
 ** Created: 19 July 1997
-** $Id: ficl.c,v 1.1 2004/09/22 07:26:00 t-momose Exp $
+** $Id: ficl.c,v 1.1.1.1 2004/09/22 07:26:00 t-momose Exp $
 *******************************************************************/
 /*
 ** This is an ANS Forth interpreter written in C.

@@ -32,7 +32,7 @@
 
 /*
  * $FreeBSD: src/sys/net/if_tap.h,v 1.1 2000/07/20 17:01:10 nsayer Exp $
- * $Id: if_tap.h,v 1.1 2004/09/22 07:29:35 t-momose Exp $
+ * $Id: if_tap.h,v 1.1.1.1 2004/09/22 07:29:35 t-momose Exp $
  */
 
 #ifndef _NET_IF_TAP_H_

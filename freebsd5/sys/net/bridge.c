@@ -202,7 +202,7 @@ static struct mtx bdg_mtx;
 SYSCTL_DECL(_net_link_ether);
 SYSCTL_NODE(_net_link_ether, OID_AUTO, bridge, CTLFLAG_RD, 0,
 	"Bridge parameters");
-static char bridge_version[] = "$Revision: 1.1 $ $Date: 2004/09/22 07:29:33 $";
+static char bridge_version[] = "$Revision: 1.1.1.1 $ $Date: 2004/09/22 07:29:33 $";
 SYSCTL_STRING(_net_link_ether_bridge, OID_AUTO, version, CTLFLAG_RD,
 	bridge_version, 0, "software version");
 

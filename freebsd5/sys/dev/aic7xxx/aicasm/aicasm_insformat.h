@@ -37,7 +37,7 @@
  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGES.
  *
- * $Id: aicasm_insformat.h,v 1.1 2004/09/22 07:26:49 t-momose Exp $
+ * $Id: aicasm_insformat.h,v 1.1.1.1 2004/09/22 07:26:49 t-momose Exp $
  *
  * $FreeBSD: src/sys/dev/aic7xxx/aicasm/aicasm_insformat.h,v 1.8 2002/11/27 07:06:43 scottl Exp $
  */

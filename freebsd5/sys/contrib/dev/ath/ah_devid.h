@@ -33,7 +33,7 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGES.
  *
- * $Id: ah_devid.h,v 1.1 2004/09/22 07:26:30 t-momose Exp $
+ * $Id: ah_devid.h,v 1.1.1.1 2004/09/22 07:26:30 t-momose Exp $
  */
 
 #ifndef _DEV_ATH_DEVID_H_

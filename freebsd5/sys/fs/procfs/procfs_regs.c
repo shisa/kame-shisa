@@ -37,7 +37,7 @@
  *	@(#)procfs_regs.c	8.4 (Berkeley) 6/15/94
  *
  * From:
- *	$Id: procfs_regs.c,v 1.1 2004/09/22 07:28:25 t-momose Exp $
+ *	$Id: procfs_regs.c,v 1.1.1.1 2004/09/22 07:28:25 t-momose Exp $
  * $FreeBSD: src/sys/fs/procfs/procfs_regs.c,v 1.28 2003/10/02 15:00:55 nectar Exp $
  */
 

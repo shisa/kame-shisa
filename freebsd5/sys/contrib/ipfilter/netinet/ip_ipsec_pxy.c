@@ -2,7 +2,7 @@
  * Simple ISAKMP transparent proxy for in-kernel use.  For use with the NAT
  * code.
  *
- * $Id: ip_ipsec_pxy.c,v 1.1 2004/09/22 07:26:35 t-momose Exp $
+ * $Id: ip_ipsec_pxy.c,v 1.1.1.1 2004/09/22 07:26:35 t-momose Exp $
  *
  */
 #define	IPF_IPSEC_PROXY

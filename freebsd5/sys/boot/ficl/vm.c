@@ -3,7 +3,7 @@
 ** Forth Inspired Command Language - virtual machine methods
 ** Author: John Sadler (john_sadler@alum.mit.edu)
 ** Created: 19 July 1997
-** $Id: vm.c,v 1.1 2004/09/22 07:26:01 t-momose Exp $
+** $Id: vm.c,v 1.1.1.1 2004/09/22 07:26:01 t-momose Exp $
 *******************************************************************/
 /*
 ** This file implements the virtual machine of FICL. Each virtual

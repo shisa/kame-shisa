@@ -25,7 +25,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	from BSDI $Id: ktr.h,v 1.1 2004/09/22 07:30:21 t-momose Exp $
+ *	from BSDI $Id: ktr.h,v 1.1.1.1 2004/09/22 07:30:21 t-momose Exp $
  * $FreeBSD: src/sys/sparc64/include/ktr.h,v 1.5 2003/04/26 17:00:10 obrien Exp $
  */
 

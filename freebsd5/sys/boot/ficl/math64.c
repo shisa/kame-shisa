@@ -5,7 +5,7 @@
 ** Created: 25 January 1998
 ** Rev 2.03: Support for 128 bit DP math. This file really ouught to
 ** be renamed!
-** $Id: math64.c,v 1.1 2004/09/22 07:26:01 t-momose Exp $
+** $Id: math64.c,v 1.1.1.1 2004/09/22 07:26:01 t-momose Exp $
 *******************************************************************/
 /*
 ** Copyright (c) 1997-2001 John Sadler (john_sadler@alum.mit.edu)

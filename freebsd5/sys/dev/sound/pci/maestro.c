@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: maestro.c,v 1.1 2004/09/22 07:28:02 t-momose Exp $
+ *	$Id: maestro.c,v 1.1.1.1 2004/09/22 07:28:02 t-momose Exp $
  */
 
 /*

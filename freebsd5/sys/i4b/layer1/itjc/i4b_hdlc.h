@@ -27,7 +27,7 @@
  *	i4b_hdlc.h - software-HDLC header file
  *	--------------------------------------
  *
- *	$Id: i4b_hdlc.h,v 1.1 2004/09/22 07:28:45 t-momose Exp $
+ *	$Id: i4b_hdlc.h,v 1.1.1.1 2004/09/22 07:28:45 t-momose Exp $
  *
  * $FreeBSD: src/sys/i4b/layer1/itjc/i4b_hdlc.h,v 1.2 2002/09/11 12:44:58 phk Exp $
  *

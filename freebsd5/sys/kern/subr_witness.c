@@ -25,8 +25,8 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	from BSDI $Id: subr_witness.c,v 1.1 2004/09/22 07:28:58 t-momose Exp $
- *	and BSDI $Id: subr_witness.c,v 1.1 2004/09/22 07:28:58 t-momose Exp $
+ *	from BSDI $Id: subr_witness.c,v 1.1.1.1 2004/09/22 07:28:58 t-momose Exp $
+ *	and BSDI $Id: subr_witness.c,v 1.1.1.1 2004/09/22 07:28:58 t-momose Exp $
  */
 
 /*

@@ -29,7 +29,7 @@
  * SUCH DAMAGE.
  */
 
-#ident "$Id: iir_pci.c,v 1.1 2004/09/22 07:27:27 t-momose Exp $"
+#ident "$Id: iir_pci.c,v 1.1.1.1 2004/09/22 07:27:27 t-momose Exp $"
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD: src/sys/dev/iir/iir_pci.c,v 1.12 2003/09/26 15:36:47 scottl Exp $");
 

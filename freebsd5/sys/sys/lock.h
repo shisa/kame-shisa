@@ -25,7 +25,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	from BSDI $Id: lock.h,v 1.1 2004/09/22 07:30:26 t-momose Exp $
+ *	from BSDI $Id: lock.h,v 1.1.1.1 2004/09/22 07:30:26 t-momose Exp $
  * $FreeBSD: src/sys/sys/lock.h,v 1.49 2003/09/19 22:01:56 sam Exp $
  */
 

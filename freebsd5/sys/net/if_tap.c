@@ -32,7 +32,7 @@
 
 /*
  * $FreeBSD: src/sys/net/if_tap.c,v 1.33 2003/11/09 09:17:25 tanimura Exp $
- * $Id: if_tap.c,v 1.1 2004/09/22 07:29:35 t-momose Exp $
+ * $Id: if_tap.c,v 1.1.1.1 2004/09/22 07:29:35 t-momose Exp $
  */
 
 #include "opt_inet.h"

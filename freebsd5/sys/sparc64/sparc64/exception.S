@@ -25,7 +25,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	BSDI $Id: exception.S,v 1.1 2004/09/22 07:30:23 t-momose Exp $
+ *	BSDI $Id: exception.S,v 1.1.1.1 2004/09/22 07:30:23 t-momose Exp $
  */
 /*-
  * Copyright (c) 2001 Jake Burkholder.

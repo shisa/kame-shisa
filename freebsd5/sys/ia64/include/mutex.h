@@ -25,7 +25,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	from BSDI $Id: mutex.h,v 1.1 2004/09/22 07:28:50 t-momose Exp $
+ *	from BSDI $Id: mutex.h,v 1.1.1.1 2004/09/22 07:28:50 t-momose Exp $
  * $FreeBSD: src/sys/ia64/include/mutex.h,v 1.16 2001/12/18 00:27:16 jhb Exp $
  */
 

@@ -37,7 +37,7 @@ __FBSDID("$FreeBSD: src/sys/dev/vinum/vinumdaemon.c,v 1.26 2003/08/24 17:55:56 o
  * otherwise) arising in any way out of the use of this software, even if
  * advised of the possibility of such damage.
  *
- * $Id: vinumdaemon.c,v 1.1 2004/09/22 07:28:18 t-momose Exp $
+ * $Id: vinumdaemon.c,v 1.1.1.1 2004/09/22 07:28:18 t-momose Exp $
  */
 
 #include <dev/vinum/vinumhdr.h>

@@ -33,7 +33,7 @@
  * otherwise) arising in any way out of the use of this software, even if
  * advised of the possibility of such damage.
  *
- * $Id: vinumext.h,v 1.1 2004/09/22 07:28:18 t-momose Exp $
+ * $Id: vinumext.h,v 1.1.1.1 2004/09/22 07:28:18 t-momose Exp $
  * $FreeBSD: src/sys/dev/vinum/vinumext.h,v 1.40 2003/05/23 01:13:43 grog Exp $
  */
 

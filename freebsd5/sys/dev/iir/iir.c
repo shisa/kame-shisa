@@ -39,7 +39,7 @@
  *              Mike Smith;             Some driver source code.
  *              FreeBSD.ORG;            Great O/S to work on and for.
  *
- * $Id: iir.c,v 1.1 2004/09/22 07:27:27 t-momose Exp $"
+ * $Id: iir.c,v 1.1.1.1 2004/09/22 07:27:27 t-momose Exp $"
  */
 
 #include <sys/cdefs.h>

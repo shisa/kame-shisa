@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: if_xevar.h,v 1.1 2004/09/22 07:28:22 t-momose Exp $
+ *	$Id: if_xevar.h,v 1.1.1.1 2004/09/22 07:28:22 t-momose Exp $
  * $FreeBSD: src/sys/dev/xe/if_xevar.h,v 1.4 2003/10/14 22:51:35 rsm Exp $
  */
 #ifndef DEV_XE_IF_XEDEV_H

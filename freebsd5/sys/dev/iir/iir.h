@@ -41,7 +41,7 @@
  * credits:     Niklas Hallqvist;       OpenBSD driver for the ICP Controllers.
  *              FreeBSD.ORG;            Great O/S to work on and for.
  *
- * $Id: iir.h,v 1.1 2004/09/22 07:27:27 t-momose Exp $"
+ * $Id: iir.h,v 1.1.1.1 2004/09/22 07:27:27 t-momose Exp $"
  */
 
 #ifndef _IIR_H

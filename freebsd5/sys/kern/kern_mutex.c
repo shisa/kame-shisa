@@ -25,8 +25,8 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	from BSDI $Id: kern_mutex.c,v 1.1 2004/09/22 07:28:54 t-momose Exp $
- *	and BSDI $Id: kern_mutex.c,v 1.1 2004/09/22 07:28:54 t-momose Exp $
+ *	from BSDI $Id: kern_mutex.c,v 1.1.1.1 2004/09/22 07:28:54 t-momose Exp $
+ *	and BSDI $Id: kern_mutex.c,v 1.1.1.1 2004/09/22 07:28:54 t-momose Exp $
  */
 
 /*

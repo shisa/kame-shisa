@@ -1,5 +1,5 @@
 /* $FreeBSD: src/sys/rpc/rpcclnt.c,v 1.3.2.1 2004/01/26 04:38:17 scottl Exp $ */
-/* $Id: rpcclnt.c,v 1.1 2004/09/22 07:30:19 t-momose Exp $ */
+/* $Id: rpcclnt.c,v 1.1.1.1 2004/09/22 07:30:19 t-momose Exp $ */
 
 /*
  * copyright (c) 2003

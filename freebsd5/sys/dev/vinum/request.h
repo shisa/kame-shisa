@@ -33,7 +33,7 @@
  * otherwise) arising in any way out of the use of this software, even if
  * advised of the possibility of such damage.
  *
- * $Id: request.h,v 1.1 2004/09/22 07:28:18 t-momose Exp $
+ * $Id: request.h,v 1.1.1.1 2004/09/22 07:28:18 t-momose Exp $
  * $FreeBSD: src/sys/dev/vinum/request.h,v 1.21 2003/05/01 13:06:00 grog Exp $
  */
 

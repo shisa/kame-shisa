@@ -18,8 +18,8 @@
  *
  *---------------------------------------------------------------------------
  * $Log: trlld.h,v $
- * Revision 1.1  2004/09/22 07:26:32  t-momose
- * Initial revision
+ * Revision 1.1.1.1  2004/09/22 07:26:32  t-momose
+ * new mip6 development base
  *
  * 
  *    Rev 1.9   25 Jan 1999 09:56:28   EGS

@@ -37,7 +37,7 @@
  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGES.
  *
- * $Id: aicasm_symbol.h,v 1.1 2004/09/22 07:26:49 t-momose Exp $
+ * $Id: aicasm_symbol.h,v 1.1.1.1 2004/09/22 07:26:49 t-momose Exp $
  *
  * $FreeBSD: src/sys/dev/aic7xxx/aicasm/aicasm_symbol.h,v 1.16 2002/08/31 06:39:41 gibbs Exp $
  */

@@ -38,7 +38,7 @@
  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGES.
  *
- * $Id: aicasm_macro_scan.l,v 1.1 2004/09/22 07:26:49 t-momose Exp $
+ * $Id: aicasm_macro_scan.l,v 1.1.1.1 2004/09/22 07:26:49 t-momose Exp $
  *
  * $FreeBSD: src/sys/dev/aic7xxx/aicasm/aicasm_macro_scan.l,v 1.4 2002/09/27 03:23:02 gibbs Exp $
  */

@@ -58,7 +58,7 @@
 # Questions concerning this software should be directed to 
 # Kurt Windisch (kurtw@antc.uoregon.edu)
 #
-# $Id: Makefile,v 1.1 2004/09/22 07:30:37 t-momose Exp $
+# $Id: Makefile,v 1.1.1.1 2004/09/22 07:30:37 t-momose Exp $
 #
 #
 #Part of this program has been derived from PIM sparse-mode pimd.

@@ -4,7 +4,7 @@
  * See the IPFILTER.LICENCE file for details on licencing.
  *
  * @(#)ip_compat.h	1.8 1/14/96
- * $Id: ip_compat.h,v 1.1 2004/09/22 07:26:35 t-momose Exp $
+ * $Id: ip_compat.h,v 1.1.1.1 2004/09/22 07:26:35 t-momose Exp $
  * $FreeBSD: src/sys/contrib/ipfilter/netinet/ip_compat.h,v 1.21 2003/10/31 18:31:56 brooks Exp $
  */
 

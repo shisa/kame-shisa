@@ -1,5 +1,5 @@
 /*
- * $Id: ip_rcmd_pxy.c,v 1.1 2004/09/22 07:26:36 t-momose Exp $
+ * $Id: ip_rcmd_pxy.c,v 1.1.1.1 2004/09/22 07:26:36 t-momose Exp $
  */
 /*
  * Simple RCMD transparent proxy for in-kernel use.  For use with the NAT

@@ -1,7 +1,7 @@
 /*
  * Simple netbios-dgm transparent proxy for in-kernel use.
  * For use with the NAT code.
- * $Id: ip_netbios_pxy.c,v 1.1 2004/09/22 07:26:35 t-momose Exp $
+ * $Id: ip_netbios_pxy.c,v 1.1.1.1 2004/09/22 07:26:35 t-momose Exp $
  */
 
 /*-
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: ip_netbios_pxy.c,v 1.1 2004/09/22 07:26:35 t-momose Exp $
+ * $Id: ip_netbios_pxy.c,v 1.1.1.1 2004/09/22 07:26:35 t-momose Exp $
  */
 
 #define	IPF_NETBIOS_PROXY

@@ -32,7 +32,7 @@
  *	Everything which has got anything to do with I4B has been put here!
  *
  *      last edit-date: [Wed Jul 19 09:41:03 2000]
- *      $Id: i4b_ihfc_l1if.c,v 1.1 2004/09/22 07:28:44 t-momose Exp $
+ *      $Id: i4b_ihfc_l1if.c,v 1.1.1.1 2004/09/22 07:28:44 t-momose Exp $
  *
  *---------------------------------------------------------------------------*/
 

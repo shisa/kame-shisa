@@ -33,7 +33,7 @@
  * otherwise) arising in any way out of the use of this software, even if
  * advised of the possibility of such damage.
  *
- * $Id: vinummemory.c,v 1.1 2004/09/22 07:28:19 t-momose Exp $
+ * $Id: vinummemory.c,v 1.1.1.1 2004/09/22 07:28:19 t-momose Exp $
  */
 
 #include <sys/cdefs.h>

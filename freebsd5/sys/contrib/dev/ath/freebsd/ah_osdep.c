@@ -33,7 +33,7 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGES.
  *
- * $Id: ah_osdep.c,v 1.1 2004/09/22 07:26:30 t-momose Exp $
+ * $Id: ah_osdep.c,v 1.1.1.1 2004/09/22 07:26:30 t-momose Exp $
  */
 #include "opt_ah.h"
 

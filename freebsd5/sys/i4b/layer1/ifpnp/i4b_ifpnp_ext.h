@@ -27,7 +27,7 @@
  *      i4b_ifpnp - Fritz!Card PnP for split layers
  *      -------------------------------------------
  *
- *	$Id: i4b_ifpnp_ext.h,v 1.1 2004/09/22 07:28:44 t-momose Exp $
+ *	$Id: i4b_ifpnp_ext.h,v 1.1.1.1 2004/09/22 07:28:44 t-momose Exp $
  *	$Ust: src/i4b/layer1-nb/ifpnp/i4b_ifpnp_ext.h,v 1.4 2000/04/18 08:03:05 ust Exp $
  *
  * $FreeBSD: src/sys/i4b/layer1/ifpnp/i4b_ifpnp_ext.h,v 1.1 2000/10/09 13:28:54 hm Exp $

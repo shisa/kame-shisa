@@ -26,7 +26,7 @@
  *
  *	i4b_ifpnp_isac.c - i4b Fritz PnP ISAC handler
  *	---------------------------------------------
- *	$Id: i4b_ifpnp_isac.c,v 1.1 2004/09/22 07:28:44 t-momose Exp $ 
+ *	$Id: i4b_ifpnp_isac.c,v 1.1.1.1 2004/09/22 07:28:44 t-momose Exp $ 
  *	$Ust: src/i4b/layer1-nb/ifpnp/i4b_ifpnp_isac.c,v 1.4 2000/04/18 08:03:05 ust Exp $
  *      last edit-date: [Mon May 29 15:24:49 2000]
  *

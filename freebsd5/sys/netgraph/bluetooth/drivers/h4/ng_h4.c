@@ -25,7 +25,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: ng_h4.c,v 1.1 2004/09/22 07:29:48 t-momose Exp $
+ * $Id: ng_h4.c,v 1.1.1.1 2004/09/22 07:29:48 t-momose Exp $
  * $FreeBSD: src/sys/netgraph/bluetooth/drivers/h4/ng_h4.c,v 1.5 2003/05/10 22:11:25 julian Exp $
  * 
  * Based on:

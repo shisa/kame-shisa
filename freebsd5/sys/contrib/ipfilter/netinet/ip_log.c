@@ -3,7 +3,7 @@
  *
  * See the IPFILTER.LICENCE file for details on licencing.
  *
- * $Id: ip_log.c,v 1.1 2004/09/22 07:26:35 t-momose Exp $
+ * $Id: ip_log.c,v 1.1.1.1 2004/09/22 07:26:35 t-momose Exp $
  * $FreeBSD: src/sys/contrib/ipfilter/netinet/ip_log.c,v 1.26 2003/12/02 18:28:00 brooks Exp $
  */
 #include <sys/param.h>

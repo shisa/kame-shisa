@@ -25,7 +25,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: ng_hci_misc.c,v 1.1 2004/09/22 07:29:49 t-momose Exp $
+ * $Id: ng_hci_misc.c,v 1.1.1.1 2004/09/22 07:29:49 t-momose Exp $
  * $FreeBSD: src/sys/netgraph/bluetooth/hci/ng_hci_misc.c,v 1.5 2003/10/12 22:04:20 emax Exp $
  */
 

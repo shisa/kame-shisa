@@ -31,7 +31,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  * 
- * $Id: dcons.c,v 1.1 2004/09/22 07:26:59 t-momose Exp $
+ * $Id: dcons.c,v 1.1.1.1 2004/09/22 07:26:59 t-momose Exp $
  * $FreeBSD: src/sys/dev/dcons/dcons.c,v 1.1 2003/10/24 15:44:09 simokawa Exp $
  */
 
