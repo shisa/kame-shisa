@@ -176,12 +176,12 @@ int mip6_bc_proxy_control(struct in6_addr *, struct in6_addr *, int);
 
 /* mobile node functions. */
 #ifndef MIP6_MCOA
-int mip6_bul_update(const struct in6_addr *, const struct in6_addr *,
+int mip6_bul_add(const struct in6_addr *, const struct in6_addr *,
     const struct in6_addr *, u_short, u_int16_t, u_int8_t);
 struct mip6_bul_internal *mip6_bul_get(const struct in6_addr *,
     const struct in6_addr *);
 #else
-int mip6_bul_update(const struct in6_addr *, const struct in6_addr *,
+int mip6_bul_add(const struct in6_addr *, const struct in6_addr *,
     const struct in6_addr *, u_short, u_int16_t, u_int8_t, u_int16_t);
 struct mip6_bul_internal *mip6_bul_get(const struct in6_addr *,
     const struct in6_addr *, u_int16_t);
