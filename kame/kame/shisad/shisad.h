@@ -1,4 +1,4 @@
-/*	$Id: shisad.h,v 1.4 2004/10/25 11:48:55 keiichi Exp $	*/
+/*	$Id: shisad.h,v 1.5 2004/10/25 13:06:53 keiichi Exp $	*/
 /*
  * Copyright (C) 2004 WIDE Project.
  * All rights reserved.
@@ -36,8 +36,18 @@ extern int mipsock, mhsock, icmp6sock;
 extern struct mip6stat mip6stat;
 extern struct mip6_hinfo_list hoa_head;
 
+/* protocol constants. */
+#define DHAAD_RETRIES		4
+#define MAX_BINDACK_TIMEOUT	32
+#define INITIAL_DHAAD_TIMEOUT	3
+#define INITIAL_BINDACK_TIMEOUT	1
+
+#define MAX_DHAAD_TIMEOUT	(INITIAL_DHAAD_TIMEOUT << DHAAD_RETRIES)
+#define INITIAL_HOTI_COTI_TIMEOUT	1
+#define MAX_HOTI_COTI_TIMEOUT		32
+
 /* protocol configuration variables. */
-extern int first_initial_back_timeout_count;
+extern int initial_bindack_timeout_first_reg_count;
 
 /* return routability parameters. */
 #define MIP6_MAX_TOKEN_LIFE	210
@@ -192,7 +202,7 @@ struct binding_update_list {
 	u_int8_t            bul_rr_fsm_state; /* rr state */
 
 	CALLOUT_HANDLE      bul_retrans;      /* callout handle for retrans */
-	u_int8_t            bul_retrans_count;
+	u_int8_t            bul_retrans_time;
 	CALLOUT_HANDLE      bul_expire;       /* callout handle for failure */
 	u_int8_t            bul_state;        /* local status */
 

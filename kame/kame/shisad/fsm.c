@@ -1,4 +1,4 @@
-/*	$Id: fsm.c,v 1.5 2004/10/25 11:48:55 keiichi Exp $	*/
+/*	$Id: fsm.c,v 1.6 2004/10/25 13:06:53 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -61,8 +61,7 @@
 #include "shisad.h"
 #include "fsm.h"
 
- /* 1 means 1 << 1 = 2.  the spec says more than 1.5 sec. */
-int first_initial_back_timeout_count = 1;
+int initial_bindack_timeout_first_reg = 2; /* the spec says more than 1.5 */
 
 extern struct mip6stat mip6stat;
 
@@ -401,9 +400,10 @@ bul_reg_fsm(bul, event, data)
 						/* how handle this */;
 					
 					/* set retrans timer */
-					bul->bul_retrans_count = 0;
+					bul->bul_retrans_time
+					    = INITIAL_BINDACK_TIMEOUT;
 					bul_set_retrans_timer(bul,
-					    1 << bul->bul_retrans_count);
+					    bul->bul_retrans_time);
 
 					bul_set_expire_timer(bul,
 					    bul->bul_lifetime << 2);
@@ -421,10 +421,10 @@ bul_reg_fsm(bul, event, data)
 					/* continue and try again. */
 				}
 
-				bul->bul_retrans_count
-				    = first_initial_back_timeout_count;
+				bul->bul_retrans_time
+				    = initial_bindack_timeout_first_reg;
 				bul_set_retrans_timer(bul,
-				    1 << bul->bul_retrans_count);
+				    bul->bul_retrans_time);
 
 				bul_set_expire_timer(bul,
 				    bul->bul_lifetime << 2);
@@ -515,9 +515,10 @@ bul_reg_fsm(bul, event, data)
 					/* continue and try again. */
 				}
 
-				bul->bul_retrans_count = 0;
+				bul->bul_retrans_time
+				    = INITIAL_BINDACK_TIMEOUT;
 				bul_set_retrans_timer(bul,
-				    1 << bul->bul_retrans_count);
+				    bul->bul_retrans_time);
 
 				REGFSMS = MIP6_BUL_REG_FSM_STATE_WAITA;
 			} else {
@@ -655,9 +656,10 @@ bul_reg_fsm(bul, event, data)
 					return (error);
 				}
 
-				bul->bul_retrans_count = 0;
+				bul->bul_retrans_time
+				    = INITIAL_BINDACK_TIMEOUT;
 				bul_set_retrans_timer(bul,
-				    1 << bul->bul_retrans_count);
+				    bul->bul_retrans_time);
 
 				REGFSMS = MIP6_BUL_REG_FSM_STATE_WAITAR;
 			} else {
@@ -853,11 +855,12 @@ bul_reg_fsm(bul, event, data)
 				/* continue and try again. */
 			}
 
-			bul->bul_retrans_count++;
-			if (bul->bul_retrans_count > MIP6_BUL_MAX_BACKOFF)
-				bul->bul_retrans_count = MIP6_BUL_MAX_BACKOFF;
-			bul_set_retrans_timer(bul,
-			    1 << bul->bul_retrans_count);
+			bul->bul_retrans_time <<= 1;
+			if (bul->bul_retrans_time > MAX_BINDACK_TIMEOUT) {
+				/* XXX should find another home agent. */
+				bul->bul_retrans_time = MAX_BINDACK_TIMEOUT;
+			}
+			bul_set_retrans_timer(bul, bul->bul_retrans_time);
 
 			REGFSMS = MIP6_BUL_REG_FSM_STATE_WAITA;
 
@@ -886,9 +889,9 @@ bul_reg_fsm(bul, event, data)
 					/* how handle this */;
 
 				/* set retrans timer */
-				bul->bul_retrans_count = 0;
+				bul->bul_retrans_time = INITIAL_DHAAD_TIMEOUT;
 				bul_set_retrans_timer(bul,
-				    1 << bul->bul_retrans_count);
+				    bul->bul_retrans_time);
 
 				/* set expire timer */
 				bul_set_expire_timer(bul,
@@ -906,9 +909,10 @@ bul_reg_fsm(bul, event, data)
 					/* continue and try again. */
 				}
 
-				bul->bul_retrans_count = 0;
+				bul->bul_retrans_time
+				    = INITIAL_BINDACK_TIMEOUT;
 				bul_set_retrans_timer(bul,
-				    1 << bul->bul_retrans_count);
+				    bul->bul_retrans_time);
 
 				bul_set_expire_timer(bul,
 				    bul->bul_lifetime << 2);
@@ -949,9 +953,10 @@ bul_reg_fsm(bul, event, data)
 					/* continue and try again. */
 				}
 
-				bul->bul_retrans_count = 0;
+				bul->bul_retrans_time
+				    = INITIAL_BINDACK_TIMEOUT;
 				bul_set_retrans_timer(bul,
-				    1 << bul->bul_retrans_count);
+				    bul->bul_retrans_time);
 
 				bul_set_expire_timer(bul,
 				    bul->bul_lifetime << 2);
@@ -988,9 +993,10 @@ bul_reg_fsm(bul, event, data)
 					/* continue and try again. */
 				}
 
-				bul->bul_retrans_count = 0;
+				bul->bul_retrans_time
+				    = INITIAL_BINDACK_TIMEOUT;
 				bul_set_retrans_timer(bul,
-				    1 << bul->bul_retrans_count);
+				    bul->bul_retrans_time);
 
 				bul_set_expire_timer(bul,
 				    bul->bul_lifetime << 2);
@@ -1085,11 +1091,12 @@ bul_reg_fsm(bul, event, data)
 				return (error);
 			}
 
-			bul->bul_retrans_count++;
-			if (bul->bul_retrans_count > MIP6_BUL_MAX_BACKOFF)
-				bul->bul_retrans_count = MIP6_BUL_MAX_BACKOFF;
-			bul_set_retrans_timer(bul,
-			    (1 << bul->bul_retrans_count));
+			bul->bul_retrans_time <<= 1;
+			if (bul->bul_retrans_time > MAX_BINDACK_TIMEOUT) {
+				/* XXX should find another home agent. */
+				bul->bul_retrans_time = MAX_BINDACK_TIMEOUT;
+			}
+			bul_set_retrans_timer(bul, bul->bul_retrans_time);
 
 			REGFSMS = MIP6_BUL_REG_FSM_STATE_WAITAR;
 
@@ -1124,9 +1131,10 @@ bul_reg_fsm(bul, event, data)
 					/* how handle this */;
 
 				/* set retrans timer */
-				bul->bul_retrans_count = 0;
+				bul->bul_retrans_time
+				    = INITIAL_DHAAD_TIMEOUT;
 				bul_set_retrans_timer(bul,
-				    1 << bul->bul_retrans_count);
+				    bul->bul_retrans_time);
 
 				/* set expire timer */
 				bul_set_expire_timer(bul,
@@ -1144,9 +1152,10 @@ bul_reg_fsm(bul, event, data)
 					/* continue and try again. */
 				}
 
-				bul->bul_retrans_count = 0;
+				bul->bul_retrans_time
+				    = INITIAL_BINDACK_TIMEOUT;
 				bul_set_retrans_timer(bul,
-				    1 << bul->bul_retrans_count);
+				    bul->bul_retrans_time);
 
 				bul_set_expire_timer(bul,
 				    bul->bul_lifetime << 2);
@@ -1199,9 +1208,10 @@ bul_reg_fsm(bul, event, data)
 					/* continue and try again. */
 				}
 
-				bul->bul_retrans_count = 0;
+				bul->bul_retrans_time
+				    = INITIAL_BINDACK_TIMEOUT;
 				bul_set_retrans_timer(bul,
-				    1 << bul->bul_retrans_count);
+				    bul->bul_retrans_time);
 
 				REGFSMS = MIP6_BUL_REG_FSM_STATE_WAITA;
 			} else {
@@ -1238,9 +1248,10 @@ bul_reg_fsm(bul, event, data)
 					return (error);
 				}
 
-				bul->bul_retrans_count = 0;
+				bul->bul_retrans_time
+				    = INITIAL_BINDACK_TIMEOUT;
 				bul_set_retrans_timer(bul,
-				    1 << bul->bul_retrans_count);
+				    bul->bul_retrans_time);
 
 				REGFSMS = MIP6_BUL_REG_FSM_STATE_WAITD;
 			}
@@ -1330,11 +1341,12 @@ bul_reg_fsm(bul, event, data)
 				return (error);
 			}
 
-			bul->bul_retrans_count++;
-			if (bul->bul_retrans_count > MIP6_BUL_MAX_BACKOFF)
-				bul->bul_retrans_count = MIP6_BUL_MAX_BACKOFF;
-			bul_set_retrans_timer(bul,
-			    1 << bul->bul_retrans_count);
+			bul->bul_retrans_time <<= 1;
+			if (bul->bul_retrans_time > MAX_BINDACK_TIMEOUT) {
+				/* XXX how should we do?  remove bul? */
+				bul->bul_retrans_time = MAX_BINDACK_TIMEOUT;
+			}
+			bul_set_retrans_timer(bul, bul->bul_retrans_time);
 
 			REGFSMS = MIP6_BUL_REG_FSM_STATE_WAITD;
 
@@ -1396,9 +1408,10 @@ bul_reg_fsm(bul, event, data)
 					/* continue and try again. */
 				}
 
-				bul->bul_retrans_count = 0;
+				bul->bul_retrans_time
+				    = INITIAL_BINDACK_TIMEOUT;
 				bul_set_retrans_timer(bul,
-				    1 << bul->bul_retrans_count);
+				    bul->bul_retrans_time);
 
 				bul_set_expire_timer(bul,
 				    bul->bul_lifetime << 2);
@@ -1421,9 +1434,10 @@ bul_reg_fsm(bul, event, data)
 					/* continue */
 				}
 
-				bul->bul_retrans_count = 0;
+				bul->bul_retrans_time
+				    = INITIAL_BINDACK_TIMEOUT;
 				bul_set_retrans_timer(bul,
-				    1 << bul->bul_retrans_count);
+				    bul->bul_retrans_time);
 
 				REGFSMS = MIP6_BUL_REG_FSM_STATE_WAITD;
 			} else {
@@ -1566,9 +1580,10 @@ bul_reg_fsm(bul, event, data)
 					/* continue and try again. */
 				}
 
-				bul->bul_retrans_count = 0;
+				bul->bul_retrans_time
+				    = INITIAL_BINDACK_TIMEOUT;
 				bul_set_retrans_timer(bul,
-				    1 << bul->bul_retrans_count);
+				    bul->bul_retrans_time);
 
 				REGFSMS = MIP6_BUL_REG_FSM_STATE_WAITAR;
 			} else {
@@ -1603,9 +1618,10 @@ bul_reg_fsm(bul, event, data)
 					/* continue and try again. */
 				}
 
-				bul->bul_retrans_count = 0;
+				bul->bul_retrans_time
+				    = INITIAL_BINDACK_TIMEOUT;
 				bul_set_retrans_timer(bul,
-				    1 << bul->bul_retrans_count);
+				    bul->bul_retrans_time);
 
 				REGFSMS = MIP6_BUL_REG_FSM_STATE_WAITA;
 			}
@@ -1652,9 +1668,10 @@ bul_reg_fsm(bul, event, data)
 					/* continue and try again. */
 				}
 
-				bul->bul_retrans_count = 0;
+				bul->bul_retrans_time
+				    = INITIAL_BINDACK_TIMEOUT;
 				bul_set_retrans_timer(bul,
-				    1 << bul->bul_retrans_count);
+				    bul->bul_retrans_time);
 
 				REGFSMS = MIP6_BUL_REG_FSM_STATE_WAITD;
 			}
@@ -1719,9 +1736,10 @@ bul_reg_fsm(bul, event, data)
 					/* continue and try again. */
 				}
 
-				bul->bul_retrans_count = 0;
+				bul->bul_retrans_time
+				    = INITIAL_BINDACK_TIMEOUT;
 				bul_set_retrans_timer(bul,
-				    1 << bul->bul_retrans_count);
+				    bul->bul_retrans_time);
 
 				REGFSMS = MIP6_BUL_REG_FSM_STATE_WAITAR;
 			} else {
@@ -1775,9 +1793,9 @@ bul_reg_fsm(bul, event, data)
 
 				/* XXX send DHAAD request. */
 
-				bul->bul_retrans_count = 0;
+				bul->bul_retrans_time = INITIAL_DHAAD_TIMEOUT;
 				bul_set_retrans_timer(bul,
-				    1 << bul->bul_retrans_count);
+				    bul->bul_retrans_time);
 
 				REGFSMS = MIP6_BUL_REG_FSM_STATE_DHAAD;
 			} else {
@@ -1858,10 +1876,9 @@ bul_reg_fsm(bul, event, data)
 				/* continue and try again. */
 			}
 
-			bul->bul_retrans_count
-			    = first_initial_back_timeout_count;
-			bul_set_retrans_timer(bul,
-			    1 << bul->bul_retrans_count);
+			bul->bul_retrans_time
+			    = initial_bindack_timeout_first_reg;
+			bul_set_retrans_timer(bul, bul->bul_retrans_time);
 
 			bul_set_expire_timer(bul, bul->bul_lifetime << 2);
 
@@ -1884,12 +1901,15 @@ bul_reg_fsm(bul, event, data)
 						/* continue and try again. */
 					}
 					
-					mbul->bul_retrans_count = 0;
+					mbul->bul_retrans_time
+					    = INITIAL_BINDACK_TIMEOUT;
 					bul_set_retrans_timer(mbul,
-							      1 << mbul->bul_retrans_count);
+					    mbul->bul_retrans_time);
 					
-					bul_set_expire_timer(mbul, mbul->bul_lifetime << 2);
-					mbul->bul_reg_fsm_state = MIP6_BUL_REG_FSM_STATE_WAITA;
+					bul_set_expire_timer(mbul,
+					    mbul->bul_lifetime << 2);
+					mbul->bul_reg_fsm_state
+					    = MIP6_BUL_REG_FSM_STATE_WAITA;
 				}
 			}
 #endif /* MIP_MCOA */
@@ -1906,11 +1926,17 @@ bul_reg_fsm(bul, event, data)
 			if (send_haadreq(bul->bul_hoainfo, 64 /* XXX */, &bul->bul_coa) > 0)
 				/* how handle this */;
 
-			bul->bul_retrans_count++;
-			if (bul->bul_retrans_count > MIP6_BUL_MAX_BACKOFF)
-				bul->bul_retrans_count = MIP6_BUL_MAX_BACKOFF;
-			bul_set_retrans_timer(bul,
-			    1 << bul->bul_retrans_count);
+			bul->bul_retrans_time <<= 1;
+			if (bul->bul_retrans_time > MAX_DHAAD_TIMEOUT) {
+				/*
+				 * we keep sending DHAAD request. this
+				 * breaks the specification, however
+				 * we believe it is better keep sending than
+				 * stop Mobile IPv6 service.
+				 */
+				bul->bul_retrans_time = MAX_DHAAD_TIMEOUT;
+			}
+			bul_set_retrans_timer(bul, bul->bul_retrans_time);
 
 			REGFSMS = MIP6_BUL_REG_FSM_STATE_DHAAD;
 
@@ -1957,9 +1983,8 @@ bul_rr_fsm(bul, event, fsmmsg)
 			if (send_coti(bul) != 0)
 				break;
 
-			bul->bul_retrans_count = 0;
-			bul_set_retrans_timer(bul,
-			    1 << bul->bul_retrans_count);
+			bul->bul_retrans_time = INITIAL_HOTI_COTI_TIMEOUT;
+			bul_set_retrans_timer(bul, bul->bul_retrans_time);
 
 			RRFSMS = MIP6_BUL_RR_FSM_STATE_WAITHC;
 
@@ -1973,9 +1998,8 @@ bul_rr_fsm(bul, event, fsmmsg)
 			if (send_hoti(bul) != 0)
 				break;
 
-			bul->bul_retrans_count = 0;
-			bul_set_retrans_timer(bul,
-			    1 << bul->bul_retrans_count);
+			bul->bul_retrans_time = INITIAL_HOTI_COTI_TIMEOUT;
+			bul_set_retrans_timer(bul, bul->bul_retrans_time);
 
 			RRFSMS = MIP6_BUL_RR_FSM_STATE_WAITH;
 
@@ -2042,11 +2066,10 @@ bul_rr_fsm(bul, event, fsmmsg)
 			if (send_coti(bul) != 0)
 				break;
 
-			bul->bul_retrans_count++;
-			if (bul->bul_retrans_count > MIP6_BUL_MAX_BACKOFF)
-				bul->bul_retrans_count = MIP6_BUL_MAX_BACKOFF;
-			bul_set_retrans_timer(bul,
-			    1 << bul->bul_retrans_count);
+			bul->bul_retrans_time <<= 1;
+			if (bul->bul_retrans_time > MAX_HOTI_COTI_TIMEOUT)
+				bul->bul_retrans_time = MAX_HOTI_COTI_TIMEOUT;
+			bul_set_retrans_timer(bul, bul->bul_retrans_time);
 
 			RRFSMS = MIP6_BUL_RR_FSM_STATE_WAITHC;
 
@@ -2103,11 +2126,10 @@ bul_rr_fsm(bul, event, fsmmsg)
 			if (send_hoti(bul) != 0)
 				break;
 
-			bul->bul_retrans_count++;
-			if (bul->bul_retrans_count > MIP6_BUL_MAX_BACKOFF)
-				bul->bul_retrans_count = MIP6_BUL_MAX_BACKOFF;
-			bul_set_retrans_timer(bul,
-			    1 << bul->bul_retrans_count);
+			bul->bul_retrans_time <<= 1;
+			if (bul->bul_retrans_time > MAX_HOTI_COTI_TIMEOUT)
+				bul->bul_retrans_time = MAX_HOTI_COTI_TIMEOUT;
+			bul_set_retrans_timer(bul, bul->bul_retrans_time);
 
 			RRFSMS = MIP6_BUL_RR_FSM_STATE_WAITH;
 
@@ -2165,11 +2187,10 @@ bul_rr_fsm(bul, event, fsmmsg)
 			if (send_coti(bul) != 0)
 				break;
 
-			bul->bul_retrans_count++;
-			if (bul->bul_retrans_count > MIP6_BUL_MAX_BACKOFF)
-				bul->bul_retrans_count = MIP6_BUL_MAX_BACKOFF;
-			bul_set_retrans_timer(bul,
-			    1 << bul->bul_retrans_count);
+			bul->bul_retrans_time <<= 1;
+			if (bul->bul_retrans_time > MAX_HOTI_COTI_TIMEOUT)
+				bul->bul_retrans_time = MAX_HOTI_COTI_TIMEOUT;
+			bul_set_retrans_timer(bul, bul->bul_retrans_time);
 
 			RRFSMS = MIP6_BUL_RR_FSM_STATE_WAITC;
 
@@ -2269,9 +2290,8 @@ bul_fsm_back_preprocess(bul, fsmmsg)
 			syslog(LOG_ERR,
 			    "sending a binding update failed.\n");
 		}
-		bul->bul_retrans_count = 0;
-		bul_set_retrans_timer(bul,
-		    1 << bul->bul_retrans_count);
+		bul->bul_retrans_time = INITIAL_BINDACK_TIMEOUT;
+		bul_set_retrans_timer(bul, bul->bul_retrans_time);
 		/* keep current state. */
 		
 		return (-1); /* XXX */
@@ -2358,11 +2378,10 @@ bul_fsm_back_preprocess(bul, fsmmsg)
 			if (send_haadreq(bul->bul_hoainfo, 64 /* XXX */, &bul->bul_coa) > 0)
 				/* how handle this */;
 
-			bul->bul_retrans_count++;
-			if (bul->bul_retrans_count > MIP6_BUL_MAX_BACKOFF)
-				bul->bul_retrans_count = MIP6_BUL_MAX_BACKOFF;
-			bul_set_retrans_timer(bul,
-						   1 << bul->bul_retrans_count);
+			bul->bul_retrans_time <<= 1;
+			if (bul->bul_retrans_time > MAX_DHAAD_TIMEOUT)
+				bul->bul_retrans_time = MAX_DHAAD_TIMEOUT;
+			bul_set_retrans_timer(bul, bul->bul_retrans_time);
 
 			bul->bul_reg_fsm_state = MIP6_BUL_REG_FSM_STATE_DHAAD;
 

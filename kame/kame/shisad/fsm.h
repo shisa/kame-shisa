@@ -1,4 +1,4 @@
-/*	$Id: fsm.h,v 1.1 2004/09/27 04:06:01 t-momose Exp $	*/
+/*	$Id: fsm.h,v 1.2 2004/10/25 13:06:53 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -30,8 +30,6 @@
 
 #ifndef _FSM_H_
 #define _FSM_H_
-
-#define MIP6_BUL_MAX_BACKOFF 6
 
 /* states for the primary fsm. */
 #define MIP6_BUL_REG_FSM_STATE_IDLE		0
