@@ -1,4 +1,4 @@
-/*      $Id: mdd.c,v 1.2 2004/09/29 11:44:45 t-momose Exp $  */
+/*      $Id: mdd.c,v 1.3 2004/10/06 07:16:20 keiichi Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -498,12 +498,18 @@ set_coa(void)
 			memset(&bp->coa, 0, sizeof(bp->coa));
 		} else
 		if (maxmatchlen >= bp->hoa_prefixlen) {
+#if 0
+			/*
+			 * returning home is processed separately when
+			 * receiving a MIPM_HOME_HINT message.
+			 */
 			bp->flags &= ~BF_BOUND;
 			bp->flags |= BF_HOME;
 			memcpy(&bp->pcoa, &bp->coa, sizeof(bp->pcoa));
 			bp->pcoaifindex = bp->coaifindex;
 			memcpy(&bp->coa, &sin6, sizeof(bp->coa));
 			bp->coaifindex = in6_addr2ifindex(&bp->coa.sin6_addr);
+#endif
 		} else {
 			bp->flags |= BF_BOUND;
 			bp->flags &= ~BF_HOME;
@@ -636,11 +642,12 @@ mainloop(void)
 				(void) dereg_detach_coa((struct ifa_msghdr *) ifm);
 #endif /* MIP_MCOA */
 
-			if (in6_is_on_homenetwork(
-					(struct ifa_msghdr *) ifm, &bl_head))
-					continue;
-
 			get_coacandidate();
+/*
+			if (in6_is_on_homenetwork(
+			    (struct ifa_msghdr *)ifm, &bl_head))
+					continue;
+*/
 			set_coa();
 			sync_binding();
 
@@ -927,7 +934,7 @@ recv_home_hint(int ifindex, struct sockaddr_in6 *sin6, int prefixlen)
 			bp->flags |= BF_HOME;
 			memcpy(&bp->pcoa, &bp->coa, sizeof(bp->pcoa));
 			bp->pcoaifindex =bp->coaifindex;
-			memcpy(&bp->coa, &bp->hoa, sizeof(bp->coa));
+			memcpy(&bp->coa, &bp->hoa, sizeof(bp->hoa));
 			bp->coaifindex = ifindex;
 		}
 	}

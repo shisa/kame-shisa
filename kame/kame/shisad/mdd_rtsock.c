@@ -1,4 +1,4 @@
-/*      $Id: mdd_rtsock.c,v 1.2 2004/09/27 08:50:43 t-momose Exp $  */
+/*      $Id: mdd_rtsock.c,v 1.3 2004/10/06 07:16:20 keiichi Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -162,7 +162,20 @@ get_addr_with_ifl(struct coacl *coacl_headp, struct cifl *ifl_headp)
 			}
 			flags6 = ifr6.ifr_ifru.ifru_flags6;
 
-			if (flags6 & IN6_IFF_READONLY) continue;
+			/* an address which is not ready cannot be a CoA. */
+			if (flags6 & IN6_IFF_NOTREADY)
+				continue;
+
+			/* a detached addresses cannot be a CoA. */
+			if (flags6 & IN6_IFF_DETACHED)
+				continue;
+
+			/*
+			 * XXX need more consideration:
+			 * a home address cannot be a CoA.
+			 */
+			if (flags6 & IN6_IFF_HOME)
+				continue;
 
 			cp = malloc(sizeof(struct coac));
 			memcpy(&cp->coa, sin6, sizeof(cp->coa));
@@ -488,22 +501,24 @@ in6_is_on_homenetwork(struct ifa_msghdr *ifam, struct bl *bl_headp)
 
 
 	if (if_indextoname(ifam->ifam_index, ifname) == NULL)
-		return 0;
+		return (0);
 	if (strncmp(ifname, "mip", 3) == 0) {
 		fprintf(stdout, "this address is assigned to mip virtual interface\n");
-		return 0;	
+		return (0);	
 	}
 
 	get_rtaddrs(ifam->ifam_addrs,
-		(struct sockaddr *) (ifam + 1), rti_info);
+	    (struct sockaddr *)(ifam + 1), rti_info);
 	sin6 = (struct sockaddr_in6 *) rti_info[RTAX_IFA];
-	if (sin6 == NULL) return 0;
+	if (sin6 == NULL)
+		return (0);
 
 	LIST_FOREACH(bp, bl_headp, binding_entries) {
 		len = in6_matchlen(&sin6->sin6_addr, &bp->hoa.sin6_addr);
-		if (len >= bp->hoa_prefixlen) return 1;
+		if (len >= bp->hoa_prefixlen)
+			return (1);
 	}
 
-	return 0;
+	return (0);
 }
 
