@@ -1,4 +1,4 @@
-/*	$Id: fsm.c,v 1.4 2004/10/18 04:08:19 keiichi Exp $	*/
+/*	$Id: fsm.c,v 1.5 2004/10/25 11:48:55 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -61,7 +61,8 @@
 #include "shisad.h"
 #include "fsm.h"
 
-int first_initial_back_timeout = 2; /* the spec says more than 1.5 sec. */
+ /* 1 means 1 << 1 = 2.  the spec says more than 1.5 sec. */
+int first_initial_back_timeout_count = 1;
 
 extern struct mip6stat mip6stat;
 
@@ -420,9 +421,10 @@ bul_reg_fsm(bul, event, data)
 					/* continue and try again. */
 				}
 
-				bul->bul_retrans_count = 0;
+				bul->bul_retrans_count
+				    = first_initial_back_timeout_count;
 				bul_set_retrans_timer(bul,
-				    first_initial_back_timeout);
+				    1 << bul->bul_retrans_count);
 
 				bul_set_expire_timer(bul,
 				    bul->bul_lifetime << 2);
@@ -1856,8 +1858,10 @@ bul_reg_fsm(bul, event, data)
 				/* continue and try again. */
 			}
 
-			bul->bul_retrans_count = 0;
-			bul_set_retrans_timer(bul, first_initial_back_timeout);
+			bul->bul_retrans_count
+			    = first_initial_back_timeout_count;
+			bul_set_retrans_timer(bul,
+			    1 << bul->bul_retrans_count);
 
 			bul_set_expire_timer(bul, bul->bul_lifetime << 2);
 
