@@ -1,4 +1,4 @@
-/*	$Id: mnd.c,v 1.4 2004/10/07 09:26:11 keiichi Exp $	*/
+/*	$Id: mnd.c,v 1.5 2004/10/08 07:53:08 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -345,7 +345,7 @@ mipsock_bul_request (bul, command)
 		sizeof(struct mipm_bul_info) + sizeof(struct sockaddr_in6) * 3;
 	buinfo->mipu_version = MIP_VERSION;
 	buinfo->mipu_type = command;
-	buinfo->mipu_seq = rand();
+	buinfo->mipu_seq = random();
 	buinfo->mipu_flags = bul->bul_flags;
 	buinfo->mipu_hoa_ifindex = bul->bul_hoainfo->hinfo_ifindex;
 #ifdef MIP_MCOA

@@ -1,4 +1,4 @@
-/*      $Id: binding.c,v 1.2 2004/10/01 11:30:44 t-momose Exp $  */
+/*      $Id: binding.c,v 1.3 2004/10/08 07:53:08 keiichi Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -367,7 +367,7 @@ mipscok_bc_request(bc, command)
 		+ sizeof(struct sockaddr_in6) * 3;
         bcinfo->mipc_version = MIP_VERSION;
         bcinfo->mipc_type = command;
-        bcinfo->mipc_seq = rand();
+        bcinfo->mipc_seq = random();
         bcinfo->mipc_flags = bc->bc_flags;
         bcinfo->mipc_seqno = bc->bc_seqno;
         bcinfo->mipc_lifetime = bc->bc_lifetime;
