@@ -1,4 +1,4 @@
-/*      $Id: mdd_rtsock.c,v 1.3 2004/10/06 07:16:20 keiichi Exp $  */
+/*      $Id: mdd_rtsock.c,v 1.4 2004/10/13 16:13:43 keiichi Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -465,14 +465,6 @@ in6_is_one_of_hoa(struct ifa_msghdr *ifam, struct bl *bl_headp)
 	struct sockaddr_in6 *sin6;
 	struct binding *bp;
 	struct sockaddr *rti_info[RTAX_MAX];
-	char ifname[IFNAMSIZ];
-
-	if (if_indextoname(ifam->ifam_index, ifname) == NULL)
-		return (0);
-	if (strncmp(ifname, "mip", 3) == 0) {
-		printf("a home address is assinged to mip interface.\n");
-		return (0);
-	}
 		
 	get_rtaddrs(ifam->ifam_addrs,
 		(struct sockaddr *) (ifam + 1), rti_info);

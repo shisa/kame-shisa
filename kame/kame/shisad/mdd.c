@@ -1,4 +1,4 @@
-/*      $Id: mdd.c,v 1.4 2004/10/07 09:26:11 keiichi Exp $  */
+/*      $Id: mdd.c,v 1.5 2004/10/13 16:13:43 keiichi Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -510,6 +510,8 @@ set_coa()
 			memset(&bp->coa, 0, sizeof(bp->coa));
 		} else
 		if (maxmatchlen >= bp->hoa_prefixlen) {
+			bp->flags &= ~BF_BOUND;
+			bp->flags |= BF_HOME;
 #if 0
 			/*
 			 * returning home is processed separately when
@@ -659,6 +661,14 @@ mainloop()
 			if (ifm->ifm_type == RTM_ADDRINFO) 
 				(void) dereg_detach_coa((struct ifa_msghdr *) ifm);
 #endif /* MIP_MCOA */
+
+#if 1
+/* ETSI 2004.10.11 */
+			if (in6_is_one_of_hoa((struct ifa_msghdr *)ifm,
+			    &bl_head)) {
+				continue;
+			}
+#endif
 
 			get_coacandidate();
 /*

@@ -1,4 +1,4 @@
-/*	$Id: mnd.c,v 1.6 2004/10/13 16:09:01 keiichi Exp $	*/
+/*	$Id: mnd.c,v 1.7 2004/10/13 16:13:43 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -497,8 +497,30 @@ mipsock_md_dereg_bul(hoa, coa, ifindex)
 	 */
 	if (if_indextoname(ifindex, ifname) == NULL) 
 		return (EINVAL);
+#if 1
+	/* ETSI 2004.10.13 */
+{
+	int flags;
+
+	bul = bul_get_homeflag(&hoainfo->hinfo_hoa);
+	if (bul == NULL) {
+		syslog(LOG_ERR, "mipsock_md_dereg_bul: "
+		    "received home hint, but there is no bul for %s\n",
+		    ip6_sprintf(&hoainfo->hinfo_hoa));
+		return (-1);
+	}
+	flags = IN6_IFF_NODAD|IN6_IFF_HOME|IN6_IFF_AUTOCONF;
+	if ((bul->bul_flags & IP6_MH_BU_HOME) &&
+	    ((bul->bul_reg_fsm_state == MIP6_BUL_REG_FSM_STATE_WAITAR) ||
+		(bul->bul_reg_fsm_state == MIP6_BUL_REG_FSM_STATE_BOUND))) {
+		flags |= IN6_IFF_DEREGISTERING;
+	}
+	err = set_ip6addr(ifname, &hoainfo->hinfo_hoa, 64, flags);
+}
+#else
 	err = set_ip6addr(ifname, &hoainfo->hinfo_hoa, 64,
 	    IN6_IFF_NODAD|IN6_IFF_HOME|IN6_IFF_DEREGISTERING);
+#endif
 	if (err) {
 		syslog(LOG_ERR,
 		    "assigning a home address (%s) to %s failed.\n",
