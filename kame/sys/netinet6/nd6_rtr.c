@@ -1693,6 +1693,10 @@ pfxlist_onlink_check()
 		for (ifa = in6_ifaddr; ifa; ifa = ifa->ia_next) {
 			if ((ifa->ia6_flags & IN6_IFF_AUTOCONF) == 0)
 				continue;
+#if defined(MIP6) && NMIP > 0
+			ifa->ia6_flags |= IN6_IFF_DETACHED;
+			rt_addrinfomsg((struct ifaddr *)ifa);
+#else /* defined(MIP6) && NMIP > 0 */
 			if (ifa->ia6_flags & IN6_IFF_DETACHED) {
 				ifa->ia6_flags &= ~IN6_IFF_DETACHED;
 				ifa->ia6_flags |= IN6_IFF_TENTATIVE;
@@ -1702,6 +1706,7 @@ pfxlist_onlink_check()
 				/* Do we need a delay in this case? */
 				nd6_dad_start((struct ifaddr *)ifa, 0);
 			}
+#endif /* MIP6 && NMIP > 0 */
 		}
 	}
 
