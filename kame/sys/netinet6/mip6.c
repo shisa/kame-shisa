@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.19 2004/10/20 12:25:08 keiichi Exp $	*/
+/*	$Id: mip6.c,v 1.20 2004/10/25 05:13:34 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -337,9 +337,9 @@ mip6_tunnel_input(mp, offp, proto)
 	int *offp, proto;
 {
 	struct mbuf *m = *mp;
-	struct ip6_hdr *ip6;
 #if NMIP > 0
 	int nxt;
+	struct in6_addr src, dst;
 	struct mip6_bul_internal *bul, *cnbul;
 #endif /* NMIP > 0 */
 #if !(defined(__FreeBSD__) && __FreeBSD_version >= 500000)
@@ -350,8 +350,8 @@ mip6_tunnel_input(mp, offp, proto)
 
 	switch (proto) {
 	case IPPROTO_IPV6:
-		if (m->m_len < sizeof(*ip6)) {
-			m = m_pullup(m, sizeof(*ip6));
+		if (m->m_len < sizeof(struct ip6_hdr)) {
+			m = m_pullup(m, sizeof(struct ip6_hdr));
 			if (!m)
 				return (IPPROTO_DONE);
 		}
@@ -362,15 +362,20 @@ mip6_tunnel_input(mp, offp, proto)
 		}
 		if (nxt == IPPROTO_MH)
 			goto dontstartrr;
-		ip6 = mtod(m, struct ip6_hdr *);
-		bul = mip6_bul_get_home_agent(&ip6->ip6_dst);
+		if (mip6_get_logical_src_dst(m, &src, &dst)) {
+			mip6log((LOG_ERR, "mip6_tunnel_input: "
+			    "failded to get logical source and destination "
+			    "addresses.\n"));
+			return (IPPROTO_DONE);
+		}
+		bul = mip6_bul_get_home_agent(&dst);
 		if (bul == NULL)
 			goto dontstartrr;
-		cnbul = mip6_bul_get(&ip6->ip6_dst, &ip6->ip6_src);
+		cnbul = mip6_bul_get(&dst, &src);
 		if (cnbul != NULL)
 			goto dontstartrr;
 
-		mip6_notify_rr_hint(&ip6->ip6_dst, &ip6->ip6_src);
+		mip6_notify_rr_hint(&dst, &src);
 
 	dontstartrr:
 #endif /* NMIP > 0 */
@@ -704,7 +709,6 @@ mip6_bce_remove_all ()
 		mip6_bc_list_remove(mbc);
 	}
 	splx(s);
-
 }
 
 /* Preparing a type2 routing header for outgoing packets  */
@@ -915,7 +919,13 @@ void
 mip6_bul_remove(mbul)
 	struct mip6_bul_internal *mbul;
 {
-	int error;
+	int s, error;
+
+#if defined(__NetBSD__) || defined(__OpenBSD__)
+	s = splsoftnet();
+#else
+	s = splnet();
+#endif
 
 	LIST_REMOVE(mbul, mbul_entry);
 
@@ -925,20 +935,30 @@ mip6_bul_remove(mbul)
 		error = encap_detach(mbul->mbul_encap);
 		mbul->mbul_encap = NULL;
 		if (error) {
-			mip6log((LOG_ERR, "tunnel delete failed.\n"));
+			mip6log((LOG_ERR, "mip6_bul_remove: "
+			    "tunnel deletione failed.\n"));
 		}
 	}
 
 	FREE(mbul, M_TEMP);
+
+	splx(s);
 }
 
 void
 mip6_bul_remove_all()
 {
+	int s;
 	register struct ifnet *ifp;
 	register struct ifaddr *ifa;
 	struct in6_ifaddr *ia6;
 	struct mip6_bul_internal *mbul, *nmbul;
+
+#if defined(__NetBSD__) || defined(__OpenBSD__)
+	s = splsoftnet();
+#else
+	s = splnet();
+#endif
 
 #ifdef __FreeBSD__
 	TAILQ_FOREACH(ifp, &ifnet, if_link)
@@ -966,6 +986,8 @@ mip6_bul_remove_all()
 			}
 		}
 	}
+
+	splx(s);
 }
 
 struct mip6_bul_internal *
@@ -1555,5 +1577,120 @@ mip6_rr_hint_ratelimit(dst, src)
 	}
 
 	return ret;
+}
+#endif /* NMIP > 0 */
+
+#if NMIP > 0
+int
+mip6_get_logical_src_dst(m, src, dst)
+	struct mbuf *m;
+	struct in6_addr *src, *dst;
+{
+	struct ip6_hdr *ip6;
+	struct ip6_dest *ip6d;
+	struct ip6_rthdr *ip6r;
+	struct ip6_rthdr2 *ip6r2;
+	u_int8_t *ip6o;
+	int off, proto, nxt, ip6dlen, ip6olen, ip6r2len;
+
+#ifndef PULLDOWN_TEST
+	IP6_EXTHDR_CHECK(m, 0, sizeof(struct ip6_hdr), -1);
+	ip6 = (struct ip6_hdr *)mtod(m, caddr_t);
+#else
+	IP6_EXTHDR_GET(ip6, struct ip6_hdr *, m, 0, sizeof(struct ip6_hdr));
+	if (ip6 == NULL)
+		return (-1);
+#endif
+	*src = ip6->ip6_src;
+	*dst = ip6->ip6_dst;
+
+	off = 0;
+	proto = IPPROTO_IPV6;
+
+	while ((off = ip6_nexthdr(m, off, proto, &nxt)) != -1) {
+		proto = nxt;
+		if (nxt == IPPROTO_DSTOPTS) {
+#ifndef PULLDOWN_TEST
+			IP6_EXTHDR_CHECK(m, off, sizeof(struct ip6_dest), -1);
+			ip6d = (struct ip6_dest *)(mtod(m, caddr_t) + off);
+#else
+			IP6_EXTHDR_GET(ip6d, struct ip6_dest *, m, off,
+			    sizeof(struct ip6_dest));
+			if (ip6d == NULL)
+				return (-1);
+#endif
+			ip6dlen = (ip6d->ip6d_len + 1) << 3;
+#ifndef PULLDOWN_TEST
+			IP6_EXTHDR_CHECK(m, off, ip6dlen, -1);
+			ip6d = (struct ip6_dest *)(mtod(m, caddr_t) + off);
+#else
+			IP6_EXTHDR_GET(ip6d, struct ip6_dest *, m, off,
+			    ip6dlen);
+			if (ip6d == NULL)
+				return (-1);
+#endif
+			ip6dlen -= sizeof(struct ip6_dest);
+			ip6o = (u_int8_t *)ip6d + sizeof(struct ip6_dest);
+			for (ip6olen = 0; ip6dlen > 0;
+			     ip6dlen -= ip6olen, ip6o += ip6olen) {
+				if (*ip6o != IP6OPT_PAD1 &&
+				    (ip6dlen < IP6OPT_MINLEN ||
+					2 + *(ip6o + 1) > ip6dlen)) {
+					mip6log((LOG_ERR,
+					    "mip6_get_logical_src_dst: "
+					    "destopt too small.\n"));
+					return (-1);
+				}
+				if (*ip6o == IP6OPT_PAD1) {
+					/* special case. */
+					ip6olen = 1;
+				} else if (*ip6o == IP6OPT_HOME_ADDRESS) {
+					ip6olen = 2 + *(ip6o + 1);
+					if (ip6olen != sizeof(struct ip6_opt_home_address)) {
+						mip6log((LOG_ERR,
+						    "mip6_get_logical_src_dst: "
+						    "invalid HAO length.\n"));
+						return (-1);
+					}
+					bcopy(ip6o + 2, src,
+					    sizeof(struct in6_addr));
+				} else {
+					/* ignore other options. */
+					ip6olen = 2 + *(ip6o + 1);
+				}
+			}
+		}
+		if (nxt == IPPROTO_ROUTING) {
+#ifndef PULLDOWN_TEST
+			IP6_EXTHDR_CHECK(m, off, sizeof(struct ip6_rthdr), -1);
+			ip6r = (struct ip6_rthdr *)(mtod(m, caddr_t) + off);
+#else
+			IP6_EXTHDR_GET(ip6r, struct ip6_rthdr *, m, off,
+			    sizeof(struct ip6_rthdr));
+			if (ip6r == NULL)
+				return (-1);
+#endif
+			if (ip6r->ip6r_type != IPV6_RTHDR_TYPE_2)
+				continue;
+			if (ip6r->ip6r_len != 2)
+				continue;
+			if (ip6r->ip6r_segleft != 1)
+				continue;
+			ip6r2len = (ip6r->ip6r_len + 1) << 3;
+#ifndef PULLDOWN_TEST
+			IP6_EXTHDR_CHECK(m, off, ip6r2len, -1);
+			ip6r2 = (struct ip6_rthdr2 *)(mtod(m, caddr_t) + off);
+#else
+			IP6_EXTHDR_GET(ip6r2, struct ip6_rthdr2 *, m, off,
+			    ip6r2len);
+			if (ip6r2 == NULL)
+				return (-1);
+#endif
+			bcopy((caddr_t)(ip6r2 + 1), dst,
+			    sizeof(struct in6_addr));
+		}
+	}
+
+	return (0);
 }
 #endif /* NMIP > 0 */

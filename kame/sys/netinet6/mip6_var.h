@@ -188,6 +188,8 @@ int mip6_ifa6_is_addr_valid_hoa(struct in6_ifaddr *);
 u_int8_t *mip6_create_hoa_opt(struct in6_addr *); 
 struct ip6_opt_home_address *mip6_search_hoa_in_destopt(u_int8_t *);
 void mip6_probe_routers(void);
+int mip6_get_logical_src_dst(struct mbuf *, struct in6_addr *,
+    struct in6_addr *);
 
 /* used by one or more kind of nodetypes. */
 struct in6_ifaddr *mip6_ifa_ifwithin6addr(const struct in6_addr *,
