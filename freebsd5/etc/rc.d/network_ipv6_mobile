@@ -26,7 +26,7 @@
 #
 
 # PROVIDE: network_ipv6_mobile
-# REQUIRE: network_ipv6
+# REQUIRE: routing network_ipv6
 # KEYWORD: FreeBSD
 
 #
@@ -124,7 +124,7 @@ network_ipv6_mobile_start()
 		;;
 	esac
 
-	echo ''
+	echo '.'
 }
 
 mobileip6_getprefixes() {
