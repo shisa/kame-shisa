@@ -32,9 +32,11 @@
 #ifdef __FreeBSD__
 #include "opt_inet.h"
 #include "opt_inet6.h"
+#include "opt_mip6.h"
 #endif
 #ifdef __NetBSD__
 #include "opt_inet.h"
+#include "opt_mip6.h"
 #endif
 
 #include <sys/param.h>
@@ -69,6 +71,13 @@
 #include <netinet6/nd6.h>
 #include <netinet/icmp6.h>
 #include <netinet6/scope6_var.h>
+
+#ifdef MIP6
+#include "mip.h"
+#include <netinet6/mip6.h>
+#include <netinet6/mip6_var.h>
+#include <net/mipsock.h>
+#endif /* MIP6 */
 
 #include <net/net_osdep.h>
 
@@ -142,7 +151,11 @@ nd6_rs_input(m, off, icmp6len)
 	union nd_opts ndopts;
 
 	/* If I'm not a router, ignore it. */
+#if defined(MIP6) && NMIP > 0
+	if ((ip6_accept_rtadv != 0 || !ip6_forwarding) && !MIP6_IS_MR)
+#else
 	if (ip6_accept_rtadv != 0 || !ip6_forwarding)
+#endif
 		goto freeit;
 
 	/* Sanity checks */
@@ -395,6 +408,11 @@ nd6_ra_input(m, off, icmp6len)
 		}
 	}
 
+#if defined(MIP6) && NMIP > 0
+	if (MIP6_IS_MN) {
+		mip6_probe_routers();
+	}
+#endif /* MIP6 && NMIP > 0 */
 	/*
 	 * MTU
 	 */
@@ -673,7 +691,11 @@ defrtrlist_del(dr)
 	 * Flush all the routing table entries that use the router
 	 * as a next hop.
 	 */
+#if defined(MIP6) && NMIP > 0
+	if ((!ip6_forwarding && ip6_accept_rtadv) && !MIP6_IS_MR) /* XXX: better condition? */
+#else
 	if (!ip6_forwarding && ip6_accept_rtadv) /* XXX: better condition? */
+#endif
 		rt6_flush(&dr->rtaddr, dr->ifp);
 
 	if (dr->installed) {
@@ -805,7 +827,11 @@ defrouter_select()
 	 * if the node is not an autoconfigured host, we explicitly exclude
 	 * such cases here for safety.
 	 */
+#if defined(MIP6) && NMIP > 0
+	if ((ip6_forwarding || !ip6_accept_rtadv) && !MIP6_IS_MR) {
+#else
 	if (ip6_forwarding || !ip6_accept_rtadv) {
+#endif
 		nd6log((LOG_WARNING,
 		    "defrouter_select: called unexpectedly (forwarding=%d, "
 		    "accept_rtadv=%d)\n", ip6_forwarding, ip6_accept_rtadv));
@@ -827,7 +853,11 @@ defrouter_select()
 		 * the function, but we intentionally keep it to make the note
 		 * clear.
 		 */
+#if defined(MIP6) && NMIP > 0
+		if (!ip6_forwarding || MIP6_IS_MR) {
+#else
 		if (!ip6_forwarding) {
+#endif
 			if (nd6_defifp) {
 				/*
 				 * Install a route to the default interface
@@ -855,7 +885,6 @@ defrouter_select()
 	 * function.
 	 */
 	defrouter_delifreq();
-
 	/*
 	 * Search for a (probably) reachable router from the list.
 	 * We just pick up the first reachable one (if any), assuming that
@@ -1453,6 +1482,7 @@ prelist_update(new, dr, m, mcast)
 
 		in6_init_address_ltimes(pr, &lt6_tmp);
 
+
 		/*
 		 * We need to treat lifetimes for temporary addresses
 		 * differently, according to
@@ -1494,6 +1524,23 @@ prelist_update(new, dr, m, mcast)
 	if (ia6_match == NULL && new->ndpr_vltime) {
 		int ifidlen;
 
+		ifidlen = ((struct in6_ifextra *)(ifp)->if_afdata[AF_INET6])->ifidlen;
+#if defined(MIP6) && NMIP > 0
+		/* 
+		 * if the received prefix is equal to a home prefix, should not 
+		 * create a new address from the prefix. The home agent may defend
+		 * the same address by proxy ND due to binding registration. 
+		 * Thus, the new address (i.e. Home Address) will be 
+		 * added manually by shiisa.  
+		 */
+		if (MIP6_IS_MN
+		    && mip6_are_homeprefix(new)) {
+			mips_notify_home_hint(new->ndpr_ifp->if_index, 
+				&new->ndpr_prefix.sin6_addr, new->ndpr_plen);
+			printf("DEBUG: returning home\n");
+			goto end;
+		}
+#endif /* MIP6 && NMIP > 0 */
 		/*
 		 * 5.5.3 (d) (continued)
 		 * No address matched and the valid lifetime is non-zero.
@@ -1508,7 +1555,6 @@ prelist_update(new, dr, m, mcast)
 		 * identifier is defined in a separate link-type specific
 		 * document.
 		 */
-		ifidlen = ((struct in6_ifextra *)(ifp)->if_afdata[AF_INET6])->ifidlen;
 		if (ifidlen < 0) {
 			/* this should not happen, so we always log it. */
 			log(LOG_ERR, "prelist_update: IFID undefined (%s)\n",
@@ -1663,6 +1709,15 @@ pfxlist_onlink_check()
 			if (pr->ndpr_raf_onlink == 0)
 				continue;
 
+#ifdef MIP6
+			/*
+			 * we aren't interested in prefixes without the A bit
+			 * set.
+			 */
+			if (pr->ndpr_raf_auto == 0)
+				continue;
+#endif /* MIP6 */
+
 			if ((pr->ndpr_stateflags & NDPRF_DETACHED) == 0 &&
 			    find_pfxlist_reachable_router(pr) == NULL)
 				pr->ndpr_stateflags |= NDPRF_DETACHED;
@@ -1733,7 +1788,16 @@ pfxlist_onlink_check()
 	 * The precise detection logic is same as the one for prefixes.
 	 */
 	for (ifa = in6_ifaddr; ifa; ifa = ifa->ia_next) {
-		if (!(ifa->ia6_flags & IN6_IFF_AUTOCONF))
+		if (!(ifa->ia6_flags & IN6_IFF_AUTOCONF)
+#if defined(MIP6) && NMIP > 0
+		    /*
+		     * check onlink status if we have a home address
+		     * even when we don't have autoconfigured
+		     * addresses.
+		     */
+		    && !(ifa->ia6_flags & IN6_IFF_HOME)
+#endif /* MIP6 && NMIP > 0 */
+			)
 			continue;
 
 		if (ifa->ia6_ndpr == NULL) {
@@ -1760,11 +1824,18 @@ pfxlist_onlink_check()
 				if (ifa->ia6_flags & IN6_IFF_DETACHED) {
 					ifa->ia6_flags &= ~IN6_IFF_DETACHED;
 					ifa->ia6_flags |= IN6_IFF_TENTATIVE;
+#ifdef MIP6
+					rt_addrinfomsg((struct ifaddr *)ifa);
+#endif /* MIP6 */
 					nd6_dad_start((struct ifaddr *)ifa,
 					    0);
 				}
-			} else
+			} else {
 				ifa->ia6_flags |= IN6_IFF_DETACHED;
+#ifdef MIP6
+				rt_addrinfomsg((struct ifaddr *)ifa);
+#endif /* MIP6 */
+			}
 		}
 	}
 	else {
@@ -1774,6 +1845,9 @@ pfxlist_onlink_check()
 			if (ifa->ia6_flags & IN6_IFF_DETACHED) {
 				ifa->ia6_flags &= ~IN6_IFF_DETACHED;
 				ifa->ia6_flags |= IN6_IFF_TENTATIVE;
+#ifdef MIP6
+				rt_addrinfomsg((struct ifaddr *)ifa);
+#endif /* MIP6 */
 				/* Do we need a delay in this case? */
 				nd6_dad_start((struct ifaddr *)ifa, 0);
 			}
@@ -1793,6 +1867,12 @@ nd6_prefix_onlink(pr)
 	u_long rtflags;
 	int error = 0;
 	struct rtentry *rt = NULL;
+#ifdef MIP6
+	struct nd_ifinfo *ndi = ND_IFINFO(ifp);
+
+	if ((ndi->flags & ND6_IFF_DONT_SET_IFROUTE) != 0)
+		return (0);
+#endif /* MIP6 */
 
 	/* sanity check */
 	if ((pr->ndpr_stateflags & NDPRF_ONLINK) != 0) {

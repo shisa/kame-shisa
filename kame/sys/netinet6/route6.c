@@ -32,9 +32,11 @@
 #ifdef __FreeBSD__
 #include "opt_inet.h"
 #include "opt_inet6.h"
+#include "opt_mip6.h"
 #endif
 #ifdef __NetBSD__
 #include "opt_inet.h"
+#include "opt_mip6.h"
 #endif
 
 #include <sys/param.h>
@@ -51,10 +53,20 @@
 #include <netinet/ip6.h>
 #include <netinet6/ip6_var.h>
 
+#ifdef MIP6
+#include "mip.h"
+#include <netinet/ip6mh.h>
+#endif
+
 #include <netinet/icmp6.h>
 
 static int ip6_rthdr0 __P((struct mbuf *, struct ip6_hdr *,
     struct ip6_rthdr0 *));
+
+#if defined(MIP6) && NMIP > 0
+static int ip6_rthdr2 __P((struct mbuf *, struct ip6_hdr *,
+    struct ip6_rthdr2 *));
+#endif /* defined(MIP6) && NMIP > 0 */
 
 int
 route6_input(mp, offp, proto)
@@ -119,6 +131,25 @@ route6_input(mp, offp, proto)
 		if (ip6_rthdr0(m, ip6, (struct ip6_rthdr0 *)rh))
 			return (IPPROTO_DONE);
 		break;
+#if defined(MIP6) && NMIP > 0
+	case IPV6_RTHDR_TYPE_2:
+		rhlen = (rh->ip6r_len + 1) << 3;
+
+#ifndef PULLDOWN_TEST
+		IP6_EXTHDR_CHECK(m, off, rhlen, IPPROTO_DONE);
+#else
+		IP6_EXTHDR_GET(rh, struct ip6_rthdr *, m, off, rhlen);
+		if (rh == NULL) {
+			ip6stat.ip6s_tooshort++;
+			return IPPROTO_DONE;
+		}
+#endif
+
+		if (ip6_rthdr2(m, ip6, (struct ip6_rthdr2 *)rh)) 
+			return(IPPROTO_DONE);
+
+		break;
+#endif /* defined(MIP6) && NMIP > 0 */
 	default:
 		/* unknown routing type */
 		if (rh->ip6r_segleft == 0) {
@@ -250,4 +281,101 @@ ip6_rthdr0(m, ip6, rh0)
 	return (-1);
 }
 
+#if defined(MIP6) && NMIP > 0
+/* Type2 routing header processing */
+static int
+ip6_rthdr2(m, ip6, rh2)
+	struct mbuf *m;
+	struct ip6_hdr *ip6;
+	struct ip6_rthdr2 *rh2;
+{
+	struct in6_addr *nextaddr, tmpaddr;
+	struct in6_ifaddr *ifa;
+	struct sockaddr_in6 next_sa;
 
+	if (rh2->ip6r2_segleft == 0)
+		return (0);
+
+	/* section 11.3.3 */
+	if (rh2->ip6r2_len != 2) {
+		ip6stat.ip6s_badoptions++;
+		goto bad;
+	}
+
+	if (rh2->ip6r2_segleft != 1) { 
+		ip6stat.ip6s_badoptions++;
+		goto bad;
+	}
+
+	rh2->ip6r2_segleft--;
+	nextaddr = (struct in6_addr *)(rh2 + 1);
+
+	/*
+	 * reject invalid addresses.  be proactive about malicious use of
+	 * IPv4 mapped/compat address.
+	 * XXX need more checks?
+	 */
+	if (IN6_IS_ADDR_MULTICAST(nextaddr) ||
+		IN6_IS_ADDR_UNSPECIFIED(nextaddr) ||
+		IN6_IS_ADDR_V4MAPPED(nextaddr) ||
+		IN6_IS_ADDR_V4COMPAT(nextaddr)) {
+		ip6stat.ip6s_badoptions++;
+		goto bad;
+	}
+
+	if (IN6_IS_ADDR_MULTICAST(&ip6->ip6_dst) ||
+		IN6_IS_ADDR_UNSPECIFIED(&ip6->ip6_dst) ||
+		IN6_IS_ADDR_V4MAPPED(&ip6->ip6_dst) ||
+		IN6_IS_ADDR_V4COMPAT(&ip6->ip6_dst)) {
+		ip6stat.ip6s_badoptions++;
+		goto bad;
+	}
+
+	/*
+	 * determine the scope zone of the next hop, based on the interface
+	 * of the current hop.
+	 * [draft-ietf-ipngwg-scoping-arch, Section 9]
+	 */
+	if ((ifa = ip6_getdstifaddr(m)) == NULL) 
+		goto bad;
+	/*
+	 * construct a sockaddr_in6 for the next hop with the zone ID,
+	 * then update the recorded destination address.
+	 */
+	bzero(&next_sa, sizeof(next_sa));
+	next_sa.sin6_family = AF_INET6;
+	next_sa.sin6_len = sizeof(next_sa);
+	next_sa.sin6_addr = *nextaddr;
+	if (in6_addr2zoneid(ifa->ia_ifp, nextaddr, &next_sa.sin6_scope_id)) {
+		ip6stat.ip6s_badscope++;
+		goto bad;
+	}
+	if (in6_embedscope(&next_sa.sin6_addr, &next_sa)) {
+		/* XXX: should not happen */
+		ip6stat.ip6s_badscope++;
+		goto bad;
+	}
+
+
+	/* Check BUL xxx */
+
+	/* Swap the IPv6 destination address and nextaddr. Forward the packet.  */
+  	tmpaddr = *nextaddr;
+	*nextaddr = ip6->ip6_dst;
+	if (IN6_IS_ADDR_LINKLOCAL(nextaddr))
+		nextaddr->s6_addr16[1] = 0;
+	ip6->ip6_dst = tmpaddr;
+
+	if (IN6_IS_ADDR_LINKLOCAL(&ip6->ip6_dst))
+		ip6->ip6_dst.s6_addr16[1] = htons(m->m_pkthdr.rcvif->if_index);
+
+  	ip6_forward(m, 1);
+
+	return (-1);			/* m would be freed in ip6_forward() */
+
+  bad:
+	m_freem(m);
+	return (-1);
+
+}
+#endif /* defined(MIP6) && NMIP > 0 */

@@ -33,10 +33,12 @@
 #include "opt_inet.h"
 #include "opt_inet6.h"
 #include "opt_ipsec.h"
+#include "opt_mip6.h"
 #endif
 #ifdef __NetBSD__
 #include "opt_inet.h"
 #include "opt_ipsec.h"
+#include "opt_mip6.h"
 #endif
 
 #include <sys/param.h>
@@ -66,6 +68,9 @@
 #include <net/if_types.h>
 #include <net/if_dl.h>
 #include <net/route.h>
+#ifdef RADIX_MPATH
+#include <net/radix_mpath.h>
+#endif
 
 #include <netinet/in.h>
 #include <netinet/in_var.h>
@@ -83,6 +88,15 @@
 #ifdef IPSEC
 #include <netinet6/ipsec.h>
 #endif
+
+#ifdef MIP6
+#include "mip.h"
+#include <netinet6/mip6.h>
+#include <netinet6/mip6_var.h>
+#if NMIP > 0
+#include <net/if_mip.h>
+#endif /* NMIP > 0 */
+#endif /* MIP6 */
 
 #include <net/net_osdep.h>
 
@@ -229,17 +243,27 @@ nd6_ns_input(m, off, icmp6len)
 	if (!ifa) {
 		struct rtentry *rt;
 		struct sockaddr_in6 tsin6;
+#ifdef RADIX_MPATH
+		struct route_in6 ro;
+#endif /* RADIX_MPATH */
 
 		bzero(&tsin6, sizeof(tsin6));
 		tsin6.sin6_family = AF_INET6;
 		tsin6.sin6_len = sizeof(struct sockaddr_in6);
 		tsin6.sin6_addr = taddr6;
 
+#ifdef RADIX_MPATH
+		bzero(&ro, sizeof(ro));
+		ro.ro_dst = tsin6;
+		rtalloc_mpath_with_flag((struct route *)&ro, RTF_ANNOUNCE);
+		rt = ro.ro_rt;
+#else /* RADIX_MPATH */
 		rt = rtalloc1((struct sockaddr *)&tsin6, 0
 #ifdef __FreeBSD__
 			      , 0
 #endif /* __FreeBSD__ */
 			      );
+#endif /* RADIX_MPATH */
 		if (rt && (rt->rt_flags & RTF_ANNOUNCE) != 0 &&
 		    rt->rt_gateway->sa_family == AF_LINK) {
 			/*
@@ -482,9 +506,16 @@ nd6_ns_output(ifp, daddr6, taddr6, ln, dad)
 			src = hsrc;
 		else {
 			int error;
+			struct ip6_pktopts *popts = NULL;
+#if defined(MIP6) && NMIP > 0
+			struct ip6_pktopts opts;
 
+			ip6_initpktopts(&opts);
+			opts.ip6po_flags |= IP6PO_USECOA;
+			popts = &opts;
+#endif /* MIP6 && NMIP > 0 */
 			src = in6_selectsrc(&dst_sa,
-			    NULL,
+			    popts,
 			    NULL, &ro, NULL, NULL, &error);
 			if (src == NULL) {
 				nd6log((LOG_DEBUG,
@@ -494,6 +525,35 @@ nd6_ns_output(ifp, daddr6, taddr6, ln, dad)
 				goto bad;
 			}
 		}
+#if defined(MIP6) && NMIP > 0
+		/*
+		 * returning home case: don't send a unicast NS before
+		 * deregistration has been completed.
+		 */
+		{
+			struct in6_ifaddr *ia6;
+			ia6 = in6ifa_ifpwithaddr(ifp, src);
+			if (ia6 == NULL)
+				goto bad;
+			if (ia6->ia6_flags & IN6_IFF_DEREGISTERING) {
+				dst_sa.sin6_addr.s6_addr16[0] = IPV6_ADDR_INT16_MLL;
+				dst_sa.sin6_addr.s6_addr16[1] = 0;
+				dst_sa.sin6_addr.s6_addr32[1] = 0;
+				dst_sa.sin6_addr.s6_addr32[2] = IPV6_ADDR_INT32_ONE;
+				dst_sa.sin6_addr.s6_addr32[3] = taddr6->s6_addr32[3];
+				dst_sa.sin6_addr.s6_addr8[12] = 0xff;
+				if (in6_addr2zoneid(ifp, &dst_sa.sin6_addr,
+					&dst_sa.sin6_scope_id)) {
+					goto bad; /* XXX */
+				}
+				in6_embedscope(&dst_sa.sin6_addr, &dst_sa); /* XXX */
+				ip6->ip6_dst = dst_sa.sin6_addr;
+				bzero(&src_in, sizeof(src_in));
+				src = &src_in;
+				dad = 1; /* XXX to set IPV6_UNSPECSRC */
+			}
+		}
+#endif /* MIP6 && NMIP > 0 */
 	} else {
 		/*
 		 * Source address for DAD packet must always be IPv6
@@ -906,6 +966,10 @@ nd6_na_output(ifp, daddr6, taddr6, flags, tlladdr, sdl0)
 #else
 	struct route_in6 ro;
 #endif
+	struct ip6_pktopts *popts = NULL;
+#if defined(MIP6) && NMIP > 0
+	struct ip6_pktopts opts;
+#endif /* MIP6 && NMIP > 0 */
 
 	mac = NULL;
 	bzero(&ro, sizeof(ro));
@@ -976,9 +1040,14 @@ nd6_na_output(ifp, daddr6, taddr6, flags, tlladdr, sdl0)
 	/*
 	 * Select a source whose scope is the same as that of the dest.
 	 */
+#if defined(MIP6) && NMIP > 0
+	ip6_initpktopts(&opts);
+	opts.ip6po_flags |= IP6PO_USECOA;
+	popts = &opts;
+#endif /* MIP6 && NMIP > 0 */
 	bcopy(&dst_sa, &ro.ro_dst, sizeof(dst_sa));
 	src = in6_selectsrc(&dst_sa,
-	    NULL,
+	    popts,
 	    NULL, &ro, NULL, NULL, &error);
 	if (src == NULL) {
 		nd6log((LOG_DEBUG, "nd6_na_output: source can't be "

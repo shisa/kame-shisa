@@ -70,10 +70,12 @@
 #include "opt_inet6.h"
 #include "opt_ipsec.h"
 #include "opt_natpt.h"
+#include "opt_mip6.h"
 #endif
 #ifdef __NetBSD__
 #include "opt_inet.h"
 #include "opt_ipsec.h"
+#include "opt_mip6.h"
 #endif
 
 #include <sys/param.h>
@@ -810,10 +812,42 @@ ip6_input(m)
 	    IN6_ARE_ADDR_EQUAL(&ip6->ip6_dst,
 	    &rt6_key(ip6_forward_rt.ro_rt)->sin6_addr)
 #endif
+#ifdef MIP6
+	    ((ip6_forward_rt.ro_rt->rt_flags & RTF_ANNOUNCE) ||
+	     ip6_forward_rt.ro_rt->rt_ifp->if_type == IFT_LOOP)
+#else
 	    ip6_forward_rt.ro_rt->rt_ifp->if_type == IFT_LOOP
-								) {
+#endif /* MIP6 */
+	    ) {
 		struct in6_ifaddr *ia6 =
 			(struct in6_ifaddr *)ip6_forward_rt.ro_rt->rt_ifa;
+#ifdef MIP6
+		/* check unicast NS */
+	    	if ((ip6_forward_rt.ro_rt->rt_flags & RTF_ANNOUNCE) != 0) {
+			/* This route shows proxy nd. thus the packet was
+			 *  captured. this packet should be tunneled to
+			 * actual coa with tunneling unless this is NS.
+			 */
+			int nxt, loff;
+			struct icmp6_hdr *icp;
+			loff = ip6_lasthdr(m, 0, IPPROTO_IPV6, &nxt);
+			if (loff <  0 || nxt != IPPROTO_ICMPV6)
+				goto mip6_forwarding;
+#ifndef PULLDOWN_TEST
+			IP6_EXTHDR_CHECK(m, 0, loff + sizeof(struct icmp6_hdr),);
+			icp = (struct icmp6_hdr *)(mtod(m, caddr_t) + loff);
+#else
+			IP6_EXTHDR_GET(icp, struct icmp6_hdr *, m, loff,
+				sizeof(*icp));
+			if (icp == NULL) {
+				icmp6stat.icp6s_tooshort++;
+				return;
+			}
+#endif
+			if (icp->icmp6_type != ND_NEIGHBOR_SOLICIT)
+				goto mip6_forwarding;
+		}
+#endif /* MIP6 */
 		/*
 		 * record address information into m_tag.
 		 */
@@ -844,6 +878,9 @@ ip6_input(m)
 		}
 	}
 
+#ifdef MIP6
+ mip6_forwarding:
+#endif /* MIP6 */
 	/*
 	 * FAITH (Firewall Aided Internet Translator)
 	 */
@@ -1092,6 +1129,10 @@ ip6_input(m)
 			goto bad;
 		}
 #endif
+#ifdef MIP6
+		if (dest6_mip6_hao(m, off, nxt) < 0)
+			goto bad;
+#endif /* MIP6 */
 		nxt = (*inet6sw[ip6_protox[nxt]].pr_input)(&m, &off, nxt);
 	}
 	return;
@@ -1515,6 +1556,7 @@ ip6_savecontrol(in6p, m, mp)
 			int elen;
 #ifdef PULLDOWN_TEST
 			struct mbuf *ext = NULL;
+#endif
 #endif
 
 			/*

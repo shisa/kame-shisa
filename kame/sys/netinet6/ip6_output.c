@@ -100,10 +100,12 @@
 #include "opt_inet.h"
 #include "opt_inet6.h"
 #include "opt_ipsec.h"
+#include "opt_mip6.h"
 #endif
 #ifdef __NetBSD__
 #include "opt_inet.h"
 #include "opt_ipsec.h"
+#include "opt_mip6.h"
 #endif
 #if defined(__OpenBSD__) || defined(__NetBSD__) || (defined(__FreeBSD__) && __FreeBSD__ == 4)
 #include "pf.h"
@@ -189,6 +191,17 @@ extern int ipsec_ipcomp_default_level;
 #include <netinet6/ip6_fw.h>
 #endif
 
+#ifdef MIP6
+#include <net/mipsock.h>
+#include <netinet6/mip6.h>
+#include <netinet6/mip6_var.h>
+#include "mip.h"
+#if NMIP > 0
+#include <netinet/ip6mh.h>
+#endif /* NMIP > 0*/
+ #endif /* MIP6 */
+ 
+
 #include <net/net_osdep.h>
 
 #if defined(__NetBSD__) && defined(PFIL_HOOKS)
@@ -204,10 +217,13 @@ struct ip6_exthdrs {
 	struct mbuf *ip6e_hbh;
 	struct mbuf *ip6e_dest1;
 	struct mbuf *ip6e_rthdr;
-	struct mbuf *ip6e_rthdr2;	/* for MIP6 */
-	struct mbuf *ip6e_haddr;	/* for MIP6 */
+#ifdef MIP6
+	struct mbuf *ip6e_rthdr2;
+#endif /* MIP6 */
+#if defined(MIP6) && NMIP > 0
+	struct mbuf *ip6e_hoa;
+#endif /* MIP6 && NMIP > 0 */
 	struct mbuf *ip6e_dest2;
-	struct mbuf *ip6e_mh;		/* for MIP6 */
 };
 
 static int ip6_pcbopt __P((int, u_char *, int, struct ip6_pktopts **,
@@ -312,6 +328,12 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 #else
 	int needipsec = 0;
 #endif
+#ifdef MIP6
+	struct mip6_bc_internal *bce;
+#if NMIP > 0
+	struct mip6_bul_internal *mbul = NULL;
+#endif /* MIP6 */
+#endif /* NMIP > 0 */
 #ifdef IPSEC
 #ifdef __OpenBSD__
 	struct m_tag *mtag;
@@ -357,6 +379,9 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 		MAKE_EXTHDR(opt->ip6po_hbh, &exthdrs.ip6e_hbh);
 		/* Destination options header(1st part) */
 		if (opt->ip6po_rthdr
+#ifdef MIP6
+		|| opt->ip6po_rthdr2
+#endif /* MIP6 */
 		    ) {
 			/*
 			 * Destination options header(1st part)
@@ -372,9 +397,78 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 		}
 		/* Routing header */
 		MAKE_EXTHDR(opt->ip6po_rthdr, &exthdrs.ip6e_rthdr);
+#ifdef MIP6
+		/* Type 2 Routing header */
+		MAKE_EXTHDR(opt->ip6po_rthdr2, &exthdrs.ip6e_rthdr2);
+#if NMIP > 0
+                /* Home Address Destination options header */
+		MAKE_EXTHDR(opt->ip6po_hoa, &exthdrs.ip6e_hoa);
+#endif /* NMIP > 0*/
+#endif /* MIP6 */
 		/* Destination options header(2nd part) */
 		MAKE_EXTHDR(opt->ip6po_dest2, &exthdrs.ip6e_dest2);
 	}
+
+#ifdef MIP6
+	/* Find binding cache entry */
+#ifndef MIP6_MCOA
+	bce = mip6_bce_get(&ip6->ip6_dst, &ip6->ip6_src);
+#else
+	/* XXX need policy to determine bid */
+	bce = mip6_bce_get(&ip6->ip6_dst, &ip6->ip6_src, NULL, 0); 
+#endif /* MIP6_MCOA */
+	if (bce && (ip6->ip6_nxt != IPPROTO_MH)) {
+		struct ip6_rthdr2 *rthdr2;
+
+		rthdr2 = mip6_create_rthdr2(&bce->mbc_coa);
+		if (rthdr2 == NULL)
+			goto freehdrs;
+		
+		MAKE_EXTHDR(rthdr2, &exthdrs.ip6e_rthdr2);
+		free(rthdr2, M_IP6OPT);
+	}
+#endif /* MIP6 */
+
+#if defined(MIP6) && NMIP > 0
+	/* 
+	 * If correspondent binding update list is found and its
+	 * status is successful registration, a packet is sent
+	 * directly to the destination with a home address
+	 * option.
+	 */
+
+#ifndef MIP6_MCOA
+	mbul = mip6_bul_get(&ip6->ip6_src, &ip6->ip6_dst);
+#else /* !MIP6_MCOA */
+	mbul = mip6_bul_get(&ip6->ip6_src, &ip6->ip6_dst, 0/* XXX */);
+#endif /* !MIP6_MCOA */
+	/* 
+	 * Route Optimization: appending a HoA option. 
+	 */
+	if (mbul) {
+		u_int8_t *hoa_opt;
+
+		if (mbul->mbul_state & MIP6_BUL_STATE_NEEDTUNNEL)
+			goto skip_hoa;
+  
+		if (ip6->ip6_nxt == IPPROTO_MH) {
+#if 0
+			m_copydata(m, sizeof(struct ip6_hdr),
+			    sizeof(struct ip6_mh), (caddr_t)&mh);
+			if (mh.ip6mh_type != IP6_MH_TYPE_BU)
+#endif /* 0 */
+				goto skip_hoa;
+		}
+
+		hoa_opt = mip6_create_hoa_opt(&mbul->mbul_coa);
+		if (hoa_opt == NULL)
+			goto freehdrs;
+
+		MAKE_EXTHDR(hoa_opt, &exthdrs.ip6e_hoa);
+		free(hoa_opt, M_IP6OPT);
+	}
+ skip_hoa:
+#endif /* MIP6 && NMIP > 0 */
 
 #ifdef IPSEC
 #ifdef __OpenBSD__
@@ -459,6 +553,12 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 		/* if we have any extension header, we cannot perform IPsec */
 		if (exthdrs.ip6e_hbh || exthdrs.ip6e_dest1 ||
 		    exthdrs.ip6e_rthdr || exthdrs.ip6e_dest2
+#ifdef MIP6
+			|| exthdrs.ip6e_rthdr2 
+#if NMIP > 0
+			|| exthdrs.ip6e_hoa
+#endif /* NMIP > 0 */
+#endif /* MIP6 */
 		    ) {
 			error = EHOSTUNREACH;
 			goto freehdrs;
@@ -529,6 +629,12 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 	if (exthdrs.ip6e_dest1) optlen += exthdrs.ip6e_dest1->m_len;
 	if (exthdrs.ip6e_rthdr) optlen += exthdrs.ip6e_rthdr->m_len;
 	unfragpartlen = optlen + sizeof(struct ip6_hdr);
+#ifdef MIP6
+	if (exthdrs.ip6e_rthdr2) optlen += exthdrs.ip6e_rthdr2->m_len;
+#if NMIP > 0
+	if (exthdrs.ip6e_hoa) optlen += exthdrs.ip6e_hoa->m_len;
+#endif /* NMIP > 0 */
+#endif /* MIP6 */
 	/* NOTE: we don't add AH/ESP length here. do that later. */
 	if (exthdrs.ip6e_dest2) optlen += exthdrs.ip6e_dest2->m_len;
 
@@ -629,6 +735,20 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 		    IPPROTO_DSTOPTS);
 		MAKE_CHAIN(exthdrs.ip6e_rthdr, mprev, nexthdrp,
 		    IPPROTO_ROUTING);
+#ifdef MIP6
+		/* a type 2 routing header for route optimization. */
+		MAKE_CHAIN(exthdrs.ip6e_rthdr2, mprev, nexthdrp,
+		    IPPROTO_ROUTING);
+#if NMIP > 0
+		/*
+		 * MIP6 homeaddress destination option must reside
+		 * after rthdr and before ah/esp/frag hdr.
+		 * this order is not recommended in the ipv6 spec of course.
+		 * result: IPv6 hbh dest1 rthdr ha dest2 payload.
+		 */
+		MAKE_CHAIN(exthdrs.ip6e_hoa, mprev, nexthdrp, IPPROTO_DSTOPTS);
+#endif /* NMIP > 0 */
+#endif /* MIP6 */
 
 #if defined(IPSEC) && !defined(__OpenBSD__)
 		if (!needipsec)
@@ -644,6 +764,9 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 		{
 			struct ip6_rthdr *rh = NULL;
 			int segleft_org = 0;
+#ifdef MIP6
+			int segleft2_org = 0;
+#endif /* MIP6 */
 			struct ipsec_output_state state;
 
 			if (exthdrs.ip6e_rthdr) {
@@ -653,6 +776,15 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 				rh->ip6r_segleft = 0;
 			}
 
+#ifdef MIP6
+			if (exthdrs.ip6e_rthdr2) {
+				rh = mtod(exthdrs.ip6e_rthdr2,
+				    struct ip6_rthdr *);
+				segleft2_org = rh->ip6r_segleft;
+				rh->ip6r_segleft = 0;
+			}
+#endif /* MIP6 */
+  
 			bzero(&state, sizeof(state));
 			state.m = m;
 			error = ipsec6_output_trans(&state, nexthdrp, mprev,
@@ -688,11 +820,39 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 				/* ah6_output doesn't modify mbuf chain */
 				rh->ip6r_segleft = segleft_org;
 			}
+#ifdef MIP6
+			if (exthdrs.ip6e_rthdr2) {
+				/* ah6_output doesn't modify mbuf chain */
+				rh->ip6r_segleft = segleft2_org;
+			}
+#endif /* MIP6 */
 		}
 skip_ipsec2:;
 #endif
 	}
 
+#if defined(MIP6) && NMIP > 0
+	/* Swap HoA and CoA */
+	if (exthdrs.ip6e_hoa) {
+		struct ip6_opt_home_address *hoaopt = NULL; 
+		struct in6_addr tmpaddr;
+
+		bzero(&tmpaddr, sizeof(tmpaddr));
+
+		hoaopt = mip6_search_hoa_in_destopt(mtod(exthdrs.ip6e_hoa, caddr_t));
+		if (hoaopt == NULL) 
+			goto freehdrs;
+
+		if (mip6_ifa_ifwithin6addr(&ip6->ip6_src, NULL) == NULL)
+			goto freehdrs;
+
+		ip6 = mtod(m, struct ip6_hdr *);
+		bcopy(&ip6->ip6_src, &tmpaddr, sizeof(ip6->ip6_src));
+		bcopy(hoaopt->ip6oh_addr, 
+			&ip6->ip6_src, sizeof(hoaopt->ip6oh_addr));
+		bcopy(&tmpaddr, hoaopt->ip6oh_addr, sizeof(tmpaddr));
+	}
+#endif /* MIP6 && NMIP > 0 */
 
 	/*
 	 * If there is a routing header, replace the destination address field
@@ -705,6 +865,11 @@ skip_ipsec2:;
 		if (exthdrs.ip6e_rthdr)
 			rh = (struct ip6_rthdr *)(mtod(exthdrs.ip6e_rthdr,
 			    struct ip6_rthdr *));
+#ifdef MIP6
+		else if (exthdrs.ip6e_rthdr2)
+			rh = (struct ip6_rthdr *)(mtod(exthdrs.ip6e_rthdr2,
+			    struct ip6_rthdr *));
+#endif /* MIP6 */
 		if (rh) {
 			struct ip6_rthdr0 *rh0;
 			struct in6_addr *addr;
@@ -713,6 +878,9 @@ skip_ipsec2:;
 			finaldst = ip6->ip6_dst;
 			switch (rh->ip6r_type) {
 			case IPV6_RTHDR_TYPE_0:
+#ifdef MIP6
+			case IPV6_RTHDR_TYPE_2:
+#endif /* MIP6 */
 				rh0 = (struct ip6_rthdr0 *)rh;
 				addr = (struct in6_addr *)(rh0 + 1);
 
@@ -780,6 +948,13 @@ skip_ipsec2:;
 	ro_pmtu = ro;
 	if (opt && opt->ip6po_rthdr)
 		ro = &opt->ip6po_route;
+#ifdef MIP6
+	if (exthdrs.ip6e_rthdr2) {
+		ro = &ip6route;
+		bzero((caddr_t)ro, sizeof(*ro));
+		ro_pmtu = ro;
+	}
+#endif /* MIP6 */
 	dst = (struct sockaddr_in6 *)&ro->ro_dst;
 
 	/*
@@ -857,6 +1032,9 @@ skip_ipsec2:;
 	}
 #else
 	if (needipsec && needipsectun
+#if defined(MIP6) && NMIP > 0
+	    && !((opt && opt->ip6po_hoa) || exthdrs.ip6e_hoa)
+#endif /* MIP6 && NMIP > 0 */
 		) {
 		struct ipsec_output_state state;
 
@@ -1353,6 +1531,16 @@ skip_ipsec2:;
 		} else if (exthdrs.ip6e_hbh) {
 			nextproto = *mtod(exthdrs.ip6e_hbh, u_char *);
 			*mtod(exthdrs.ip6e_hbh, u_char *) = IPPROTO_FRAGMENT;
+#ifdef MIP6
+#if NMIP > 0
+		} else if (exthdrs.ip6e_hoa) {
+			nextproto = *mtod(exthdrs.ip6e_hoa, u_char *);
+			*mtod(exthdrs.ip6e_hoa, u_char *) = IPPROTO_FRAGMENT;
+#endif /* NMIP > 0 */
+		} else if (exthdrs.ip6e_rthdr) {
+			nextproto = *mtod(exthdrs.ip6e_rthdr, u_char *);
+			*mtod(exthdrs.ip6e_rthdr, u_char *) = IPPROTO_FRAGMENT;
+#endif /* MIP6 */
 		} else {
 			nextproto = ip6->ip6_nxt;
 			ip6->ip6_nxt = IPPROTO_FRAGMENT;
@@ -1471,6 +1659,12 @@ freehdrs:
 	m_freem(exthdrs.ip6e_dest1);
 	m_freem(exthdrs.ip6e_rthdr);
 	m_freem(exthdrs.ip6e_dest2);
+#ifdef MIP6
+	m_freem(exthdrs.ip6e_rthdr2);
+#if NMIP > 0
+        m_freem(exthdrs.ip6e_hoa);
+#endif /* NMIP > 0 */
+#endif /* MIP6 */
 	/* FALLTHROUGH */
 bad:
 	m_freem(m);
@@ -2991,6 +3185,9 @@ ip6_pcbopts(pktopt, m, so)
 #ifdef DIAGNOSTIC
 	    if (opt->ip6po_pktinfo || opt->ip6po_nexthop ||
 		opt->ip6po_hbh || opt->ip6po_dest1 || opt->ip6po_dest2 ||
+#if defined(MIP6) && NMIP > 0
+		opt->ip6po_hoa || 
+#endif /* MIP6 && NMIP > 0 */
 		opt->ip6po_rhinfo.ip6po_rhi_rthdr)
 		    printf("ip6_pcbopts: all specified options are cleared.\n");
 #endif
@@ -3228,6 +3425,11 @@ ip6_clearpktopts(pktopt, optname)
 		if (pktopt->ip6po_rhinfo.ip6po_rhi_rthdr)
 			free(pktopt->ip6po_rhinfo.ip6po_rhi_rthdr, M_IP6OPT);
 		pktopt->ip6po_rhinfo.ip6po_rhi_rthdr = NULL;
+#ifdef MIP6
+		if (pktopt->ip6po_rhinfo2.ip6po_rhi_rthdr)
+			free(pktopt->ip6po_rhinfo2.ip6po_rhi_rthdr, M_IP6OPT);
+		pktopt->ip6po_rhinfo2.ip6po_rhi_rthdr = NULL;
+#endif /* MIP6 */
 		if (pktopt->ip6po_route.ro_rt) {
 			RTFREE(pktopt->ip6po_route.ro_rt);
 			pktopt->ip6po_route.ro_rt = NULL;
@@ -3237,6 +3439,11 @@ ip6_clearpktopts(pktopt, optname)
 		if (pktopt->ip6po_dest2)
 			free(pktopt->ip6po_dest2, M_IP6OPT);
 		pktopt->ip6po_dest2 = NULL;
+#if defined(MIP6) && NMIP > 0
+		if (pktopt->ip6po_hoa)
+			free(pktopt->ip6po_hoa, M_IP6OPT);
+		pktopt->ip6po_hoa = NULL;
+#endif /* MIP6 && NMIP > 0 */
 	}
 }
 
@@ -4428,7 +4635,6 @@ ip6_setpktopt(optname, buf, len, opt, priv, sticky, cmsg, uproto)
 		destlen = (dest->ip6d_len + 1) << 3;
 		if (len != destlen)
 			return (EINVAL);
-
 		/*
 		 * Determine the position that the destination options header
 		 * should be inserted; before or after the routing header.
@@ -4456,7 +4662,19 @@ ip6_setpktopt(optname, buf, len, opt, priv, sticky, cmsg, uproto)
 			newdest = &opt->ip6po_dest1;
 			break;
 		case IPV6_DSTOPTS:
+#if defined(MIP6) && NMIP > 0
+			/* 
+			 * Check whether this destination option is 
+			 * home address option. 
+			 * If so, the option must be stored in ip6po_hoa 
+			 */
+			if (mip6_search_hoa_in_destopt((u_int8_t *)dest) != NULL) 
+				newdest = &opt->ip6po_hoa;
+			else 
+				newdest = &opt->ip6po_dest2;
+#else
 			newdest = &opt->ip6po_dest2;
+#endif /* MIP6 && NMIP > 0 */
 			break;
 		}
 
@@ -4496,15 +4714,32 @@ ip6_setpktopt(optname, buf, len, opt, priv, sticky, cmsg, uproto)
 			if (rth->ip6r_len / 2 != rth->ip6r_segleft)
 				return (EINVAL);
 			break;
+#ifdef MIP6
+		case IPV6_RTHDR_TYPE_2:
+			if (rth->ip6r_len == 0)	/* must contain one addr */
+				return (EINVAL);
+			if (rth->ip6r_len != 2) /* length must be 2 */
+				return (EINVAL);
+			if (rth->ip6r_segleft != 1)
+				return (EINVAL);
+			break;
+#endif /* MIP6 */
 		default:
 			return (EINVAL);	/* not supported */
 		}
-
 		/* turn off the previous option */
 		ip6_clearpktopts(opt, IPV6_RTHDR);
+#ifdef MIP6
+		if (rth->ip6r_type == IPV6_RTHDR_TYPE_0) {
+#endif /* MIP6 */
 		opt->ip6po_rthdr = malloc(rthlen, M_IP6OPT, M_WAITOK);
 		bcopy(rth, opt->ip6po_rthdr, rthlen);
-
+#ifdef MIP6
+		} else if (rth->ip6r_type == IPV6_RTHDR_TYPE_2) {
+			opt->ip6po_rthdr2 = malloc(rthlen, M_IP6OPT, M_WAITOK);
+			bcopy(rth, opt->ip6po_rthdr2, rthlen);
+		}
+#endif /* MIP6 */
 		break;
 	}
 
@@ -4552,6 +4787,7 @@ ip6_setpktopt(optname, buf, len, opt, priv, sticky, cmsg, uproto)
 
 	return (0);
 }
+
 
 /*
  * Routine called from ip6_output() to loop back a copy of an IP6 multicast
@@ -4923,3 +5159,4 @@ ip6_getmopt_sgaddr(m, optname, ifp, ss_grp, ss_src)
 	return error;
 }
 #endif /* MLDV2 */  
+

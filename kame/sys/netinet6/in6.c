@@ -98,9 +98,11 @@
 #ifdef __FreeBSD__
 #include "opt_inet.h"
 #include "opt_inet6.h"
+#include "opt_mip6.h"
 #endif
 #ifdef __NetBSD__
 #include "opt_inet.h"
+#include "opt_mip6.h"
 #endif
 
 #include <sys/param.h>
@@ -166,6 +168,15 @@
 #if NGIF > 0
 #include <net/if_gif.h>
 #endif
+
+#ifdef MIP6
+#include "mip.h"
+#include <netinet6/mip6.h>
+#include <netinet6/mip6_var.h>
+#if NMIP > 0
+#include <net/if_mip.h>
+#endif /* NMIP > 0 */
+#endif /* MIP6 */
 
 #include <net/net_osdep.h>
 
@@ -827,6 +838,10 @@ in6_control(so, cmd, data, ifp, p)
 		    NULL);
 		if (pr0.ndpr_plen == 128) {
 			break;	/* we don't need to install a host route. */
+#if defined(MIP6) && NMIP > 0
+		} else if ((ia->ia6_flags & IN6_IFF_HOME) && (ifp->if_type == IFT_MIP)) {
+			break;  /* we don't need to install a interface route. for home address */
+#endif 
 		}
 		pr0.ndpr_prefix = ifra->ifra_addr;
 		/* apply the mask for safety. */
@@ -1084,6 +1099,9 @@ in6_update_ifa(ifp, ifra, ia, flags)
 			return (ENOBUFS);
 		bzero((caddr_t)ia, sizeof(*ia));
 		LIST_INIT(&ia->ia6_memberships);
+#if defined(MIP6) && NMIP > 0
+		LIST_INIT(&ia->ia6_mbul_list);
+#endif /* MIP6 && NMIP > 0 */
 		/* Initialize the address and masks, and put time stamp */
 #if defined(__FreeBSD__) && (__FreeBSD_version >= 501000)
 		IFA_LOCK_INIT(&ia->ia_ifa);
@@ -1197,7 +1215,11 @@ in6_update_ifa(ifp, ifra, ia, flags)
 	 * source address.
 	 */
 	ia->ia6_flags &= ~IN6_IFF_DUPLICATED;	/* safety */
-	if (hostIsNew && in6if_do_dad(ifp))
+	if (hostIsNew && in6if_do_dad(ifp)
+#if defined(MIP6) && NMIP > 0
+	    && (MIP6_IS_MN && 0) /* XXX XXX XXX */
+#endif /* MIP6 && NMIP > 0 */
+		)
 		ia->ia6_flags |= IN6_IFF_TENTATIVE;
 
 	/*
@@ -1555,6 +1577,15 @@ in6_purgeaddr(ifa)
 		LIST_REMOVE(imm, i6mm_chain);
 		in6_leavegroup(imm);
 	}
+
+#if defined(MIP6) && NMIP > 0
+	{
+		struct mip6_bul_internal *mbul;
+		while ((mbul = LIST_FIRST(&ia->ia6_mbul_list)) != NULL) {
+			mip6_bul_remove(mbul);
+		}
+	}
+#endif /* MIP6 && NMIP > 0 */
 
 	in6_unlink_ifa(ia, ifp);
 }

@@ -37,11 +37,13 @@
 #include "opt_inet.h"
 #include "opt_inet6.h"
 #include "opt_ipsec.h"
+#include "opt_mip6.h"
 #endif
 #ifdef __NetBSD__
 #include "opt_inet.h"
 #include "opt_ipsec.h"
 #include "fs_kernfs.h"
+#include "opt_mip6.h"
 #else
 #undef KERNFS
 #endif
@@ -129,6 +131,15 @@
 #ifdef __FreeBSD__
 #include <sys/random.h>
 #endif
+
+#ifdef MIP6
+#include <netinet6/mip6.h>
+#include <netinet6/mip6_var.h>
+#include "mip.h"
+#if NMIP > 0
+#include <netinet/ip6mh.h>
+#endif /* NMIP > 0*/
+#endif /* MIP6 */
 
 #include <net/net_osdep.h>
 
@@ -997,6 +1008,9 @@ key_allocsa(family, src, dst, proto, spi)
 	int s;
 	const u_int *saorder_state_valid;
 	int arraysize;
+#if defined(MIP6) && NMIP > 0
+	struct mip6_bul_internal *bul = NULL;
+#endif
 
 	/* sanity check */
 	if (src == NULL || dst == NULL)
@@ -1096,9 +1110,32 @@ key_allocsa(family, src, dst, proto, spi)
 			if (in6_recoverscope(&sin6, (struct in6_addr *)dst,
 			    NULL) != 0)
 				continue;
+#if defined(MIP6) && NMIP > 0
+			/* 
+			 * If packet't proto is MH, need to fake the
+			 * comparison of odst.
+			 * 
+			 * 1. search binding update list with the SA.
+			 * 2. if found, compare odst with found CoA 
+			 * 3. if it does match, use the SA
+			 * 4. Otherwise, the SA is not for this packet.
+			 */
+
+			bul = mip6_bul_get_home_agent(&((struct sockaddr_in6 *)&sav->sah->saidx.dst)->sin6_addr);
+			if (bul && 
+			    IN6_ARE_ADDR_EQUAL(&bul->mbul_coa, 
+					       (struct in6_addr *)dst)) { 
+				printf("matched SA found\n");
+				break;
+			} else 
+#endif
 			if (key_sockaddrcmp((struct sockaddr *)&sin6,
-			    (struct sockaddr *)&sav->sah->saidx.dst, 0) != 0)
+					    (struct sockaddr *)&sav->sah->saidx.dst, 0) != 0) {
+				printf("dst: %s\n", ip6_sprintf((struct in6_addr *)dst));
+				printf("SA dst: %s\n", ip6_sprintf(&((struct sockaddr_in6 *)&sav->sah->saidx.dst)->sin6_addr));
 				continue;
+			}
+
 			break;
 		default:
 			ipseclog((LOG_DEBUG, "key_allocsa: "

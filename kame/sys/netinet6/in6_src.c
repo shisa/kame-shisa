@@ -67,9 +67,11 @@
 #ifdef __FreeBSD__
 #include "opt_inet.h"
 #include "opt_inet6.h"
+#include "opt_mip6.h"
 #endif
 #ifdef __NetBSD__
 #include "opt_inet.h"
+#include "opt_mip6.h"
 #endif
 
 #include <sys/param.h>
@@ -93,6 +95,7 @@
 #include <sys/proc.h>
 
 #include <net/if.h>
+#include <net/if_types.h>
 #include <net/route.h>
 #ifdef RADIX_MPATH
 #include <net/radix_mpath.h>
@@ -113,6 +116,15 @@
 #include <netinet6/scope6_var.h>
 
 #include <net/net_osdep.h>
+
+#ifdef MIP6
+#include <netinet6/mip6.h>
+#include <netinet6/mip6_var.h>
+#include "mip.h"
+#if NMIP > 0
+#include <net/if_mip.h>
+#endif /* NMIP > 0 */
+#endif /* MIP6 */
 
 #ifndef __OpenBSD__
 #include "loop.h"
@@ -193,6 +205,9 @@ in6_selectsrc(dstsock, opts, mopts, ro, laddr, ifpp, errorp)
 	struct in6_addrpolicy *dst_policy = NULL, *best_policy = NULL;
 	u_int32_t odstzone;
 	int prefer_tempaddr;
+#if defined(MIP6) && NMIP > 0
+	u_int8_t ip6po_usecoa = 0;
+#endif /* MIP6 && NMIP > 0 */
 
 	dst = &dstsock->sin6_addr;
 	*errorp = 0;
@@ -264,6 +279,18 @@ in6_selectsrc(dstsock, opts, mopts, ro, laddr, ifpp, errorp)
 	if ((*errorp = in6_selectif(dstsock, opts, mopts, ro, &ifp)) != 0)
 		return (NULL);
 
+#if defined(MIP6) && NMIP > 0
+	/*
+	 * a caller can specify IP6PO_USECOA to not to use a home
+	 * address.  for example, the case that the neighbour
+	 * unreachability detection to the global address.
+	 */
+	if (opts != NULL &&
+	    (opts->ip6po_flags & IP6PO_USECOA) != 0) {
+		ip6po_usecoa = 1;
+	}
+#endif /* MIP6 && NMIP > 0 */
+
 #ifdef DIAGNOSTIC
 	if (ifp == NULL)	/* this should not happen */
 		panic("in6_selectsrc: NULL ifp");
@@ -302,6 +329,11 @@ in6_selectsrc(dstsock, opts, mopts, ro, laddr, ifpp, errorp)
 		if (!ip6_use_deprecated && IFA6_IS_DEPRECATED(ia))
 			continue;
 
+#if defined(MIP6) && NMIP > 0
+		if (ia->ia6_flags & IN6_IFF_DEREGISTERING)
+			continue;
+#endif /* MIP6 && NMIP > 0 */
+
 		/* Rule 1: Prefer same address */
 		if (IN6_ARE_ADDR_EQUAL(dst, &ia->ia_addr.sin6_addr)) {
 			ia_best = ia;
@@ -333,6 +365,70 @@ in6_selectsrc(dstsock, opts, mopts, ro, laddr, ifpp, errorp)
 			NEXT(3);
 		if (IFA6_IS_DEPRECATED(ia_best) && !IFA6_IS_DEPRECATED(ia))
 			REPLACE(3);
+
+		/* Rule 4: Prefer home addresses */
+#if defined(MIP6) && NMIP > 0
+		if (!MIP6_IS_MN)
+			goto skip_rule4;
+
+		/*
+		 * If SA is simultaneously a home address and care-of
+		 * address and SB is not, then prefer SA. Similarly,
+		 * if SB is simultaneously a home address and care-of
+		 * address and SA is not, then prefer SB.
+		 */
+		if (((ia_best->ia6_flags & IN6_IFF_HOME) != 0
+			&& ia_best->ia_ifp->if_type != IFT_MIP)
+		    && ((ia->ia6_flags & IN6_IFF_HOME) != 0
+			&& ia->ia_ifp->if_type == IFT_MIP)) {
+			NEXT(4);
+		}
+		if (((ia_best->ia6_flags & IN6_IFF_HOME) != 0
+			&& ia_best->ia_ifp->if_type == IFT_MIP)
+		    && ((ia->ia6_flags & IN6_IFF_HOME) != 0
+			&& ia->ia_ifp->if_type != IFT_MIP)) {
+			REPLACE(4);
+		}
+		if (ip6po_usecoa == 0) {
+			/*
+			 * If SA is just a home address and SB is just
+			 * a care-of address, then prefer
+			 * SA. Similarly, if SB is just a home address
+			 * and SA is just a care-of address, then
+			 * prefer SB.
+			 */
+			if ((ia_best->ia6_flags & IN6_IFF_HOME) != 0 &&
+			    (ia->ia6_flags & IN6_IFF_HOME) == 0) {
+				NEXT(4);
+			}
+			if ((ia_best->ia6_flags & IN6_IFF_HOME) == 0 &&
+			    (ia->ia6_flags & IN6_IFF_HOME) != 0) {
+				REPLACE(4);
+			}
+		} else {
+			/*
+			 * a sender don't want to use a home address
+			 * because:
+			 *
+			 * 1) we cannot use.  (ex. NS or NA to global
+			 * addresses.)
+			 *
+			 * 2) a user specified not to use.
+			 * (ex. mip6control -u)
+			 */
+			if ((ia_best->ia6_flags & IN6_IFF_HOME) == 0 &&
+			    (ia->ia6_flags & IN6_IFF_HOME) != 0) {
+				/* XXX breaks stat */
+				NEXT(0);
+			}
+			if ((ia_best->ia6_flags & IN6_IFF_HOME) != 0 &&
+			    (ia->ia6_flags & IN6_IFF_HOME) == 0) {
+				/* XXX breaks stat */
+				REPLACE(0);
+			}
+		}			
+	skip_rule4:
+#endif /* MIP6 && NMIP > 0 */
 
 		/* Rule 5: Prefer outgoing interface */
 		if (ia_best->ia_ifp == ifp && ia->ia_ifp != ifp)
@@ -732,6 +828,12 @@ in6_selectroute(dstsock, opts, mopts, ro, retifp, retrt, clone)
 				error = EHOSTUNREACH;
 				goto done;
 			}
+		}
+		if (!nd6_is_addr_neighbor(sin6_next, ron->ro_rt->rt_ifp)) {
+			RTFREE(ron->ro_rt);
+			ron->ro_rt = NULL;
+			error = EHOSTUNREACH;
+			goto done;
 		}
 	}
 

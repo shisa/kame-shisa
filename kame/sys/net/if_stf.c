@@ -146,9 +146,11 @@
 #include <net/bpf.h>
 #endif
 
+/*
 #if NGIF > 0
 #include <net/if_gif.h>
 #endif
+*/
 
 #if NSTF > 0
 # if NSTF > 1

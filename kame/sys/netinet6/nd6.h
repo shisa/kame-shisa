@@ -103,6 +103,7 @@ struct nd_ifinfo {
 #define ND6_IFF_IFDISABLED	0x8 /* IPv6 operation is disabled due to
 				     * DAD failure.  (XXX: not ND-specific)
 				     */
+#define ND6_IFF_DONT_SET_IFROUTE	0x10
 
 #ifdef _KERNEL
 #define ND_IFINFO(ifp) \

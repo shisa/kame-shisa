@@ -69,6 +69,7 @@
 #include "opt_ipsec.h"
 #include "opt_sctp.h"
 #include "opt_dccp.h"
+#include "opt_mip6.h"
 #endif
 #ifdef __NetBSD__
 #include "opt_inet.h"
@@ -76,6 +77,7 @@
 #include "opt_iso.h"
 #include "opt_sctp.h"
 #include "opt_dccp.h"
+#include "opt_mip6.h"
 #endif
 
 #include <sys/param.h>
@@ -397,6 +399,24 @@ struct ip6protosw inet6sw[] = {
   &nousrreqs
 #endif
 },
+#ifdef MIP6
+{ SOCK_RAW,	&inet6domain,	IPPROTO_MH,PR_ATOMIC|PR_ADDR|PR_LASTHDR,
+  mip6_input,	0,	 	0,		rip6_ctloutput,
+#if defined(__FreeBSD__) && __FreeBSD__ >= 3
+  0,
+#else
+  rip6_usrreq,
+#endif
+  0,		0,		0,		0,
+#ifndef __FreeBSD__
+  mip6_sysctl,
+#else
+# if __FreeBSD__ >= 3
+  &rip6_usrreqs,
+# endif
+#endif
+},
+#endif /* MIP6 */
 #ifdef IPSEC
 { SOCK_RAW,	&inet6domain,	IPPROTO_AH,	PR_ATOMIC|PR_ADDR,
   ah6_input,	0,
@@ -504,6 +524,23 @@ struct ip6protosw inet6sw[] = {
 #endif
 },
 };
+
+/* To receive tunneled packet on mobile node or home agent */
+#if defined(MIP6)
+struct ip6protosw mip6_tunnel_protosw =
+{ SOCK_RAW,	&inet6domain,	IPPROTO_IPV6,	PR_ATOMIC|PR_ADDR,
+  mip6_tunnel_input, rip6_output,	0,	rip6_ctloutput,
+#if defined(__FreeBSD__) && __FreeBSD__ >= 3
+  0,
+#else
+  rip6_usrreq,
+#endif
+  0,            0,              0,              0,
+#if defined(__FreeBSD__) && __FreeBSD__ >= 3
+  &rip6_usrreqs
+#endif
+};
+#endif /* MIP6 */
 
 #ifdef __FreeBSD__
 extern int in6_inithead __P((void **, int));
@@ -618,6 +655,9 @@ SYSCTL_NODE(_net_inet6,	IPPROTO_SCTP,	sctp6,	CTLFLAG_RW, 0,	"SCTP6");
 #ifdef IPSEC
 SYSCTL_NODE(_net_inet6,	IPPROTO_ESP,	ipsec6,	CTLFLAG_RW, 0,	"IPSEC6");
 #endif /* IPSEC */
+#ifdef MIP6
+SYSCTL_NODE(_net_inet6,	IPPROTO_MH,	mip6,	CTLFLAG_RW, 0,	"MIP6");
+#endif /* MIP6 */
 
 /* net.inet6.ip6 */
 static int

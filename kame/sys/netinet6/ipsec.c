@@ -38,10 +38,12 @@
 #include "opt_inet6.h"
 #include "opt_ipsec.h"
 #include "opt_random_ip_id.h"
+#include "opt_mip6.h"
 #endif
 #ifdef __NetBSD__
 #include "opt_inet.h"
 #include "opt_ipsec.h"
+#include "opt_mip6.h"
 #endif
 
 #include <sys/param.h>
@@ -102,6 +104,13 @@
 #include <machine/in_cksum.h>
 #endif
 #include <net/net_osdep.h>
+
+#ifdef MIP6
+#include "mip.h"
+#include <netinet/ip6mh.h>
+#include <netinet6/mip6.h>
+#include <netinet6/mip6_var.h>
+#endif /* MIP6 */ 
 
 #if defined(__OpenBSD__) || defined(__NetBSD__) || (defined(__FreeBSD__) && __FreeBSD__ == 4)
 #include "pf.h"
@@ -2367,22 +2376,61 @@ ipsec6_encapsulate(m, sav)
 		/* ip6->ip6_plen will be updated in ip6_output() */
 	}
 
-	bcopy(&((struct sockaddr_in6 *)&sav->sah->saidx.src)->sin6_addr,
-		&ip6->ip6_src, sizeof(ip6->ip6_src));
-	bcopy(&((struct sockaddr_in6 *)&sav->sah->saidx.dst)->sin6_addr,
-		&ip6->ip6_dst, sizeof(ip6->ip6_dst));
+#if defined(MIP6) && NMIP > 0
+	/* Fake IPsec for Mobile Node */
+#if 0
+	/* XXX do we need these conditions? */
+	if (MIP6_IS_MN &&
+	    (mip6_ifa_ifwithin6addr(&oip6->ip6_src, NULL) != NULL) &&
+	    (oip6->ip6_nxt == IPPROTO_MH)) {
+#endif
+	if (MIP6_IS_MN) {
+		struct mip6_bul_internal *bul = NULL;
+		bul = mip6_bul_get_home_agent(&oip6->ip6_src);
+		if (bul)
+			bcopy(&bul->mbul_coa, &ip6->ip6_src,
+			    sizeof(ip6->ip6_src));
+		else {
+			bcopy(&((struct sockaddr_in6 *)&sav->sah->saidx.src)->sin6_addr,
+			    &ip6->ip6_src, sizeof(ip6->ip6_src));
+
+			/* updated the recorded packet address */
+			error = in6_embedscope(&ip6->ip6_src,
+			    (struct sockaddr_in6 *)&sav->sah->saidx.src);
+			if (error)
+				return (error);
+		}
+	} else
+#endif /* MIP6 && NMIP > 0 */
+	{
+	    bcopy(&((struct sockaddr_in6 *)&sav->sah->saidx.src)->sin6_addr,
+		  &ip6->ip6_src, sizeof(ip6->ip6_src));
+	    /* updated the recorded packet addresses */
+	    error = in6_embedscope(&ip6->ip6_src,
+				   (struct sockaddr_in6 *)&sav->sah->saidx.src);
+	    if (error)
+		return (error);
+	}
+
+#ifdef MIP6
+	if (MIP6_IS_HA
+	    /* other conditions */ ) {
+		/* Fake IPsec for Home Agent here xxx */
+		bcopy(&((struct sockaddr_in6 *)&sav->sah->saidx.dst)->sin6_addr,
+		    &ip6->ip6_dst, sizeof(ip6->ip6_dst));
+	} else
+#endif /* MIP6 */
+	{
+	    bcopy(&((struct sockaddr_in6 *)&sav->sah->saidx.dst)->sin6_addr,
+		  &ip6->ip6_dst, sizeof(ip6->ip6_dst));
+	    /* updated the recorded packet addresses */
+	    error = in6_embedscope(&ip6->ip6_dst,
+				   (struct sockaddr_in6 *)&sav->sah->saidx.dst);
+	    if (error)
+		return (error);
+	}
+
 	ip6->ip6_hlim = IPV6_DEFHLIM;
-
-	/* updated the recorded packet addresses */
-	error = in6_embedscope(&ip6->ip6_src,
-	    (struct sockaddr_in6 *)&sav->sah->saidx.src);
-	if (error)
-		return (error);
-	error = in6_embedscope(&ip6->ip6_dst,
-	    (struct sockaddr_in6 *)&sav->sah->saidx.dst);
-	if (error)
-		return (error);
-
 	/* XXX Should ip6_src be updated later ? */
 
 	return 0;

@@ -40,6 +40,7 @@
 #if defined(__FreeBSD__) || defined(__NetBSD__)
 #if defined(_KERNEL) && !defined(_LKM)
 #include "opt_inet.h"
+#include "opt_mip6.h"
 #endif
 #endif
 
@@ -83,6 +84,10 @@ struct gif_softc {
 #endif
 #if defined(__FreeBSD__) && __FreeBSD_version >= 500000
 	void		*gif_netgraph;	/* ng_gif(4) netgraph node info */
+#endif
+
+#ifdef MIP6
+	struct sockaddr	*gif_nexthop; /* nexthop address */
 #endif
 };
 

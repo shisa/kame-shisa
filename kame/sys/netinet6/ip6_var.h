@@ -165,11 +165,11 @@ struct	ip6_pktopts {
 	/* Mobile IPv6 type 2 Routing header. */
 	struct	ip6po_rhinfo ip6po_rhinfo2;
 
+        /* Home Address Destination option */
+	struct  ip6_dest *ip6po_hoa;
+
 	/* Destination options header (after a routing header) */
 	struct	ip6_dest *ip6po_dest2;
-
-	/* Mobility header (just before an upper layer header) */
-	struct	ip6_mh *ip6po_mh;
 
 	int	ip6po_tclass;	/* traffic class */
 
@@ -191,6 +191,7 @@ struct	ip6_pktopts {
 #endif
 #define IP6PO_DONTFRAG	0x04	/* disable fragmentation (IPV6_DONTFRAG) */
 #define IP6PO_USECOA	0x08	/* use care of address */
+#define IP6PO_NOTUSEBCE	0x10	/* Don't use  */
 };
 
 struct	ip6stat {
@@ -294,6 +295,7 @@ struct ip6aux {
 #define	IPV6_UNSPECSRC		0x01	/* allow :: as the source address */
 #define	IPV6_FORWARDING		0x02	/* most of IPv6 header exists */
 #define	IPV6_MINMTU		0x04	/* use minimum MTU (IPV6_USE_MIN_MTU) */
+#define IPV6_NOTUSEBC		0x08	/* Don't lookup bc */
 
 extern struct	ip6stat ip6stat;	/* statistics */
 extern u_int32_t ip6_id;		/* fragment identifier */
@@ -462,6 +464,10 @@ int	rip6_usrreq __P((struct socket *,
 	    int, struct mbuf *, struct mbuf *, struct mbuf *, struct proc *));
 
 int	dest6_input __P((struct mbuf **, int *, int));
+#ifdef MIP6
+int	dest6_mip6_hao __P((struct mbuf *, int, int));
+int	mip6_input __P((struct mbuf **, int *, int));
+#endif
 
 #ifdef NEW_STRUCT_ROUTE
 struct in6_addr *in6_selectsrc __P((struct sockaddr_in6 *,

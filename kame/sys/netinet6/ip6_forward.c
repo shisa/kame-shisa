@@ -34,10 +34,12 @@
 #include "opt_inet.h"
 #include "opt_inet6.h"
 #include "opt_ipsec.h"
+#include "opt_mip6.h"
 #endif
 #ifdef __NetBSD__
 #include "opt_inet.h"
 #include "opt_ipsec.h"
+#include "opt_mip6.h"
 #endif
 
 #include <sys/param.h>
@@ -65,6 +67,11 @@
 #include <netinet6/ip6_var.h>
 #include <netinet/icmp6.h>
 #include <netinet6/nd6.h>
+#ifdef MIP6
+#include <netinet/ip6mh.h>
+#include <netinet6/mip6.h>
+#include <netinet6/mip6_var.h>
+#endif
 
 #include <netinet/in_pcb.h>
 #ifdef __NetBSD__
@@ -138,6 +145,9 @@ ip6_forward(m, srcrt)
 #ifdef IPSEC
 	struct secpolicy *sp = NULL;
 	int ipsecrt = 0;
+#endif
+#ifdef MIP6 
+	struct mip6_bc_internal *bce;
 #endif
 #ifndef __FreeBSD__
 	long time_second = time.tv_sec;
@@ -370,6 +380,65 @@ ip6_forward(m, srcrt)
     skip_ipsec:
 #endif /* IPSEC */
 
+#ifdef MIP6
+	/* This codes are only for Home Agent */
+	if (!MIP6_IS_HA) 
+		goto bc_check_done;
+	/*
+	 * intercept and tunnel packets for home addresses
+	 * which we are acting as a home agent for.
+	 */
+
+#ifndef MIP6_MCOA
+	bce = mip6_bce_get(&ip6->ip6_dst, NULL);
+#else
+	/* XXX need some policy to determine bid */
+	bce = mip6_bce_get(&ip6->ip6_dst, NULL, NULL, 0); 
+#endif /* MIP6_MCOA */
+	if (bce &&
+	     (bce->mbc_flags & IP6_MH_BU_HOME) &&
+	     (bce->mbc_encap != NULL)) {
+		if (IN6_IS_ADDR_LINKLOCAL(&bce->mbc_hoa)
+		    || IN6_IS_ADDR_SITELOCAL(&bce->mbc_hoa)) {
+			ip6stat.ip6s_cantforward++;
+			if (mcopy) {
+				icmp6_error(mcopy, ICMP6_DST_UNREACH,
+					    ICMP6_DST_UNREACH_ADDR, 0);
+			}
+			m_freem(m);
+			return;
+		}
+	
+		if (m->m_pkthdr.len > IPV6_MMTU) {
+			u_long mtu = IPV6_MMTU;
+			/* XXX in6_ifstat_inc(rt->rt_ifp, ifs6_in_toobig); */
+			if (mcopy) {
+				icmp6_error(mcopy,
+					    ICMP6_PACKET_TOO_BIG, 0, mtu);
+			}
+			m_freem(m);
+			return;
+		}
+
+		/*
+		 * if we have a binding cache entry for the
+		 * ip6_dst, we are acting as a home agent for
+		 * that node.  before sending a packet as a
+		 * tunneled packet, we must make sure that
+		 * encaptab is ready.  if dad is enabled and
+		 * not completed yet, encaptab will be NULL.
+		 */
+		if (mip6_encapsulate(&m, IFA_IN6(bce->mbc_ifaddr), 
+			&bce->mbc_coa) != 0) {
+			ip6stat.ip6s_cantforward++;
+		}
+		if (mcopy)
+			m_freem(mcopy);
+		return;
+   bc_check_done:
+	}
+#endif /* MIP6 */
+
 #ifdef IPSEC
 	if (ipsecrt)
 		goto skip_routing;
@@ -572,6 +641,12 @@ ip6_forward(m, srcrt)
 		if ((rt->rt_ifp->if_flags & IFF_POINTOPOINT)) {
 			struct sockaddr_in6 sa6_dst;
 
+#ifdef MIP6
+			if (MIP6_IS_HA) {
+			    /* Should it be take care on home agent case ? */
+			    ;
+			}
+#endif /* defined(MIP6) */
 			/*
 			 * If the incoming interface is equal to the outgoing
 			 * one, the link attached to the interface is
