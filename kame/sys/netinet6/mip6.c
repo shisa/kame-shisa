@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.7 2004/10/08 07:01:19 keiichi Exp $	*/
+/*	$Id: mip6.c,v 1.8 2004/10/11 10:54:57 t-momose Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -496,7 +496,9 @@ mip6_bce_update(cnaddr, hoa, coa, flags, bid)
 	int error = 0;
 	struct mip6_bc_internal *bce = NULL;
 	struct ifaddr *ifa;
+#ifdef IPSEC
 	struct sockaddr_in6 hoa_sa, coa_sa, haaddr_sa;
+#endif
 
 	/* Non IPv6 address is not support (only for MIP6) */
 	if ((cnaddr->sin6_family != AF_INET6) ||
@@ -544,7 +546,7 @@ mip6_bce_update(cnaddr, hoa, coa, flags, bid)
 						   mip6_rev_encapcheck,
 						   (struct protosw *)&mip6_tunnel_protosw,
 						   bce);
-#if 1
+#ifdef IPSEC
 /* racoon2 guys wants us to update ipsecdb. (2004.10.8) */
 		/* update ipsecdb. */
 		bzero(&hoa_sa, sizeof(struct sockaddr_in6));
@@ -786,7 +788,9 @@ mip6_bul_add(peeraddr, hoa, coa, hoa_ifindex, flags, state, bid)
 	int error = 0;
 	struct in6_ifaddr *ia6_hoa;
 	struct mip6_bul_internal *mbul;
+#ifdef IPSEC
 	struct sockaddr_in6 hoa_sa, coa_sa, haaddr_sa;
+#endif
 
 #if 0
 #if defined(__FreeBSD__) && __FreeBSD__ >= 5
@@ -853,7 +857,7 @@ mip6_bul_add(peeraddr, hoa, coa, hoa_ifindex, flags, state, bid)
 			return (error);
 		}
 
-#if 1
+#ifdef IPSEC
 /* racoon2 guys wants us to update ipsecdb. (2004.10.8) */
 		/* update ipsecdb. */
 		bzero(&hoa_sa, sizeof(struct sockaddr_in6));
