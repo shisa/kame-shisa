@@ -1465,6 +1465,9 @@ nd6_dad_timer(ifa)
 			TAILQ_REMOVE(&dadq, (struct dadq *)dp, dad_list);
 			free(dp, M_IP6NDP);
 			dp = NULL;
+#if defined(MIP6) && NMIP > 0
+			rt_addrinfomsg((struct ifaddr *)ia);
+#endif /* MIP6 && NMIP > 0 */
 			IFAFREE(ifa);
 		}
 	}
