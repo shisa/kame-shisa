@@ -992,6 +992,9 @@ ifinfo(ifname, argc, argv)
 #ifdef ND6_IFF_PREFER_SOURCE
 		SETFLAG("prefer_source", ND6_IFF_PREFER_SOURCE);
 #endif
+#ifdef ND6_IFF_DONT_SET_IFROUTE
+		SETFLAG("dont_set_ifroute", ND6_IFF_DONT_SET_IFROUTE);
+#endif
 
 		ND.flags = newflags;
 		if (ioctl(s, SIOCSIFINFO_FLAGS, (caddr_t)&nd) < 0) {
@@ -1054,6 +1057,10 @@ ifinfo(ifname, argc, argv)
 #ifdef ND6_IFF_PREFER_SOURCE
 		if ((ND.flags & ND6_IFF_PREFER_SOURCE))
 			printf("prefer_source ");
+#endif
+#ifdef ND6_IFF_DONT_SET_IFROUTE
+		if ((ND.flags & ND6_IFF_DONT_SET_IFROUTE))
+			printf("dont_set_ifroute ");
 #endif
 	}
 	putc('\n', stdout);

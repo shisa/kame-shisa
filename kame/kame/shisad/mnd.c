@@ -1,4 +1,4 @@
-/*	$Id: mnd.c,v 1.1 2004/09/27 04:06:04 t-momose Exp $	*/
+/*	$Id: mnd.c,v 1.2 2004/09/27 08:50:43 t-momose Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -194,6 +194,10 @@ main(int argc, char **argv)
 		return -1;
 	}
 
+	mhsock_open();
+	icmp6sock_open();
+	mipsock_open();
+
 	mn_lists_init();
 
 	noro_init();
@@ -255,10 +259,6 @@ main(int argc, char **argv)
 		/* kick the fsm to start its state transition. */
 		bul_kick_fsm(bul, MIP6_BUL_FSM_EVENT_MOVEMENT, NULL);
 	}
-
-	mhsock_open();
-	icmp6sock_open();
-	mipsock_open();
 
 	new_fd_list(mipsock, POLLIN, mipsock_input_common);
 	new_fd_list(mhsock, POLLIN, mh_input_common);
@@ -649,6 +649,7 @@ bul_update_by_mipsock_w_hoa(hoa, coa, bid)
 					syslog(LOG_ERR,
 					    "removing a home address "
 					    "from a physical i/f failed.\n");
+					freeifaddrs(ifap);
 					return (-1);
 				}
 
@@ -660,6 +661,7 @@ bul_update_by_mipsock_w_hoa(hoa, coa, bid)
 					    "adding a home address "
 					    "to a mip virtual i/f failed.\n");
 					/* XXX recover the old phy addr. */
+					freeifaddrs(ifap);
 					return (-1);
 				}
 
@@ -668,6 +670,7 @@ bul_update_by_mipsock_w_hoa(hoa, coa, bid)
 			}
 		}
 	}
+	freeifaddrs(ifap);
 
 #ifdef MIP_MCOA
         /* for bootstrap */

@@ -1,4 +1,4 @@
-/*      $Id: network.c,v 1.1 2004/09/27 04:06:05 t-momose Exp $  */
+/*      $Id: network.c,v 1.2 2004/09/27 08:50:43 t-momose Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -891,6 +891,7 @@ get_ifindex_from_address(address)
 		
 		if (IN6_ARE_ADDR_EQUAL(&((struct sockaddr_in6 *)ifa->ifa_addr)->sin6_addr, address)) {
 			index = if_nametoindex(ifa->ifa_name);
+			freeifaddrs(ifap);
 			return index;
 		}
 	}

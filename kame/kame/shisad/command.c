@@ -1,4 +1,4 @@
-/*	$Id: command.c,v 1.1 2004/09/27 04:06:00 t-momose Exp $	*/
+/*	$Id: command.c,v 1.2 2004/09/27 08:50:43 t-momose Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -120,6 +120,7 @@ new_connection(s)
 	struct sockaddr_in6 sin6;
 	size_t sin6len;
 
+	sin6len = sizeof(struct sockaddr_in6);
 	if ((ss = accept(s, (struct sockaddr *)&sin6, &sin6len)) < 0) {
 		perror("command: accept");
 		return -1;

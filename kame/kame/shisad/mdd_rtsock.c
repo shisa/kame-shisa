@@ -1,4 +1,4 @@
-/*      $Id: mdd_rtsock.c,v 1.1 2004/09/27 04:06:03 t-momose Exp $  */
+/*      $Id: mdd_rtsock.c,v 1.2 2004/09/27 08:50:43 t-momose Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -279,6 +279,7 @@ get_ifl(struct cifl *ifl_headp)
 		strncpy(cifp->cif_name, ifa->ifa_name, strlen(ifa->ifa_name));
 		LIST_INSERT_HEAD(ifl_headp, cifp, cif_entries);
 	}
+	freeifaddrs(ifap);
 #endif
 
 	return 0;

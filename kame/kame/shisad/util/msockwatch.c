@@ -69,24 +69,24 @@ main(int argc,char **argv) {
 		//printf ("-- read %d byte from MIP socket--\n", n);
 
 		switch(miphdr->miph_type) {
-		case MIPM_BCEADD:
-		case MIPM_BCECHANGE:
-		case MIPM_BCEREMOVE: {
+		case MIPM_BC_ADD:
+		case MIPM_BC_CHANGE:
+		case MIPM_BC_REMOVE: {
 
-			struct mipc_info *mipc;
-			mipc = (struct mipc_info *)msg;
+			struct mipm_bc_info *mipc;
+			mipc = (struct mipm_bc_info *)msg;
 
 			if (mipc->mipc_msglen < 
-			    sizeof(struct mipc_info) + sizeof(struct sockaddr_in6) * 3) {
+			    sizeof(struct mipm_bc_info) + sizeof(struct sockaddr_in6) * 3) {
 				printf("received buffer size is somehow small %d\n", mipc->mipc_msglen);
 				break;
 			}
 			
-			if (miphdr->miph_type == MIPM_BCEADD)
+			if (miphdr->miph_type == MIPM_BC_ADD)
 				printf("** Binding Cache Add request **\n");
-			else if (miphdr->miph_type == MIPM_BCECHANGE)
+			else if (miphdr->miph_type == MIPM_BC_CHANGE)
 				printf("** Binding Cache Change request **\n");
-			else if (miphdr->miph_type == MIPM_BCEREMOVE)
+			else if (miphdr->miph_type == MIPM_BC_REMOVE)
 				printf("** Binding Cache Remove request **\n");
 
 
@@ -113,21 +113,21 @@ main(int argc,char **argv) {
 			
 			break;
 		}
-		case MIPM_BULADD:
-		case MIPM_BULCHANGE:
-		case MIPM_BULREMOVE: {
-			struct mipu_info *mipu;
+		case MIPM_BUL_ADD:
+		case MIPM_BUL_CHANGE:
+		case MIPM_BUL_REMOVE: {
+			struct mipm_bul_info *mipu;
 			if (mipu->mipu_msglen < 
-			    sizeof(struct mipu_info) + sizeof(struct sockaddr_in6) * 3) {
+			    sizeof(struct mipm_bul_info) + sizeof(struct sockaddr_in6) * 3) {
 				printf("received buffer size is somehow small %d\n", mipu->mipu_msglen);
 				break;
 			}
 			
-			if (miphdr->miph_type == MIPM_BULADD)
+			if (miphdr->miph_type == MIPM_BUL_ADD)
 				printf("** Binding Update List Add request **\n");
-			else if (miphdr->miph_type == MIPM_BULCHANGE)
+			else if (miphdr->miph_type == MIPM_BUL_CHANGE)
 				printf("** Binding Update List Change request **\n");
-			else if (miphdr->miph_type == MIPM_BULREMOVE)
+			else if (miphdr->miph_type == MIPM_BUL_REMOVE)
 				printf("** Binding Update List Remove request **\n");
 
 			memset(&addr_buf, 0, sizeof(addr_buf));
@@ -165,25 +165,25 @@ main(int argc,char **argv) {
 
 			break;
 		}
-		case MIPM_HOMEHINT: {
+		case MIPM_HOME_HINT: {
 			struct mipm_home_hint *hint;
 			hint = (struct mipm_home_hint *)msg;
 
 			memset(&addr_buf, 0, sizeof(addr_buf));
 			inet_ntop(AF_INET6, 
-				  &((struct sockaddr_in6 *)&hint->mipm_prefix[0])->sin6_addr, 
+				  &((struct sockaddr_in6 *)&hint->mipmhh_prefix[0])->sin6_addr, 
 				  addr_buf, sizeof(addr_buf));
 			
 			printf("** Home Hint: ifindex %d, %s/%d **\n", 
-			       hint->mipm_ifindex, addr_buf, hint->mipm_prefixlen);
+			       hint->mipmhh_ifindex, addr_buf, hint->mipmhh_prefixlen);
 
 			break;
 		}
 
-		case MIPM_BULFLASH:
+		case MIPM_BUL_FLUSH:
 			printf("** BUL Flush request **\n");
 			break;
-		case MIPM_MDINFO: {
+		case MIPM_MD_INFO: {
 			struct mipm_md_info *mdi;
 
 			mdi = (struct mipm_md_info *)msg;
@@ -227,7 +227,7 @@ main(int argc,char **argv) {
 			break;
 		}
 
-		case MIPM_RRHINT: {
+		case MIPM_RR_HINT: {
 
 			struct mipm_rr_hint *rrhint;
 

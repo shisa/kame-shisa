@@ -1,4 +1,4 @@
-/*	$Id: cnd.c,v 1.1 2004/09/27 04:06:00 t-momose Exp $	*/
+/*	$Id: cnd.c,v 1.2 2004/09/27 08:50:43 t-momose Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -138,6 +138,11 @@ main(int argc, char **argv)
 	openlog("shisad(cnd)", 0, LOG_DAEMON);
 	syslog(LOG_INFO, "-- Start CN daemon at %s -- \n", arg_string);
 
+	/* open sockets */
+	mhsock_open();
+	mipsock_open();
+	icmp6sock_open();
+
 	/* start timer */
 	callout_init();
 
@@ -162,11 +167,6 @@ main(int argc, char **argv)
 
 	if (debug == 0)
 		daemon(0, 0);
-
-	/* open sockets */
-	mhsock_open();
-	mipsock_open();
-	icmp6sock_open();
 
 	new_fd_list(mhsock, POLLIN, mh_input_common);
         new_fd_list(mipsock, POLLIN, mipsock_input_common);
