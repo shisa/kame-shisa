@@ -228,8 +228,8 @@ main(int argc,char **argv) {
 		}
 
 		case MIPM_RR_HINT: {
-
 			struct mipm_rr_hint *rrhint;
+			rrhint = (struct mipm_rr_hint *)msg;
 
 			memset(&addr_buf, 0, sizeof(addr_buf));
 			inet_ntop(AF_INET6, 
