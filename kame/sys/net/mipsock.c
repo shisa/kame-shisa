@@ -1,4 +1,4 @@
-/* $Id: mipsock.c,v 1.3 2004/10/20 03:37:07 keiichi Exp $ */
+/* $Id: mipsock.c,v 1.4 2004/11/05 09:29:19 keiichi Exp $ */
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -396,7 +396,7 @@ mipus_output(m, va_alist)
 		    (MIPU_COA(mipu))->sa_family == AF_INET6)
 		    
 #ifndef MIP6_MCOA
-			error = mip6_bul_update(&((struct sockaddr_in6 *)MIPU_PEERADDR(mipu))->sin6_addr,
+			error = mip6_bul_add(&((struct sockaddr_in6 *)MIPU_PEERADDR(mipu))->sin6_addr,
 			    &((struct sockaddr_in6 *)MIPU_HOA(mipu))->sin6_addr,
 			    &((struct sockaddr_in6 *)MIPU_COA(mipu))->sin6_addr,
 			    mipu->mipu_hoa_ifindex, mipu->mipu_flags,
