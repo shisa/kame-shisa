@@ -1,4 +1,4 @@
-/*	$Id: fsm.c,v 1.3 2004/10/13 16:13:43 keiichi Exp $	*/
+/*	$Id: fsm.c,v 1.4 2004/10/18 04:08:19 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -1306,7 +1306,7 @@ bul_reg_fsm(bul, event, data)
 				     cnbul = LIST_NEXT(cnbul, bul_entry)) {
 					if ((cnbul->bul_flags & IP6_MH_BU_HOME) != 0)
 						continue;
-					if (cnbul->bul_hoainfo == bul->bul_hoainfo)
+					if (cnbul->bul_hoainfo != bul->bul_hoainfo)
 						continue;
 					bul_kick_fsm(cnbul,
 					    MIP6_BUL_FSM_EVENT_DEREGISTERED,
@@ -1797,6 +1797,14 @@ bul_reg_fsm(bul, event, data)
 
 				bul_stop_retrans_timer(bul);
 
+				error = bul_rr_fsm(bul,
+				    MIP6_BUL_FSM_EVENT_STOP_RR, data);
+				if (error) {
+					syslog(LOG_ERR,
+					    "second fsm state transition "
+					    "failed.\n");
+					return (error);
+				}
 				error = bul_rr_fsm(bul,
 				    MIP6_BUL_FSM_EVENT_START_RR, data);
 				if (error) {
