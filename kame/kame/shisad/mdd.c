@@ -1,4 +1,4 @@
-/*      $Id: mdd.c,v 1.1 2004/09/27 04:06:02 t-momose Exp $  */
+/*      $Id: mdd.c,v 1.2 2004/09/29 11:44:45 t-momose Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -87,14 +87,14 @@ usage(void)
 {
 	fprintf(stderr, "%s\n", cmd);
 	fprintf(stderr, "movement detection daemon for mobile router\n");
-	fprintf(stderr, "\t[-h HoA]        HoA\n", cmd);
-	fprintf(stderr, "\t[-i IF_for_CoA] Interface for watching\n", cmd);
-	fprintf(stderr, "\t[-d]            Debug mode\n", cmd);
-	fprintf(stderr, "\t[-n]            Don't resolve names\n", cmd);
-	fprintf(stderr, "\t[-m]            Don\'t use mipsock\n", cmd);
-	fprintf(stderr, "\t[-p interval]   polling link status per interval(sec)\n", cmd);
+	fprintf(stderr, "\t[-h HoA]        HoA\n");
+	fprintf(stderr, "\t[-i IF_for_CoA] Interface for watching\n");
+	fprintf(stderr, "\t[-d]            Debug mode\n");
+	fprintf(stderr, "\t[-n]            Don't resolve names\n");
+	fprintf(stderr, "\t[-m]            Don\'t use mipsock\n");
+	fprintf(stderr, "\t[-p interval]   polling link status per interval(sec)\n");
 #ifdef MIP_MCOA
-	fprintf(stderr, "\t[-b bid]   set Binding Unique Identifier", cmd);
+	fprintf(stderr, "\t[-b bid]   set Binding Unique Identifier");
 	fprintf(stderr, "\t           -b must be used with -i and - h option.\n");
 	fprintf(stderr, "\t           multiple mdds must be executed.\n");
 #endif /* MIP6_MCOA */

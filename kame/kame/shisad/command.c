@@ -1,4 +1,4 @@
-/*	$Id: command.c,v 1.2 2004/09/27 08:50:43 t-momose Exp $	*/
+/*	$Id: command.c,v 1.3 2004/09/29 11:44:45 t-momose Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -31,6 +31,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <strings.h>
 #include <unistd.h>
 #include <ctype.h>

@@ -1,4 +1,4 @@
-/*      $Id: mh.c,v 1.1 2004/09/27 04:06:03 t-momose Exp $  */
+/*      $Id: mh.c,v 1.2 2004/09/29 11:44:45 t-momose Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -349,7 +349,7 @@ get_mobility_options(ip6mh, hlen, ip6mhlen, mopt)
 			if (*mh < 8) 
 				syslog(LOG_INFO, "  %s is found\n", mhopt_name[*mh]);
 			else
-				syslog(LOG_INFO, "  unknown option is found\n", mhopt_name[*mh]);
+				syslog(LOG_INFO, "  unknown option is found\n");
 		}
 
 		if (*mh != IP6_MHOPT_BAUTH)	/* Always bind. auth. opt. should be the last option */
@@ -679,9 +679,9 @@ receive_bu(src, dst, hoa, rtaddr, bu, mhlen)
 				       hexdump(&home_token, MIP6_TOKEN_SIZE));
 				syslog(LOG_INFO, "CareofIndex 0x%x\n",
 				       ntohs(mopt.opt_nonce->ip6moni_coa_nonce));
-				syslog(LOG_INFO, "Careof Token= ", 
+				syslog(LOG_INFO, "Careof Token= %s\n", 
 				       hexdump(&careof_token, MIP6_TOKEN_SIZE));
-				syslog(LOG_INFO, "kbm: ",
+				syslog(LOG_INFO, "kbm: %s\n",
 				       hexdump(kbm, MIP6_KBM_SIZE));
 			}
 			
