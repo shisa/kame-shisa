@@ -1,4 +1,4 @@
-/*      $Id: nemo_netconfig.c,v 1.2 2004/10/20 03:37:07 keiichi Exp $  */
+/*      $Id: nemo_netconfig.c,v 1.3 2004/11/02 12:39:25 ryuji Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -54,6 +54,9 @@
 #define MODE_HA 0x01
 #define MODE_MR 0x02
 
+#define NEMO_TUNOPTNUM 3
+#define NEMO_TUNNAME "nemo"
+
 #include "callout.h"
 #include "shisad.h"
 
@@ -62,6 +65,7 @@ struct nemo_if {
 	LIST_ENTRY(nemo_if) nemo_ifentry;
 	char ifname[IFNAMSIZ];
 	struct in6_addr hoa;
+	struct in6_addr coa;
 #ifdef MIP_MCOA
 	u_int16_t bid;
 #endif /* MIP_MCOA */
@@ -84,6 +88,7 @@ LIST_HEAD(nemo_mnpt_head, nemo_mnpt) nemo_mnpthead;
 int mode;
 int debug = 0;
 int numerichost = 0;
+int staticmode = 0;
 
 /* Functions */
 static int set_nemo_ifinfo();
@@ -91,6 +96,8 @@ static void mainloop();
 static void terminate(int);
 static int ha_parse_ptconf(char *);
 static int mr_parse_ptconf(char *);
+static struct nemo_if *find_nemo_if_from_name(char *);
+static void set_static_tun(char *);
 #ifndef MIP_MCOA 
 static struct nemo_if *nemo_setup_forwarding (struct sockaddr *, struct sockaddr *, 
 					      struct in6_addr *);
@@ -103,16 +110,23 @@ static struct nemo_if *nemo_destroy_forwarding(struct in6_addr *, u_int16_t);
 
 void
 usage() {
-	fprintf(stderr, "netd -d -h -m -f prefixtable\n");
-	fprintf(stderr, "\t-h Home Agent\n");
-	fprintf(stderr, "\t-m Mobile Router\n");
+	fprintf(stderr, "nemonetd -d [-h or -m] -f prefix_table.conf -t static_tun.conf\n");
+	fprintf(stderr, "\t-d: Verbose Debug messages \n");
+	fprintf(stderr, "\t-h: when Home Agent\n");
+	fprintf(stderr, "\t-m: when Mobile Router\n");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "Note: If prefixtable is not specified, ");
+	fprintf(stderr, "nemonetd will read /etc/prefix_table.conf\n");
 
 	exit(0);
 }
 
 int
-main (int argc, char **argv) {
-	char *pt_filename = NULL;
+main (argc, argv)
+	int argc;
+	char **argv;
+{
+	char *pt_filename = NULL, *tun_filename = NULL;
 	int ch = 0;
 	int if_number = 0, pt_number = 0;
 	struct nemo_if *nif;
@@ -122,7 +136,7 @@ main (int argc, char **argv) {
 	LIST_INIT(&nemo_ifhead);
 
 	mode = 0;
-	while ((ch = getopt(argc, argv, "dnhmf:")) != -1) {
+	while ((ch = getopt(argc, argv, "dnhmf:t:")) != -1) {
 		switch (ch) {
 		case 'd':
 			debug = 1;
@@ -139,8 +153,12 @@ main (int argc, char **argv) {
 		case 'f':
 			pt_filename = optarg;
 			break;
+		case 't':
+			tun_filename = optarg;
+			staticmode = 1;
+			break;
 		default:
-			fprintf(stderr, "unknown option\n");
+			fprintf(stderr, "unknown execution option\n");
 			usage();
 		}
 	}
@@ -151,8 +169,8 @@ main (int argc, char **argv) {
 		usage();
 
 	/* open syslog */
-	openlog("shisad(net)", 0, LOG_DAEMON);
-	syslog(LOG_INFO, "start nemo network daemon\n");
+	openlog("shisad(nemonet)", 0, LOG_DAEMON);
+	syslog(LOG_INFO, "start NEMO Network daemon\n");
 
 	// parse prefix table
 	if (mode == MODE_HA) {
@@ -164,8 +182,8 @@ main (int argc, char **argv) {
 
 	//get nemotun from the kernel and flush all states
 	if (set_nemo_ifinfo()) {
-		perror("set_nemo_ifinfo");
-		return -1;
+		syslog(LOG_ERR, "set_nemo_ifinfo %s\n", strerror(errno));
+		return (-1);
 	}
 
 	LIST_FOREACH(nif, &nemo_ifhead, nemo_ifentry) {
@@ -178,14 +196,17 @@ main (int argc, char **argv) {
 	if (if_number < pt_number) {
 		syslog(LOG_ERR, "Please create %d of nemo interfaces\n", pt_number);	
 		exit(0);
-	}
+	} 
+	
+	if (staticmode && tun_filename) 
+		set_static_tun(tun_filename);
 
 	signal(SIGTERM, terminate);
 	signal(SIGINT, terminate);
 
 	if (debug == 0) {
 		if (daemon(0, 0) < 0) {
-			perror("daemon");
+			syslog(LOG_ERR, "daemon execution %s\n", strerror(errno));
 			terminate(0);
 			exit(-1);
 		}
@@ -215,7 +236,7 @@ ha_parse_ptconf(char *filename) {
 		return EINVAL;
 	file = fopen(filename, "r");
         if(file == NULL) {
-                perror("fopen");
+		syslog(LOG_ERR, "opening %s is failed %s\n", filename, strerror(errno));
                 return errno;
         }
 
@@ -246,9 +267,10 @@ ha_parse_ptconf(char *filename) {
                 }
 
                 if (debug) {
-                        for (i = 0; i < NEMO_OPTNUM; i ++)  
+                        for (i = 0; i < NEMO_OPTNUM; i ++) { 
 				if (option[i])
                                 	syslog(LOG_INFO, "\t%d=%s\n", i, option[i]);
+			}
                 }
 
 		pt = malloc(sizeof(*pt));
@@ -277,10 +299,9 @@ ha_parse_ptconf(char *filename) {
 		LIST_INSERT_HEAD(&nemo_mnpthead, pt, nemo_mnptentry);
 
                 memset(buf, 0, sizeof(buf));
-        }
-
-        fclose(file);
-        return 0;
+        } 
+	fclose(file);
+	return 0;
 
 };
 
@@ -305,7 +326,7 @@ mr_parse_ptconf(char *filename) {
 
         file = fopen(filename, "r");
         if(file == NULL) {
-                perror("fopen");
+		syslog(LOG_ERR, "opening %s is failed %s\n", filename, strerror(errno));
                 return errno;
         }
 
@@ -336,28 +357,29 @@ mr_parse_ptconf(char *filename) {
                 }
 
                 if (debug) {
-                        for (i = 0; i < NEMO_OPTNUM; i ++)  
+                        for (i = 0; i < NEMO_OPTNUM; i ++) {
 				if (option[i])
-                                	syslog(LOG_INFO, "\t%d=%s\n", i, option[i]);
-                }
+						syslog(LOG_INFO, "\t%d=%s\n", i, option[i]);
+			}
+		}
 
 		pt = malloc(sizeof(*pt));
 		if (pt == NULL)
 			return ENOMEM;
 		memset(pt, 0, sizeof(*pt));
 
-                if (inet_pton(AF_INET6, option[0], &pt->hoa) < 0) {
-                        fprintf(stderr, "%s is not correct address\n", option[0]);
+		if (inet_pton(AF_INET6, option[0], &pt->hoa) < 0) {
+			fprintf(stderr, "%s is not correct address\n", option[0]);
 			free(pt);
-                        continue;
-                }
+			continue;
+		}
 
-                if (inet_pton(AF_INET6, option[1], &pt->nemo_prefix) < 0) {
-                        fprintf(stderr, "%s is not correct address\n", option[1]);
+		if (inet_pton(AF_INET6, option[1], &pt->nemo_prefix) < 0) {
+			fprintf(stderr, "%s is not correct address\n", option[1]);
 			free(pt);
-                        continue;
-                }
-                pt->nemo_prefixlen = atoi(option[2]);
+			continue;
+		}
+		pt->nemo_prefixlen = atoi(option[2]);
 
 #ifdef MIP_MCOA 
 		if (option[4])
@@ -367,40 +389,40 @@ mr_parse_ptconf(char *filename) {
 #endif /* MIP_MCOA */
 
 		LIST_INSERT_HEAD(&nemo_mnpthead, pt, nemo_mnptentry);
-                memset(buf, 0, sizeof(buf));
-        }
-
-        fclose(file);
-        return 0;
+		memset(buf, 0, sizeof(buf));
+	} 
+	
+	fclose(file);
+	return 0;
 };
 
 
 static int
 set_nemo_ifinfo() {
-        size_t needed;
-        char *buf, *next, name[IFNAMSIZ];
-        struct if_msghdr *ifm;
-        struct sockaddr_dl *sdl;
-        int mib[6];
+	size_t needed;
+	char *buf, *next, name[IFNAMSIZ];
+	struct if_msghdr *ifm;
+	struct sockaddr_dl *sdl;
+	int mib[6];
 	struct nemo_if *nif;
-        
-        mib[0] = CTL_NET;
-        mib[1] = PF_ROUTE;
-        mib[2] = 0;
-        mib[3] = AF_INET6;
-        mib[4] = NET_RT_IFLIST;
-        mib[5] = 0;
-        
-        if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0) {
-                perror("sysctl");
+	
+	mib[0] = CTL_NET;
+	mib[1] = PF_ROUTE;
+	mib[2] = 0;
+	mib[3] = AF_INET6;
+	mib[4] = NET_RT_IFLIST;
+	mib[5] = 0;
+	
+	if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0) {
+		syslog(LOG_ERR, "sysctl: %s\n", strerror(errno));
 		return errno;
 	}
-        if ((buf = malloc(needed)) == NULL) {
-                perror("malloc");
+	if ((buf = malloc(needed)) == NULL) {
+		syslog(LOG_ERR, "malloc: %s\n", strerror(errno));
 		return errno;
 	}
-        if (sysctl(mib, 6, buf, &needed, NULL, 0) < 0) {
-                perror("sysctl");
+	if (sysctl(mib, 6, buf, &needed, NULL, 0) < 0) {
+		syslog(LOG_ERR, "sysctl: %s\n", strerror(errno));
 		return errno;
 	}
 
@@ -413,7 +435,7 @@ set_nemo_ifinfo() {
                         bzero(name, sizeof(name));
                         strncpy(name, &sdl->sdl_data[0], sdl->sdl_nlen);
 
-                        if (strncmp(name, "nemo", strlen("nemo")) == 0) {
+                        if (strncmp(name, NEMO_TUNNAME, strlen(NEMO_TUNNAME)) == 0) {
 
 				nif = malloc(sizeof(struct nemo_if));
 				if (nif == NULL)
@@ -434,19 +456,107 @@ set_nemo_ifinfo() {
         free(buf); 
 
 	if (debug) {
+		syslog(LOG_INFO, "Watched interface: ");
 		LIST_FOREACH(nif, &nemo_ifhead, nemo_ifentry) {
-			syslog(LOG_INFO, "add %s\n", nif->ifname);
+			syslog(LOG_INFO, "%s ", nif->ifname);
 		}
+		syslog(LOG_INFO, "\n");
 	}
 
 	return 0;
 };
 
+
+static void
+set_static_tun(char *filename) {
+	struct nemo_if *nif;
+	FILE *file;
+	int i=0;
+	char buf[256], *spacer, *head;
+	char *option[NEMO_TUNOPTNUM];
+	/*
+	 * option[0]: tun name
+	 * option[1]: HoA
+	 * option[2]: Binding Unique Id (optional)
+	 */ 
+	if (filename == NULL)
+		return; 
+		
+	file = fopen(filename, "r");
+	if(file == NULL) {
+		syslog(LOG_ERR, "opening %s is failed: %s\n", 
+			filename, strerror(errno));
+		usage();
+		exit(-1);
+	} 
+	
+	
+	memset(buf, 0, sizeof(buf));
+	while((fgets(buf, sizeof(buf), file)) != NULL){
+		/* ignore comments */
+		if (strchr(buf, '#') != NULL) 
+			continue; 
+		if (strchr(buf, ' ') == NULL) 
+			continue;
+                /* parsing all options */
+		
+		for (i = 0; i < NEMO_TUNOPTNUM; i++)
+			option[i] = '\0';
+		head = buf;
+		
+		for (i = 0, head = buf; 
+			(head != NULL) && (i < NEMO_TUNOPTNUM); 
+				head = ++spacer, i ++) { 
+				
+			spacer = strchr(head, ' ');
+			if (spacer) {
+				*spacer = '\0';
+				option[i] = head;
+			} else {
+				option[i] = head;
+				break;
+			}
+		} 
+		
+		if (debug) {
+			syslog(LOG_INFO, "Static Tunnel Information\n");
+			for (i = 0; i < NEMO_TUNOPTNUM; i ++) 
+				if (option[i])
+					syslog(LOG_INFO, "\t%d=%s\n", i, option[i]);
+		} 
+		
+		nif = find_nemo_if_from_name(option[0]);
+		if (nif == NULL) {
+			syslog(LOG_ERR, "%s is not available\n", option[0]);
+			exit(-1);
+		}
+                if (inet_pton(AF_INET6, option[1], &nif->hoa) < 0) {
+			syslog(LOG_ERR, "%s is not correct address\n", option[1]);
+			exit(-1);
+		} 
+		
+#ifdef MIP_MCOA
+		if (option[2])
+			nif->bid = atoi(option[2]);
+		else 
+			nif->bid = 0;
+#endif /* MIP_MCOA */
+	} 
+	
+	return; 
+}
+
+
+
+
 static struct nemo_if *
 #ifndef MIP_MCOA
-find_nemo_if(struct in6_addr *hoa) 
+find_nemo_if(hoa)
+	struct in6_addr *hoa;
 #else
-find_nemo_if(struct in6_addr *hoa, u_int16_t bid) 
+find_nemo_if(hoa, bid)
+	struct in6_addr *hoa;
+	u_int16_t bid; 
 #endif /* MIP_MCOA */
 {
 	struct nemo_if *nif;
@@ -455,23 +565,43 @@ find_nemo_if(struct in6_addr *hoa, u_int16_t bid)
 	LIST_FOREACH(nif, &nemo_ifhead, nemo_ifentry) {
 #ifndef MIP_MCOA
 		if (hoa && IN6_ARE_ADDR_EQUAL(hoa, &nif->hoa)) {  
-				return nif;
+				return (nif);
 		} 
 #else
 		if (hoa && IN6_ARE_ADDR_EQUAL(hoa, &nif->hoa)) {
 			if ((bid > 0) && (bid == nif->bid)) 
-				return nif;
+				return (nif);
 		}
 #endif /* MIP_MCOA */
 	}
 
+	if (staticmode)
+		return (NULL);
+
 	LIST_FOREACH(nif, &nemo_ifhead, nemo_ifentry) {
 		flags = nemo_ifflag_get(nif->ifname);
 		if (!(flags & IFF_UP))
-			return nif;
+			return (nif);
 	}
 
-	return NULL;
+	return (NULL);
+}
+
+static struct nemo_if *
+find_nemo_if_from_name(ifname)
+	char *ifname;
+{
+	struct nemo_if *nif; 
+	
+	if (ifname == NULL)
+		return (NULL); 
+		
+	LIST_FOREACH(nif, &nemo_ifhead, nemo_ifentry) {
+		if (strncmp(ifname, nif->ifname, strlen(nif->ifname)) == 0)
+			return (nif);
+	} 
+	
+	return (NULL);
 }
 
 static void	
@@ -497,7 +627,7 @@ mainloop() {
         msock = socket(PF_MOBILITY, SOCK_RAW, 0);
 
         if (msock < 0) {
-                perror("socket(PF_MOBILITY)");
+		syslog(LOG_ERR, "socket(PF_MOBILITY) %s\n", strerror(errno));
                 exit(-1);
         }
 
@@ -508,14 +638,14 @@ mainloop() {
 		nfds = msock + 1;
 
                 if (select(nfds, &fds, NULL, NULL, NULL) < 0) {
-			perror("select()");
+			syslog(LOG_ERR, "select %s\n", strerror(errno));
                         exit(-1);
                 }
 
                 if (FD_ISSET(msock, &fds)) {
 			n = read(msock, buf, sizeof(buf));
 			if (n < 0) {
-				perror ("read");
+				syslog(LOG_ERR, "read %s\n", strerror(errno));
 				continue;
 			}
 
@@ -559,7 +689,6 @@ mainloop() {
 #else
 
 				bid = mbu->mipu_bid;
-				syslog(LOG_INFO, "received BID is %d\n", bid);
 				nif = nemo_setup_forwarding((struct sockaddr *)&src, 
 							    (struct sockaddr *)&dst, hoa, bid);
 #endif /* MIP_MCOA */
@@ -591,6 +720,7 @@ mainloop() {
 #endif /* MIP_MCOA */
 					
 					npt->nemo_if = nif;
+					break;
 				}
 
                                 break;
@@ -611,7 +741,6 @@ mainloop() {
 				nif = nemo_destroy_forwarding(hoa);
 #else
 				bid = mbu->mipu_bid;
-				syslog(LOG_INFO, "received BID is %d\n", bid);
 				nif = nemo_destroy_forwarding(hoa, bid);
 #endif /* MIP_MCOA */
 
@@ -661,7 +790,6 @@ mainloop() {
 						(struct sockaddr *)&dst, hoa);
 #else
 				bid = mbc->mipc_bid;
-				syslog(LOG_INFO, "received BID is %d\n", bid);
 				nif = nemo_setup_forwarding((struct sockaddr *)&src, 
 						(struct sockaddr *)&dst, hoa, bid);
 #endif /* MIP_MCOA */
@@ -698,7 +826,6 @@ mainloop() {
 				nif = nemo_destroy_forwarding(hoa);
 #else
 				bid = mbc->mipc_bid;
-				syslog(LOG_INFO, "received BID is %d\n", bid);
 				nif = nemo_destroy_forwarding(hoa, bid);
 #endif /* MIP_MCOA */
 
@@ -756,6 +883,18 @@ nemo_setup_forwarding (src, dst, hoa, bid)
 		nif->bid = bid;
 #endif /* MIP_MCOA */
 
+       /* If CoA is not changed, don't touch tunnel  */
+#ifdef MIP_MCOA
+	if (IN6_ARE_ADDR_EQUAL(&nif->coa, 
+		(mode == MODE_HA) ?  
+			&((struct sockaddr_in6 *)dst)->sin6_addr :
+			&((struct sockaddr_in6 *)src)->sin6_addr)) { 
+		/*nemo_gif_ar_set(nif->ifname, &((struct sockaddr_in6 *)src)->sin6_addr);*/ 
+		
+		return nif;
+	}
+#endif
+
 	/* tunnel disable (just for safety) */
 	nemo_tun_del(nif->ifname);
 
@@ -764,14 +903,23 @@ nemo_setup_forwarding (src, dst, hoa, bid)
 		nemo_tun_set((struct sockaddr *)src,
 			     (struct sockaddr *)dst,
 			     if_nametoindex(nif->ifname), 0 /* FALSE */);
+		/* Update CoA */
+		nif->coa = ((struct sockaddr_in6 *)dst)->sin6_addr;
 	} else if (mode == MODE_MR) {
 		/* tunnel activate */
 		nemo_tun_set((struct sockaddr *)src,
 			     (struct sockaddr *)dst,
 			     if_nametoindex(nif->ifname), 1 /* TRUE */);
+		nemo_gif_ar_set(nif->ifname, &((struct sockaddr_in6 *)src)->sin6_addr);
+                /* Update CoA */
+		nif->coa = ((struct sockaddr_in6 *)src)->sin6_addr;
 	} 
 	
-	nemo_gif_ar_set(nif->ifname, &((struct sockaddr_in6 *)src)->sin6_addr);
+        if (debug) {
+		syslog(LOG_INFO, "tunnel src %s dst %s\n",
+			ip6_sprintf(&((struct sockaddr_in6 *)src)->sin6_addr), 
+			ip6_sprintf(&((struct sockaddr_in6 *)dst)->sin6_addr));
+	}
 
 	return nif;
 }
@@ -809,10 +957,13 @@ nemo_destroy_forwarding (hoa, bid)
 		nemo_ifflag_set(nif->ifname, 
 				(flags &= ~IFF_UP));
 
-	memset(&nif->hoa, 0, sizeof(*hoa));
+	if (staticmode == 0) {
+		memset(&nif->hoa, 0, sizeof(*hoa));
 #ifdef MIP_MCOA
-	nif->bid = 0;
+		nif->bid = 0;
 #endif /* MIP_MCOA */
+	}
+        memset(&nif->coa, 0, sizeof(nif->coa));
 
 	return nif;
 }
