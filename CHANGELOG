@@ -1,7 +1,21 @@
 			CHANGELOG for KAME kit
-$KAME: CHANGELOG,v 1.2671 2004/10/05 07:42:00 suz Exp $
+$KAME: CHANGELOG,v 1.2682 2004/11/19 04:51:50 jinmei Exp $
 
 <200411>
+2004-11-18  JINMEI, Tatuya  <jinmei@isl.rdc.toshiba.co.jp>
+	* kame/sys/netinet6/in6.c (in6_if2idlen): introduced a new
+	function, which was previously a local module "if2idlen", and
+	called it when necessary.  With this change we do not store the
+	IFID length in in6_ifextra{}.  It did not always work as intended
+	due to initialization timing issues.
+
+2004-11-18  SUZUKI, Shinsuke <suz@crl.hitachi.co.jp>
+	* kame/sys/netinet6/route6.c (route6_input): removed the previous
+	fix on Nov 12, since it can lead to a buffer overrun.
+
+Tue Nov 16 14:50:50 JST 2004  itojun@iijlab.net
+	* openbsd: switch to 3.6.
+
 2004-11-12  SUZUKI, Shinsuke <suz@crl.hitachi.co.jp>
 	* kame/sys/netinet6/route6.c (route6_input): conformance fix;
 	  a Type-0 Routing-header is skipped if Segments Left is set to 
@@ -17,15 +31,18 @@ $KAME: CHANGELOG,v 1.2671 2004/10/05 07:42:00 suz Exp $
 	default MSS computation for TCP/IPv6.
 
 <200410>
-Tue Oct 26 15:42:56 JST 2004    keiichi@iij.ad.jp
-        * kame/sys/netinet6/icmp6.c: fixed a freebsd5 kernel crash due to a
-        LOR caused by ICMPv6 redirect.
+Tue Oct 26 JST 2004  itojun@iijlab.net
+	* sys/netinet6/nd6_rtr.c: remove "onlink assumption" handling code.
+
+Tue Oct 26 15:42:56 JST 2004	keiichi@iij.ad.jp
+	* kame/sys/netinet6/icmp6.c: fixed a freebsd5 kernel crash due to a
+	LOR caused by ICMPv6 redirect.
 
 2004-10-21  JINMEI, Tatuya  <jinmei@isl.rdc.toshiba.co.jp>
-        * kame/sys/netinet6/nd6_rtr.c (in6_ifadd): made sure that the
-        "new" address does not happen to have been configured already.
-        Otherwise, the same address can be doubly configured under some
-        rare conditions.
+	* kame/sys/netinet6/nd6_rtr.c (in6_ifadd): made sure that the
+	"new" address does not happen to have been configured already.
+	Otherwise, the same address can be doubly configured under some
+	rare conditions.
 
 2004-10-05  SUZUKI, Shinsuke <suz@crl.hitachi.co.jp>
 	* kame/sys/netinet6/in6_rmx.c: fixed a freebsd5 kernel crash due to a

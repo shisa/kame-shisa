@@ -1,4 +1,4 @@
-/*	$KAME: nd6_rtr.c,v 1.266 2004/10/26 07:01:31 jinmei Exp $	*/
+/*	$KAME: nd6_rtr.c,v 1.269 2004/11/18 08:22:47 jinmei Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
@@ -735,7 +735,6 @@ defrouter_select()
 	}
 
 	/*
-	 * If we have a default route for the default interface, delete it.
 	 * Search for a (probably) reachable router from the list.
 	 * We just pick up the first reachable one (if any), assuming that
 	 * the ordering rule of the list described in defrtrlist_update().
@@ -1332,7 +1331,6 @@ prelist_update(new, dr, m, mcast)
 
 		in6_init_address_ltimes(pr, &lt6_tmp);
 
-
 		/*
 		 * We need to treat lifetimes for temporary addresses
 		 * differently, according to
@@ -1388,7 +1386,6 @@ prelist_update(new, dr, m, mcast)
 	if (ia6_match == NULL && new->ndpr_vltime) {
 		int ifidlen;
 
-		ifidlen = ((struct in6_ifextra *)(ifp)->if_afdata[AF_INET6])->ifidlen;
 		/*
 		 * 5.5.3 (d) (continued)
 		 * No address matched and the valid lifetime is non-zero.
@@ -1403,6 +1400,7 @@ prelist_update(new, dr, m, mcast)
 		 * identifier is defined in a separate link-type specific
 		 * document.
 		 */
+		ifidlen = in6_if2idlen(ifp);
 		if (ifidlen < 0) {
 			/* this should not happen, so we always log it. */
 			log(LOG_ERR, "prelist_update: IFID undefined (%s)\n",
@@ -1731,8 +1729,8 @@ nd6_prefix_onlink(pr)
 	if ((pr->ndpr_stateflags & NDPRF_ONLINK) != 0) {
 		nd6log((LOG_ERR,
 		    "nd6_prefix_onlink: %s/%d is already on-link\n",
-		    ip6_sprintf(&pr->ndpr_prefix.sin6_addr), pr->ndpr_plen);
-		return (EEXIST));
+		    ip6_sprintf(&pr->ndpr_prefix.sin6_addr), pr->ndpr_plen));
+		return (EEXIST);
 	}
 
 	/*

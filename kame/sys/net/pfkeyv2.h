@@ -1,4 +1,4 @@
-/*	$KAME: pfkeyv2.h,v 1.38 2003/09/10 21:10:32 itojun Exp $	*/
+/*	$KAME: pfkeyv2.h,v 1.39 2004/11/11 22:34:45 suz Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.

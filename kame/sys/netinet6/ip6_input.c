@@ -1,4 +1,4 @@
-/*	$KAME: ip6_input.c,v 1.348 2004/08/11 10:20:48 jinmei Exp $	*/
+/*	$KAME: ip6_input.c,v 1.349 2004/11/11 22:34:46 suz Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
@@ -562,6 +562,15 @@ ip6_input(m)
 		}
 #endif /* FreeBSD5 */
 #endif /* PFIL_HOOKS */
+
+	ip6stat.ip6s_nxthist[ip6->ip6_nxt]++;
+
+#ifdef ALTQ
+	if (altq_input != NULL && (*altq_input)(m, AF_INET6) == 0) {
+		/* packet is dropped by traffic conditioner */
+		return;
+	}
+#endif
 
 	ip6stat.ip6s_nxthist[ip6->ip6_nxt]++;
 

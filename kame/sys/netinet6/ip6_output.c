@@ -1,4 +1,4 @@
-/*	$KAME: ip6_output.c,v 1.456 2004/10/27 07:59:36 itojun Exp $	*/
+/*	$KAME: ip6_output.c,v 1.458 2004/11/22 06:40:08 t-momose Exp $	*/
 
 /*
  * Copyright (c) 2002 INRIA. All rights reserved.
@@ -1398,6 +1398,16 @@ skip_ipsec2:;
 	if (error != 0 || m == NULL)
 		goto done;
 	ip6 = mtod(m, struct ip6_hdr *);
+#elif defined(__FreeBSD__) && __FreeBSD_version >= 503000
+	/* Jump over all PFIL processing if hooks are not active .*/
+	if (inet6_pfil_hook.ph_busy_count == -1)
+		goto passout;
+
+	/* Run through list of hooks for output packets. */
+	error = pfil_run_hooks(&inet6_pfil_hook, &m, ifp, PFIL_OUT, inp);
+	if (error != 0 || m == NULL)
+		goto done;
+	ip6 = mtod(m, struct ip6_hdr *);
 #endif /* PFIL_HOOKS */
 
 #if NPF > 0
@@ -1537,6 +1547,19 @@ passout:
 			in6_ifstat_inc(ifp, ifs6_out_fragfail);
 			goto bad;
 		}
+
+#if defined(__FreeBSD__) && __FreeBSD_version >= 503000
+		/*
+		 * Verify that we have any chance at all of being able to queue
+		 *      the packet or packet fragments
+		 */
+		if (qslots <= 0 || ((u_int)qslots * (mtu - hlen)
+		    < tlen  /* - hlen */)) {
+			error = ENOBUFS;
+			ip6stat.ip6s_odropped++;
+			goto bad;
+		}
+#endif
 
 #if defined(__FreeBSD__) && __FreeBSD_version >= 503000
 		/*

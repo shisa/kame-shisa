@@ -1,4 +1,4 @@
-/*	$KAME: if_gif.c,v 1.110 2004/07/27 13:11:59 suz Exp $	*/
+/*	$KAME: if_gif.c,v 1.112 2004/11/12 06:00:40 suz Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.

@@ -1,4 +1,4 @@
-/*	$KAME: ip6_forward.c,v 1.141 2004/06/24 15:03:32 itojun Exp $	*/
+/*	$KAME: ip6_forward.c,v 1.142 2004/11/11 22:34:46 suz Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
@@ -751,6 +751,18 @@ ip6_forward(m, srcrt)
 	 */
 	if ((error = pfil_run_hooks(&inet6_pfil_hook, &m, rt->rt_ifp,
 				    PFIL_OUT)) != 0)
+		goto senderr;
+	if (m == NULL)
+		goto freecopy;
+	ip6 = mtod(m, struct ip6_hdr *);
+#elif (defined(__FreeBSD__) && __FreeBSD_version >= 503000)
+	/* Jump over all PFIL processing if hooks are not active. */
+	if (inet6_pfil_hook.ph_busy_count == -1)
+		goto pass;
+
+	/* Run through list of hooks for output packets. */
+	error = pfil_run_hooks(&inet6_pfil_hook, &m, rt->rt_ifp, PFIL_OUT, NULL);
+	if (error != 0)
 		goto senderr;
 	if (m == NULL)
 		goto freecopy;

@@ -219,7 +219,6 @@ static int in6_lifaddr_ioctl __P((struct socket *, u_long, caddr_t,
 static int in6_ifinit __P((struct ifnet *, struct in6_ifaddr *,
 	struct sockaddr_in6 *, int));
 static void in6_unlink_ifa __P((struct in6_ifaddr *, struct ifnet *));
-static int if2idlen __P((struct ifnet *));
 
 #ifdef __FreeBSD__
 int	(*faithprefix_p)(struct in6_addr *);
@@ -2471,11 +2470,10 @@ in6_setmaxmtu()
  * link type.  As clarified in rfc2462bis, those two definitions should be
  * consistent, and those really are as of August 2004.
  */
-static int
-if2idlen(ifp)
+int
+in6_if2idlen(ifp)
 	struct ifnet *ifp;
 {
-#if 0
 	switch (ifp->if_type) {
 	case IFT_ETHER:		/* RFC2464 */
 #ifdef IFT_PROPVIRTUAL
@@ -2498,13 +2496,13 @@ if2idlen(ifp)
 		return (64);
 	case IFT_IEEE1394:	/* RFC3146 */
 		return (64);
+	case IFT_GIF:
+		return (64);	/* draft-ietf-v6ops-mech-v2-05 */
+	case IFT_LOOP:
+		return (64);	/* XXX: is this really correct? */
 	default:
 		return (-1);	/* unknown link type */
 	}
-#else
-	/* XXX when the function is called, if_type is not initialized. */
-	return (64);
-#endif
 }
 
 void *
@@ -2525,7 +2523,6 @@ in6_domifattach(ifp)
 	    M_IFADDR, M_WAITOK);
 	bzero(ext->icmp6_ifstat, sizeof(*ext->icmp6_ifstat));
 
-	ext->ifidlen = if2idlen(ifp);
 	ext->nd_ifinfo = nd6_ifattach(ifp);
 	ext->scope6_id = scope6_ifattach(ifp);
 	return ext;

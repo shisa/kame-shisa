@@ -1,4 +1,4 @@
-/*	$KAME: ip6_mroute.c,v 1.133 2004/09/30 10:05:18 suz Exp $	*/
+/*	$KAME: ip6_mroute.c,v 1.134 2004/11/11 22:34:46 suz Exp $	*/
 
 /*
  * Copyright (C) 1998 WIDE Project.

@@ -1,4 +1,4 @@
-/*	$KAME: if_dummy.c,v 1.27 2004/05/21 08:46:15 itojun Exp $	*/
+/*	$KAME: if_dummy.c,v 1.28 2004/11/11 22:34:44 suz Exp $	*/
 
 /*
  * Copyright (c) 1982, 1986, 1993

@@ -1,4 +1,4 @@
-/*	$KAME: ah_input.c,v 1.90 2004/06/02 05:53:14 itojun Exp $	*/
+/*	$KAME: ah_input.c,v 1.91 2004/11/11 22:34:45 suz Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.

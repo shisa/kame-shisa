@@ -1,4 +1,4 @@
-/*	$KAME: ipsec.c,v 1.223 2004/07/14 02:35:49 itojun Exp $	*/
+/*	$KAME: ipsec.c,v 1.226 2004/11/22 06:40:08 t-momose Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.

@@ -576,7 +576,7 @@ in6_ifattach_linklocal(ifp, altifp)
 	 * autoconfiguration fails and manual configuration is required.
 	 * We simply assume the link-local prefix is fe80::/10.
 	 */
-	ifidlen = ((struct in6_ifextra *)(ifp)->if_afdata[AF_INET6])->ifidlen;
+	ifidlen = in6_if2idlen(ifp);
 	if (ifidlen < 0) {
 		/* this should not happen, so we always log it. */
 		log(LOG_ERR, "%s: IFID undefined\n", if_name(ifp));

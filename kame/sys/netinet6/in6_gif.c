@@ -1,4 +1,4 @@
-/*	$KAME: in6_gif.c,v 1.111 2004/06/02 05:53:14 itojun Exp $	*/
+/*	$KAME: in6_gif.c,v 1.112 2004/11/11 22:34:45 suz Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
