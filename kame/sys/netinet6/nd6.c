@@ -2195,7 +2195,6 @@ nd6_output(ifp, origifp, m0, dst, rt0)
 	src_ia6 = (struct in6_ifaddr *)ifa_ifwithaddr((struct sockaddr *)&src);
 
 	if (src_ia6 && ((src_ia6->ia6_flags & IN6_IFF_DEREGISTERING) == 0)) {
-
 		/* 
 		 * if R flag is set, skip kernel tunnel. 
 		 * packets are tunneled by gif 
@@ -2203,12 +2202,12 @@ nd6_output(ifp, origifp, m0, dst, rt0)
 		bul = mip6_bul_get_home_agent(&ip6->ip6_src);
 		if ((bul != NULL) && (bul->mbul_mip != NULL) && 
 			(bul->mbul_flags & IP6_MH_BU_ROUTER) == 0) {
-
+			if (ip6->ip6_nxt == IPPROTO_MH)
+				goto dontstartrr;
 			if (IN6_IS_ADDR_MULTICAST(&ip6->ip6_dst))
 				goto dontstartrr;
 			if (IN6_IS_ADDR_LINKLOCAL(&ip6->ip6_dst))
 				goto dontstartrr;
-
 			cnbul = mip6_bul_get(&ip6->ip6_src, &ip6->ip6_dst);
 			if (cnbul != NULL)
 				goto dontstartrr;

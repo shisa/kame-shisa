@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.13 2004/10/13 16:29:01 keiichi Exp $	*/
+/*	$Id: mip6.c,v 1.14 2004/10/14 06:57:39 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -341,7 +341,7 @@ mip6_tunnel_input(mp, offp, proto)
 	struct mbuf *m = *mp;
 	struct ip6_hdr *ip6;
 #if NMIP > 0
-	struct in6_addr *src, *dst;
+	int nxt;
 	struct mip6_bul_internal *bul, *cnbul;
 #endif /* NMIP > 0 */
 #if !(defined(__FreeBSD__) && __FreeBSD_version >= 500000)
@@ -359,20 +359,22 @@ mip6_tunnel_input(mp, offp, proto)
 		}
 
 #if NMIP > 0
-		ip6 = mtod(m, struct ip6_hdr *);
-		if (ip6->ip6_nxt == IPPROTO_MH)
-			goto nonotify;
-		src = &ip6->ip6_src;
-		dst = &ip6->ip6_dst;
-		bul = mip6_bul_get_home_agent(dst);
-		if (bul == NULL)
-			goto nonotify;
-		cnbul = mip6_bul_get(dst, src);
-		if ((cnbul == NULL) ||
-		    !(cnbul->mbul_state & MIP6_BUL_STATE_NEEDTUNNEL)) {
-			mip6_notify_rr_hint(dst, src);
+		if (ip6_lasthdr(m, 0, IPPROTO_IPV6, &nxt) == -1) {
+			return (IPPROTO_DONE);
 		}
-	nonotify:
+		if (nxt == IPPROTO_MH)
+			goto dontstartrr;
+		ip6 = mtod(m, struct ip6_hdr *);
+		bul = mip6_bul_get_home_agent(&ip6->ip6_dst);
+		if (bul == NULL)
+			goto dontstartrr;
+		cnbul = mip6_bul_get(&ip6->ip6_dst, &ip6->ip6_src);
+		if (cnbul != NULL)
+			goto dontstartrr;
+
+		mip6_notify_rr_hint(&ip6->ip6_dst, &ip6->ip6_src);
+
+	dontstartrr:
 #endif /* NMIP > 0 */
 
 		mip6stat.mip6s_revtunnel++;
