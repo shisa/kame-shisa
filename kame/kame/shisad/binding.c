@@ -1,4 +1,4 @@
-/*      $Id: binding.c,v 1.5 2004/10/08 11:11:02 keiichi Exp $  */
+/*      $Id: binding.c,v 1.6 2004/10/14 17:24:01 t-momose Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <time.h>
 #include <syslog.h>
 #include <sys/socket.h>
 #include <sys/param.h>
@@ -246,15 +247,18 @@ void
 command_show_bc(s)
 	int s;
 {
+	time_t now;
 	char buff[2048];
 	struct binding_cache *bc;
 
+	now = time(NULL);
         for (bc = LIST_FIRST(&bchead); bc; bc = LIST_NEXT(bc, bc_entry)) {
 		sprintf(buff, "%s ", ip6_sprintf(&bc->bc_hoa));
 		sprintf(buff + strlen(buff), "%s ", ip6_sprintf(&bc->bc_coa));
 		sprintf(buff + strlen(buff), "%s ", ip6_sprintf(&bc->bc_myaddr));
-		sprintf(buff + strlen(buff), "%d %c%c%c%c %d\n",
+		sprintf(buff + strlen(buff), "%d %d %c%c%c%c %d\n",
 			bc->bc_lifetime,
+			(int)(bc->bc_expire - now),
 			(bc->bc_flags & IP6_MH_BU_ACK)  ? 'A' : '-',
 			(bc->bc_flags & IP6_MH_BU_HOME) ? 'H' : '-',
 			(bc->bc_flags & IP6_MH_BU_LLOCAL) ? 'L' : '-',

@@ -1,4 +1,4 @@
-/*      $Id: mh.c,v 1.6 2004/10/12 14:05:01 t-momose Exp $  */
+/*      $Id: mh.c,v 1.7 2004/10/14 17:24:01 t-momose Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -534,6 +534,8 @@ mh_input(src, dst, hoa, rtaddr, mh, mhlen)
 		return (receive_bu(src, dst, hoa, rtaddr, (struct ip6_mh_binding_update *)mh, mhlen));
 		break;
 
+	case IP6_MH_TYPE_BERROR:
+		break;
 	default:
 		send_be(src, dst, NULL, IP6_MH_BES_UNKNOWN_MH);
 		break;
@@ -744,7 +746,8 @@ receive_bu(src, dst, hoa, rtaddr, bu, mhlen)
 	if (bc && MIP6_LEQ(seqno, bc->bc_seqno)) {
 		statuscode = IP6_MH_BAS_SEQNO_BAD;
 		seqno = bc->bc_seqno;
-		syslog(LOG_ERR, "Received sequence number is out of window\n");
+		syslog(LOG_ERR, "Received sequence number from [%s] is out of window.\n",
+		       ip6_sprintf(hoa));
 		goto sendba;
 	}
 
