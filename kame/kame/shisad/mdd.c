@@ -1,4 +1,4 @@
-/*      $Id: mdd.c,v 1.7 2004/11/02 14:02:25 ryuji Exp $  */
+/*      $Id: mdd.c,v 1.8 2004/11/02 14:15:17 kei Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -33,6 +33,8 @@
 #include <string.h>
 #include <signal.h>
 #include <errno.h>
+#include <syslog.h>
+#include <stdarg.h>
 #include <sys/queue.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
@@ -231,14 +233,12 @@ main(argc, argv, env)
 		get_coaiflist();
 		if (debug > 1) {
 			print_coaiflist(stderr);
-			fprintf(stderr, "\n");
 		}
 	}
 	if (!hflag) {
 		get_hoalist();
 		if (debug > 1) {
 			print_bl(stderr);
-			fprintf(stderr, "\n");
 		}
 	}
 
@@ -251,16 +251,13 @@ main(argc, argv, env)
 	 *  Show starting parameters, if started as debug mode
 	 */
 	if (debug) {
-		fprintf(stderr, "# Command:	%s\n", cmd);
-		fprintf(stderr, "# Version: 	%d.%d\n", ver_major, ver_minor);
-		fprintf(stderr, "# Debug level:	%d\n", debug);
-		fprintf(stderr, "\n");
+		syslog(LOG_INFO, "# Command:	%s\n", cmd);
+		syslog(LOG_INFO, "# Version: 	%d.%d\n", ver_major, ver_minor);
+		syslog(LOG_INFO, "# Debug level:	%d\n", debug);
 
 		print_coaiflist(stderr);
-		fprintf(stderr, "\n");
 
 		print_bl(stderr);
-		fprintf(stderr, "\n");
 	}
 	sync_binding();
 
@@ -279,6 +276,7 @@ main(argc, argv, env)
 		}
 	}
 
+	openlog("shisad(mdd)", 0, LOG_DAEMON);
 	mainloop();
 
 	/* not reached */
@@ -294,7 +292,7 @@ reload(dummy)
 	struct coac *cp;
 
 	if (debug) {
-		fprintf(stderr, "Reload parameters\n");
+		syslog(LOG_INFO, "Reload parameters\n");
 	}
 
 	while (!LIST_EMPTY(&bl_head)) {
@@ -327,7 +325,7 @@ terminate(dummy)
 {
 
 	if (debug) {
-		fprintf(stderr, "Terminate\n");
+		syslog(LOG_INFO, "Terminate\n");
 	}
 
 	close(sock_rt);
@@ -458,9 +456,9 @@ get_coacandidate()
 	}
 
 	if (debug > 1) {
-		fprintf(stderr, "CoA candidate\n");
+		syslog(LOG_INFO, "CoA candidate\n");
 		LIST_FOREACH(cp, &coacl_head, coac_entries) {
-			fprintf(stderr, "\tCoA: %s\n",
+			syslog(LOG_INFO, "\tCoA: %s\n",
 				(char *) inet_ntop(AF_INET6, &cp->coa.sin6_addr,
 							buf, sizeof(buf)));
 		}
@@ -592,15 +590,15 @@ print_bl(fp)
 	struct binding *bp;
 
 	LIST_FOREACH(bp, &bl_head, binding_entries) {
-		fprintf(fp, "HoA: %s",
+		syslog(LOG_INFO, "HoA: %s",
 			(char *) inet_ntop(AF_INET6, &bp->hoa.sin6_addr,
 							buf, sizeof(buf)));
 		if (bp->flags & BF_BOUND) {
-			fprintf(fp, "\t-> %s",
+			syslog(LOG_INFO, "\t-> %s",
 				(char *) inet_ntop(AF_INET6, &bp->coa.sin6_addr,
 							buf, sizeof(buf)));
 		}
-		fprintf(stderr, "\n");
+		syslog(LOG_INFO, "\n");
 	}
 }
 
@@ -611,7 +609,7 @@ print_coaiflist(fp)
 	struct cif *cifp;
 
 	LIST_FOREACH(cifp, &cifl_head, cif_entries) {
-		fprintf(fp, "CoA IF: %s\n", cifp->cif_name);
+		syslog(LOG_INFO, "CoA IF: %s\n", cifp->cif_name);
 	}
 }
 
@@ -655,7 +653,7 @@ mainloop()
 				exit(-1);
 			}
 			if (debug > 1) {
-				fprintf(stderr, "SOCK_MOB: type=%d\n",
+				syslog(LOG_INFO, "SOCK_MOB: type=%d\n",
 						mhdr->miph_type);
 			}
 
@@ -677,7 +675,7 @@ mainloop()
 				exit(-1);
 			}
 			if (debug > 1) {
-				fprintf(stderr, "SOCK_ROUTE: type=%d\n",
+				syslog(LOG_INFO, "SOCK_ROUTE: type=%d\n",
 							ifm->ifm_type);
 			}
 
@@ -696,7 +694,6 @@ mainloop()
 
 			if (debug > 2) {
 				print_bl(stderr);
-				fprintf(stderr, "\n");
 			}
 		}
 
@@ -813,9 +810,9 @@ dereg_detach_coa(difam)
 				if (ifr6.ifr_ifru.ifru_flags6 & IN6_IFF_READONLY) 
 					continue;
 				
-				fprintf(stderr, "Detached address is %s\n", 
+				syslog(LOG_INFO, "Detached address is %s\n", 
 					inet_ntop(AF_INET6, &dsin6.sin6_addr, buf, sizeof(buf)));
-				fprintf(stderr, "send dereg from address is %s\n", 
+				syslog(LOG_INFO, "send dereg from address is %s\n", 
 					inet_ntop(AF_INET6, &sin6->sin6_addr, buf, sizeof(buf)));
 				
 				LIST_FOREACH(bp, &bl_head, binding_entries) {
@@ -879,7 +876,7 @@ mipsock_deregforeign(hoa, deregcoa, newcoa, ifindex, bid)
 		free(mdinfo);
 
 	if (debug) {
-		fprintf(stderr, "Dereg from foreign: %s\n",
+		syslog(LOG_INFO, "Dereg from foreign: %s\n",
 			(char *) inet_ntop(AF_INET6, &deregcoa->sin6_addr,
 							buf, sizeof(buf)));
  	}
@@ -928,10 +925,10 @@ chbinding(hoa, coa, bid)
 	}
 
 	if (debug) {
-		fprintf(stderr, "Binding: %s",
+		syslog(LOG_INFO, "Binding: %s",
 			(char *) inet_ntop(AF_INET6, &hoa->sin6_addr,
 							buf, sizeof(buf)));
-		fprintf(stderr, "\t-> %s\n",
+		syslog(LOG_INFO, "\t-> %s\n",
 			(char *) inet_ntop(AF_INET6, &coa->sin6_addr,
 							buf, sizeof(buf)));
 	}
@@ -974,7 +971,7 @@ returntohome(hoa, coa, ifindex)
 	}
 
 	if (debug) {
-		fprintf(stderr, "Return to home: %s\n",
+		syslog(LOG_INFO, "Return to home: %s\n",
 			(char *) inet_ntop(AF_INET6, &hoa->sin6_addr,
 							buf, sizeof(buf)));
  	}
