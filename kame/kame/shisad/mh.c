@@ -1,4 +1,4 @@
-/*      $Id: mh.c,v 1.7 2004/10/14 17:24:01 t-momose Exp $  */
+/*      $Id: mh.c,v 1.8 2004/10/18 04:06:53 keiichi Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -532,6 +532,8 @@ mh_input(src, dst, hoa, rtaddr, mh, mhlen)
 		break;
 	case IP6_MH_TYPE_BU:
 		return (receive_bu(src, dst, hoa, rtaddr, (struct ip6_mh_binding_update *)mh, mhlen));
+		break;
+	case IP6_MH_TYPE_BERROR:
 		break;
 
 	case IP6_MH_TYPE_BERROR:
