@@ -42,6 +42,7 @@
 #ifdef __NetBSD__
 #include "opt_inet.h"
 #include "opt_ipsec.h"
+#include "opt_mip6.h"
 #include "fs_kernfs.h"
 #else
 #undef KERNFS
