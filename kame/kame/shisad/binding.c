@@ -1,4 +1,4 @@
-/*      $Id: binding.c,v 1.4 2004/10/08 07:54:47 keiichi Exp $  */
+/*      $Id: binding.c,v 1.5 2004/10/08 11:11:02 keiichi Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -61,7 +61,8 @@
 
 #ifdef MIP_MN
 void bul_flush(struct mip6_hoainfo *);
-static struct binding_update_list *bul_create(struct in6_addr *, struct in6_addr *, u_int16_t, struct mip6_hoainfo *);
+static struct binding_update_list *bul_create(struct in6_addr *,
+    struct in6_addr *, u_int16_t, struct mip6_hoainfo *);
 #endif /* MIP_MN */
 
 #ifndef MIP_MN
@@ -84,6 +85,7 @@ static void mip6_bc_stop_refresh_timer(struct binding_cache *);
 void
 mip6_bc_init()
 {
+
 	LIST_INIT(&bchead);
 	mip6_flush_kernel_bc();
 }
@@ -152,7 +154,7 @@ mip6_bc_add(hoa, coa, recvaddr, lifetime, flags, seqno, bid)
 	 */
 	bc = (struct binding_cache *)malloc(sizeof(struct binding_cache));
 	if (bc == NULL)
-		return bc;
+		return (bc);
 	memset(bc, 0, sizeof(*bc));
 	bc->bc_hoa = *hoa;
 	bc->bc_coa = *coa;
@@ -175,11 +177,12 @@ mip6_bc_add(hoa, coa, recvaddr, lifetime, flags, seqno, bid)
 	/* refreshment is called after the half of BC's lifetime */
 	mip6_bc_set_refresh_timer(bc, bc->bc_lifetime / 2); 
 
-	return bc;
+	return (bc);
 };
 
 void
-mip6_bc_delete(struct binding_cache *bcreq)
+mip6_bc_delete(bcreq)
+	struct binding_cache *bcreq;
 {
 	struct binding_cache *bc = NULL;
 
@@ -220,7 +223,6 @@ mip6_bc_lookup(hoa, src, bid)
 	u_int16_t bid;
 #endif /* MIP_MCOA */
 {
-
 	struct binding_cache *bc, *bc_nxt = NULL;
 
         for (bc = LIST_FIRST(&bchead); bc; bc = bc_nxt) {
@@ -234,10 +236,10 @@ mip6_bc_lookup(hoa, src, bid)
 			continue;
 		
 		if (IN6_ARE_ADDR_EQUAL(hoa, &bc->bc_hoa)) 
-			return bc;
+			return (bc);
 	}
 
-	return NULL;
+	return (NULL);
 };
 
 void
@@ -298,6 +300,7 @@ static void
 mip6_bc_stop_refresh_timer(bc)
 	struct binding_cache *bc;
 {
+
 	remove_callout_entry(bc->bc_refresh);
 }
 
@@ -429,11 +432,11 @@ hoainfo_insert(hoa, ifindex)
 
 	hoainfo = hoainfo_find_withhoa(hoa);
 	if (hoainfo)
-		return hoainfo;
+		return (hoainfo);
 
 	hoainfo = (struct mip6_hoainfo *)malloc(sizeof(struct mip6_hoainfo)); 
 	if (hoainfo == NULL)
-		return NULL;
+		return (NULL);
 
 	memset(hoainfo, 0, sizeof(*hoainfo));
 
@@ -452,7 +455,7 @@ hoainfo_insert(hoa, ifindex)
 		syslog(LOG_INFO, "hoainfo entry (HoA %s ifindex %d) is added\n", 
 		       ip6_sprintf(hoa), ifindex); 
 
-	return hoainfo;
+	return (hoainfo);
 };
 
 int
@@ -463,7 +466,7 @@ hoainfo_remove(hoa)
 
 	hoainfo = hoainfo_find_withhoa(hoa);
 	if (hoainfo == NULL)
-		return ENOENT;
+		return (ENOENT);
 
 	/* remove all BUL entries */
 	bul_flush(hoainfo);
@@ -472,7 +475,7 @@ hoainfo_remove(hoa)
 	free(hoainfo);
 	hoainfo = NULL;
 
-	return 0;
+	return (0);
 };
 
 struct mip6_hoainfo *
@@ -484,25 +487,26 @@ hoainfo_find_withhoa(hoa)
         for (hoainfo = LIST_FIRST(&hoa_head); hoainfo;
 		     hoainfo = LIST_NEXT(hoainfo, hinfo_entry)) {
 		if (IN6_ARE_ADDR_EQUAL(hoa, &hoainfo->hinfo_hoa))
-			return hoainfo;
+			return (hoainfo);
 	}
 
-	return NULL;
+	return (NULL);
 };
 
 
 struct mip6_hoainfo *
-hoainfo_get_withdhaadid (u_int16_t id)
+hoainfo_get_withdhaadid (id)
+	u_int16_t id;
 {
 	struct mip6_hoainfo *hoainfo = NULL;
 
 	for (hoainfo = LIST_FIRST(&hoa_head); hoainfo;
 	     hoainfo = LIST_NEXT(hoainfo, hinfo_entry)) {
 		if (id == hoainfo->hinfo_dhaad_id)
-			return hoainfo;
+			return (hoainfo);
 	}
 
-	return NULL;
+	return (NULL);
 };
 
 /* 
@@ -530,51 +534,51 @@ bul_insert(hoainfo, peeraddr, coa, flags, bid)
 #endif /* MIP_MCOA */
 
 	if (hoainfo == NULL)
-		return NULL;
+		return (NULL);
 	
         bul = bul_get(&hoainfo->hinfo_hoa, peeraddr);
         if (bul != NULL) {
 #ifndef MIP_MCOA
-		return bul;
+		return (bul);
 #else
 		if (bid == 0) 
-			return bul;
+			return (bul);
 		else {
 			/* if primary bul is active and bul matched with bid is also active */
 			bul2 = bul_mcoa_get(&hoainfo->hinfo_hoa, peeraddr, bid);
 			if (bul2)
-				return bul2;
+				return (bul2);
 			
 			bul2 = bul_create(peeraddr, coa, flags, hoainfo);
 			if (bul2 == NULL)
-				return NULL;
+				return (NULL);
 			bul2->bul_bid = bid;
 			LIST_INSERT_HEAD(&bul->bul_mcoa_head, bul2, bul_entry);
 			
 			if (debug)
 				syslog(LOG_INFO, "insert bul %s w/ %d into hoainfo\n", 
 				       ip6_sprintf(&hoainfo->hinfo_hoa), bul2->bul_bid);
-			return bul2;
+			return (bul2);
 		}
 #endif /* MIP_MCOA */
 	}
 
 	bul = bul_create(peeraddr, coa, flags, hoainfo);
 	if (bul == NULL)
-		return NULL;
+		return (NULL);
 	LIST_INSERT_HEAD(&hoainfo->hinfo_bul_head, bul, bul_entry);
 
 #ifdef MIP_MCOA
 	if (bid) {
 		bul2 = bul_create(peeraddr, coa, flags, hoainfo);
 		if (bul2 == NULL)
-			return NULL;
+			return (NULL);
 		bul2->bul_bid = bid;
 		LIST_INSERT_HEAD(&bul->bul_mcoa_head, bul2, bul_entry);
 		if (debug)
 			syslog(LOG_ERR, "insert bul %s w/ %d into hoainfo\n",
 			       ip6_sprintf(&hoainfo->hinfo_hoa), bul2->bul_bid);
-		return bul2;
+		return (bul2);
 	}
 #endif /* MIP_MCOA */
 
@@ -582,7 +586,7 @@ bul_insert(hoainfo, peeraddr, coa, flags, bid)
 		syslog(LOG_ERR, "insert bul %s into hoainfo\n", 
 		       ip6_sprintf(&hoainfo->hinfo_hoa));
 
-	return bul;
+	return (bul);
 }
 
 static struct binding_update_list *
@@ -596,7 +600,7 @@ bul_create(peeraddr, coa, flags, hoainfo)
 	bul = (struct binding_update_list *)malloc(sizeof(struct binding_update_list));
 	if (bul == NULL) {
 		perror("malloc");
-		return NULL;
+		return (NULL);
 	}
 
 	memset(bul, 0, sizeof(*bul));
@@ -612,7 +616,7 @@ bul_create(peeraddr, coa, flags, hoainfo)
 	LIST_INIT(&bul->bul_mcoa_head);
 #endif /* MIP_MCOA */
 
-	return bul;
+	return (bul);
 }
 
 
@@ -651,19 +655,19 @@ bul_get_homeflag(hoa)
 
 	hoainfo = hoainfo_find_withhoa(hoa);
 	if (hoainfo == NULL)
-		return NULL;
+		return (NULL);
 
 	if (LIST_EMPTY(&hoainfo->hinfo_bul_head))
-		return NULL;
+		return (NULL);
 
         for (bul = LIST_FIRST(&hoainfo->hinfo_bul_head); bul;
 		     bul = LIST_NEXT(bul, bul_entry)) {
 
 		if (bul->bul_flags & IP6_MH_BU_HOME) 
-			return bul;
+			return (bul);
 	}
 
-	return NULL;
+	return (NULL);
 };
 
 
@@ -679,10 +683,10 @@ bul_mcoa_get(hoa, peer, bid)
 
 	hoainfo = hoainfo_find_withhoa(hoa);
 	if (hoainfo == NULL)
-		return NULL;
+		return (NULL);
 
 	if (LIST_EMPTY(&hoainfo->hinfo_bul_head))
-		return NULL;
+		return (NULL);
 
         for (bul = LIST_FIRST(&hoainfo->hinfo_bul_head); bul;
 		     bul = LIST_NEXT(bul, bul_entry)) {
@@ -693,24 +697,24 @@ bul_mcoa_get(hoa, peer, bid)
 	}
 
 	if (bul == NULL)
-		return NULL;
+		return (NULL);
 
 	/* if bid is zero, return normal BU */
 	if (bid <= 0) 
-		return bul;
+		return (bul);
 
 	/* search mcoa bul */
 	if (LIST_EMPTY(&bul->bul_mcoa_head))
-		return NULL;
+		return (NULL);
 
         for (mbul = LIST_FIRST(&bul->bul_mcoa_head); mbul;
 	     mbul = LIST_NEXT(mbul, bul_entry)) {
 
 		if (bid && bid == mbul->bul_bid)
-			return mbul;
+			return (mbul);
 	}
 
-	return NULL;
+	return (NULL);
 }
 #endif /* MIP_MCOA */
 
@@ -725,25 +729,25 @@ bul_get(hoa, peer)
 
 	hoainfo = hoainfo_find_withhoa(hoa);
 	if (hoainfo == NULL)
-		return NULL;
+		return (NULL);
 
 	if (LIST_EMPTY(&hoainfo->hinfo_bul_head))
-		return NULL;
+		return (NULL);
 
         for (bul = LIST_FIRST(&hoainfo->hinfo_bul_head); bul;
 		     bul = LIST_NEXT(bul, bul_entry)) {
 
 		if (IN6_ARE_ADDR_EQUAL(peer, &bul->bul_peeraddr))
-			return bul;
+			return (bul);
 	}
 
-	return NULL;
+	return (NULL);
 };
 
 void
-bul_flush(struct mip6_hoainfo *hoainfo)
+bul_flush(hoainfo)
+	struct mip6_hoainfo *hoainfo;
 {
-
 	struct binding_update_list *bul, *buln;
 
         for (bul = LIST_FIRST(&hoainfo->hinfo_bul_head); 
@@ -783,15 +787,16 @@ bul_get_nohoa(cookie, coa, peer)
 				(bcmp(cookie, &bul->bul_careof_cookie, 
 					sizeof(bul->bul_careof_cookie)) == 0)) 
 
-				return bul;
+				return (bul);
 		}
 	}
 
-	return NULL;
+	return (NULL);
 };
 
 void
-command_show_bul(int s)
+command_show_bul(s)
+	int s;
 {
 	char buff[2048];
 	struct mip6_hoainfo *hoainfo = NULL;
@@ -850,6 +855,7 @@ command_show_bul(int s)
 
 void
 command_show_kbul(s)
+	int s;
 {
         struct if_bulreq bulreq;
         struct bul6info *bul6;
