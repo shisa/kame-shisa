@@ -27,7 +27,7 @@
  *	i4b_q932fac.c - Q932 facility handling
  *	--------------------------------------
  *
- *	$Id: i4b_q932fac.c,v 1.1 2004/09/22 07:36:52 t-momose Exp $ 
+ *	$Id: i4b_q932fac.c,v 1.1.1.1 2004/09/22 07:36:52 t-momose Exp $ 
  *
  * $FreeBSD$
  *

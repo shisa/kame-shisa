@@ -28,7 +28,7 @@
 # SUCH DAMAGE.
 #
 #	@(#)genassym.c	7.8 (Berkeley) 5/7/91
-#	$Id: genassym.cf,v 1.1 2004/09/22 07:38:22 t-momose Exp $
+#	$Id: genassym.cf,v 1.1.1.1 2004/09/22 07:38:22 t-momose Exp $
 #
 
 include <sys/param.h>

@@ -29,7 +29,7 @@
  *	i4b_l2.h - ISDN layer 2 (Q.921) definitions
  *	---------------------------------------------
  *
- *	$Id: i4b_l2.h,v 1.1 2004/09/22 07:36:51 t-momose Exp $ 
+ *	$Id: i4b_l2.h,v 1.1.1.1 2004/09/22 07:36:51 t-momose Exp $ 
  *
  * $FreeBSD$
  *

@@ -4,7 +4,7 @@
  * See the IPFILTER.LICENCE file for details on licencing.
  *
  * @(#)ip_state.h	1.3 1/12/96 (C) 1995 Darren Reed
- * $Id: ip_state.h,v 1.1 2004/09/22 07:21:36 t-momose Exp $
+ * $Id: ip_state.h,v 1.1.1.1 2004/09/22 07:21:36 t-momose Exp $
  * $FreeBSD: src/sys/contrib/ipfilter/netinet/ip_state.h,v 1.10.2.4 2002/08/31 16:24:52 darrenr Exp $
  */
 #ifndef	__IP_STATE_H__

@@ -1,4 +1,4 @@
-/* @(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/traceroute/lbl/gnuc.h,v 1.1 2004/09/22 07:25:24 t-momose Exp $ (LBL) */
+/* @(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/traceroute/lbl/gnuc.h,v 1.1.1.1 2004/09/22 07:25:24 t-momose Exp $ (LBL) */
 
 /* Define __P() macro, if necessary */
 #ifndef __P

@@ -25,7 +25,7 @@
 #include <sys/cdefs.h>
 
 __RCSID("$NetBSD: loadbsd.c,v 1.8 2002/05/18 13:54:39 isaki Exp $");
-#define VERSION	"$Revision: 1.1 $ $Date: 2004/09/22 07:34:04 $"
+#define VERSION	"$Revision: 1.1.1.1 $ $Date: 2004/09/22 07:34:04 $"
 
 #include <sys/types.h>		/* ntohl */
 #include <sys/reboot.h>

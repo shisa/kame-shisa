@@ -27,7 +27,7 @@
  *	i4b_lme.c - layer management entity
  *	-------------------------------------
  *
- *	$Id: i4b_lme.c,v 1.1 2004/09/22 07:36:52 t-momose Exp $ 
+ *	$Id: i4b_lme.c,v 1.1.1.1 2004/09/22 07:36:52 t-momose Exp $ 
  *
  * $FreeBSD$
  *

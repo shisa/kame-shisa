@@ -18,7 +18,7 @@
  * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * @(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/racoon/tcpdump/extract.h,v 1.1 2004/09/22 07:25:20 t-momose Exp $ (LBL)
+ * @(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/racoon/tcpdump/extract.h,v 1.1.1.1 2004/09/22 07:25:20 t-momose Exp $ (LBL)
  */
 
 /* Network to host order macros */

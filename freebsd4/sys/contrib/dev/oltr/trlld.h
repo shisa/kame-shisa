@@ -18,8 +18,8 @@
  *
  *---------------------------------------------------------------------------
  * $Log: trlld.h,v $
- * Revision 1.1  2004/09/22 07:21:32  t-momose
- * Initial revision
+ * Revision 1.1.1.1  2004/09/22 07:21:32  t-momose
+ * new mip6 development base
  *
  * Revision 1.1.1.2  2000/08/05 03:24:24  sumikawa
  * FreeBSD 4.1-RELEASE

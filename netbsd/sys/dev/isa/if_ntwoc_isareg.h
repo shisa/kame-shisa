@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: if_ntwoc_isareg.h,v 1.1 2004/09/22 07:35:10 t-momose Exp $
+ * $Id: if_ntwoc_isareg.h,v 1.1.1.1 2004/09/22 07:35:10 t-momose Exp $
  */
 #ifndef _IF_NTWOC_ISAREG_H_
 #define _IF_NTWOC_ISAREG_H_

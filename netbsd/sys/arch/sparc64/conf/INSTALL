@@ -2,7 +2,7 @@
 
 include "arch/sparc64/conf/GENERIC32"
 
-#ident 		"INSTALL-$Revision: 1.1 $"
+#ident 		"INSTALL-$Revision: 1.1.1.1 $"
 
 include "arch/sparc64/conf/std.sparc64-64"
 

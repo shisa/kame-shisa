@@ -23,7 +23,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/ndp/gmt2local.c,v 1.1 2004/09/22 07:25:08 t-momose Exp $ (LBL)";
+    "@(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/ndp/gmt2local.c,v 1.1.1.1 2004/09/22 07:25:08 t-momose Exp $ (LBL)";
 #endif
 
 #include <sys/types.h>

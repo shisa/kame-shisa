@@ -234,7 +234,7 @@ xbattach(parent, self, aux)
 	xbfound = 1;
 	ccp = &xb_configuration;
 	xb_init_config(ccp, 1);
-	printf(": driver %s mtu %d\n", "$Revision: 1.1 $", xbi.if_mtu);
+	printf(": driver %s mtu %d\n", "$Revision: 1.1.1.1 $", xbi.if_mtu);
 }
 
 static void

@@ -30,7 +30,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #if defined(LIBC_SCCS) && !defined(lint)
-static char *rcsid = "$Id: strncasecmp.c,v 1.1 2004/09/22 07:40:42 t-momose Exp $";
+static char *rcsid = "$Id: strncasecmp.c,v 1.1.1.1 2004/09/22 07:40:42 t-momose Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #if !defined(_KERNEL) && !defined(_STANDALONE)

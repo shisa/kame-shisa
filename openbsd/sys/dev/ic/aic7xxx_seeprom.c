@@ -47,7 +47,7 @@
  * from the FreeBSD source file aic7xxx_pci.c by Frank van der Linden
  * <fvdl@netbsd.org>
  * 
- * $Id: aic7xxx_seeprom.c,v 1.1 2004/09/22 07:39:12 t-momose Exp $
+ * $Id: aic7xxx_seeprom.c,v 1.1.1.1 2004/09/22 07:39:12 t-momose Exp $
  *
  * $FreeBSD: src/sys/dev/aic7xxx/aic7xxx_pci.c,v 1.22 2003/01/20 20:44:55 gibbs Exp $
  */

@@ -29,7 +29,7 @@
  *                  in the IOCLogInfo field of a MPI Default Reply Message.
  *
  *  CREATION DATE:  6/02/2000
- *  ID:             $Id: fc_log.h,v 1.1 2004/09/22 07:22:22 t-momose Exp $
+ *  ID:             $Id: fc_log.h,v 1.1.1.1 2004/09/22 07:22:22 t-momose Exp $
  */
 
 /*

@@ -27,7 +27,7 @@
  *	i4b - Siemens HSCX chip (B-channel) handling
  *	--------------------------------------------
  *
- *	$Id: hscx.c,v 1.1 2004/09/22 07:34:53 t-momose Exp $ 
+ *	$Id: hscx.c,v 1.1.1.1 2004/09/22 07:34:53 t-momose Exp $ 
  *
  *      last edit-date: [Fri Jan  5 11:36:10 2001]
  *

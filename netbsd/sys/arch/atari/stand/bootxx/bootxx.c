@@ -65,7 +65,7 @@ bootxx(readsector, disklabel, autoboot)
 	setheap(end, (void*)(LOADADDR3 - 4));
 
 	printf("\033v\nNetBSD/Atari secondary bootloader"
-						" ($Revision: 1.1 $)\n\n");
+						" ($Revision: 1.1.1.1 $)\n\n");
 
 	if (init_dskio(readsector, disklabel, -1))
 		return(-1);

@@ -3,7 +3,7 @@
 include "arch/sparc64/conf/NONPLUS"
 include "arch/sparc64/conf/std.sparc64-64"
 
-#ident 		"GENERIC64-$Revision: 1.1 $"
+#ident 		"GENERIC64-$Revision: 1.1.1.1 $"
 
 options 	COMPAT_NETBSD32	# NetBSD/sparc binary compatibility
 options 	COMPAT_SVR4_32	# 32-bit SVR4 binaries

@@ -27,7 +27,7 @@
  *	i4b_l4mgmt.c - layer 4 calldescriptor management utilites
  *	-----------------------------------------------------------
  *
- *	$Id: i4b_l4mgmt.c,v 1.1 2004/09/22 07:36:52 t-momose Exp $ 
+ *	$Id: i4b_l4mgmt.c,v 1.1.1.1 2004/09/22 07:36:52 t-momose Exp $ 
  *
  * $FreeBSD$
  *

@@ -28,7 +28,7 @@
  *	i4b_ifpi2_isac.c - i4b Fritz PCI Version 2 ISACSX handler
  *	--------------------------------------------
  *
- *	$Id: i4b_ifpi2_isacsx.c,v 1.1 2004/09/22 07:23:21 t-momose Exp $ 
+ *	$Id: i4b_ifpi2_isacsx.c,v 1.1.1.1 2004/09/22 07:23:21 t-momose Exp $ 
  *
  * $FreeBSD: src/sys/i4b/layer1/ifpi2/i4b_ifpi2_isacsx.c,v 1.1.2.1 2002/04/25 20:26:50 gj Exp $
  *

@@ -18,7 +18,7 @@
  * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * @(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/libpcap/lbl/os-ultrix4.h,v 1.1 2004/09/22 07:25:06 t-momose Exp $ (LBL)
+ * @(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/libpcap/lbl/os-ultrix4.h,v 1.1.1.1 2004/09/22 07:25:06 t-momose Exp $ (LBL)
  */
 
 /* Prototypes missing in Ultrix 4 */

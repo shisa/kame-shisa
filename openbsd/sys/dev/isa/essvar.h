@@ -34,7 +34,7 @@
  */
 
 /*
-** @(#) $RCSfile: essvar.h,v $ $Revision: 1.1 $ (SHARK) $Date: 2004/09/22 07:39:30 $
+** @(#) $RCSfile: essvar.h,v $ $Revision: 1.1.1.1 $ (SHARK) $Date: 2004/09/22 07:39:30 $
 **
 **++
 **

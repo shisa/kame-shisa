@@ -37,7 +37,7 @@
  * otherwise) arising in any way out of the use of this software, even if
  * advised of the possibility of such damage.
  *
- * $Id: vinumvar.h,v 1.1 2004/09/22 07:22:54 t-momose Exp $
+ * $Id: vinumvar.h,v 1.1.1.1 2004/09/22 07:22:54 t-momose Exp $
  * $FreeBSD: src/sys/dev/vinum/vinumvar.h,v 1.32.2.4 2001/05/28 05:56:27 grog Exp $
  */
 

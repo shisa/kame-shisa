@@ -1,5 +1,5 @@
 /* 
- * $Id: output.c,v 1.1 2004/09/22 07:25:00 t-momose Exp $
+ * $Id: output.c,v 1.1.1.1 2004/09/22 07:25:00 t-momose Exp $
  */
 
 /*

@@ -27,7 +27,7 @@
  *	i4b_l2if.c - Layer 3 interface to Layer 2
  *	-------------------------------------------
  *
- *	$Id: i4b_l2if.c,v 1.1 2004/09/22 07:23:24 t-momose Exp $ 
+ *	$Id: i4b_l2if.c,v 1.1.1.1 2004/09/22 07:23:24 t-momose Exp $ 
  *
  * $FreeBSD: src/sys/i4b/layer3/i4b_l2if.c,v 1.6.2.2 2001/12/16 15:12:58 hm Exp $
  *

@@ -31,7 +31,7 @@
  * SUCH DAMAGE.
  */
 
-/* $Id: afssysdefs.h,v 1.1 2004/09/22 07:41:15 t-momose Exp $ */
+/* $Id: afssysdefs.h,v 1.1.1.1 2004/09/22 07:41:15 t-momose Exp $ */
 
 /*
  * This section is for machines using single entry point AFS syscalls!

@@ -1,4 +1,4 @@
-dnl @(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/traceroute/configure.in,v 1.1 2004/09/22 07:25:24 t-momose Exp $ (LBL)
+dnl @(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/traceroute/configure.in,v 1.1.1.1 2004/09/22 07:25:24 t-momose Exp $ (LBL)
 dnl
 dnl Copyright (c) 1995, 1996, 1997
 dnl	The Regents of the University of California.  All rights reserved.

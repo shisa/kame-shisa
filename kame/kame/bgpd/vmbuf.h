@@ -26,7 +26,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-/* YIPS @(#)$Id: vmbuf.h,v 1.1 2004/09/22 07:24:55 t-momose Exp $ */
+/* YIPS @(#)$Id: vmbuf.h,v 1.1.1.1 2004/09/22 07:24:55 t-momose Exp $ */
 
 typedef struct _vchar_ {
 	u_int32_t t;	/* type of the value */

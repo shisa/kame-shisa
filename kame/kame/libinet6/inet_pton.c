@@ -18,7 +18,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char rcsid[] = "$Id: inet_pton.c,v 1.1 2004/09/22 07:25:03 t-momose Exp $";
+static char rcsid[] = "$Id: inet_pton.c,v 1.1.1.1 2004/09/22 07:25:03 t-momose Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #ifdef HAVE_CONFIG_H

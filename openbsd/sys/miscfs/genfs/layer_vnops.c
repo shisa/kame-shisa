@@ -68,7 +68,7 @@
  *
  * Ancestors:
  *	@(#)lofs_vnops.c	1.2 (Berkeley) 6/18/92
- *	$Id: layer_vnops.c,v 1.1 2004/09/22 07:40:45 t-momose Exp $
+ *	$Id: layer_vnops.c,v 1.1.1.1 2004/09/22 07:40:45 t-momose Exp $
  *	...and...
  *	@(#)null_vnodeops.c 1.20 92/07/07 UCLA Ficus project
  */

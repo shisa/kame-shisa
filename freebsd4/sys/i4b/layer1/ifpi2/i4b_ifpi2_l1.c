@@ -28,7 +28,7 @@
  *	i4b_ifpi2_l1.c - AVM Fritz PCI Version 2 layer 1 handler
  *	---------------------------------------------
  *
- *	$Id: i4b_ifpi2_l1.c,v 1.1 2004/09/22 07:23:22 t-momose Exp $ 
+ *	$Id: i4b_ifpi2_l1.c,v 1.1.1.1 2004/09/22 07:23:22 t-momose Exp $ 
  *
  * $FreeBSD: src/sys/i4b/layer1/ifpi2/i4b_ifpi2_l1.c,v 1.2.2.1 2002/04/25 20:26:50 gj Exp $
  *

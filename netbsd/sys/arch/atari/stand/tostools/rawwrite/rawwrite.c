@@ -53,7 +53,7 @@ int	v_flag = 0;	/* Verbose (a dot for each track copied)	*/
 int	V_flag = 0;	/* Show version					*/
 char	*progname;
 
-const char version[] = "$Revision: 1.1 $";
+const char version[] = "$Revision: 1.1.1.1 $";
 
 int
 main(argc, argv)

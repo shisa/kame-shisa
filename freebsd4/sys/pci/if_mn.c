@@ -6,7 +6,7 @@
  * this stuff is worth it, you can buy me a beer in return.   Poul-Henning Kamp
  * ----------------------------------------------------------------------------
  *
- * $Id: if_mn.c,v 1.1 2004/09/22 07:24:30 t-momose Exp $
+ * $Id: if_mn.c,v 1.1.1.1 2004/09/22 07:24:30 t-momose Exp $
  *
  * Driver for Siemens reference design card "Easy321-R1".
  *

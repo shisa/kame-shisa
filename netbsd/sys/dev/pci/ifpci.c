@@ -35,7 +35,7 @@
  *	Fritz!Card PCI driver
  *	------------------------------------------------
  *
- *	$Id: ifpci.c,v 1.1 2004/09/22 07:35:41 t-momose Exp $
+ *	$Id: ifpci.c,v 1.1.1.1 2004/09/22 07:35:41 t-momose Exp $
  *
  *      last edit-date: [Fri Jan  5 11:38:58 2001]
  *

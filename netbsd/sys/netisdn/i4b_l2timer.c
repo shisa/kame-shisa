@@ -27,7 +27,7 @@
  *	i4b_l2timer.c - layer 2 timer handling
  *	--------------------------------------
  *
- *	$Id: i4b_l2timer.c,v 1.1 2004/09/22 07:36:51 t-momose Exp $ 
+ *	$Id: i4b_l2timer.c,v 1.1.1.1 2004/09/22 07:36:51 t-momose Exp $ 
  *
  * $FreeBSD$
  *

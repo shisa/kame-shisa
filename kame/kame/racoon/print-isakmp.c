@@ -37,7 +37,7 @@
 
 #ifndef lint
 static const char rcsid[] _U_ =
-    "@(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/racoon/print-isakmp.c,v 1.1 2004/09/22 07:25:18 t-momose Exp $ (LBL)";
+    "@(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/racoon/print-isakmp.c,v 1.1.1.1 2004/09/22 07:25:18 t-momose Exp $ (LBL)";
 #endif
 
 #ifdef HAVE_CONFIG_H

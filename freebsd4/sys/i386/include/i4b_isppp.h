@@ -18,7 +18,7 @@
  *
  * From: if_sppp.h,v 1.14 1999/03/30 13:28:26 phk Exp
  *
- * $Id: i4b_isppp.h,v 1.1 2004/09/22 07:23:06 t-momose Exp $
+ * $Id: i4b_isppp.h,v 1.1.1.1 2004/09/22 07:23:06 t-momose Exp $
  *
  * $FreeBSD: src/sys/i386/include/i4b_isppp.h,v 1.1.2.2 2001/09/28 07:43:19 gj Exp $
  */

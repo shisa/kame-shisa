@@ -33,7 +33,7 @@
  *	i4b_ifpi_pci.c: AVM Fritz!Card PCI hardware driver
  *	--------------------------------------------------
  *
- *	$Id: i4b_ifpi_pci.c,v 1.1 2004/09/22 07:23:21 t-momose Exp $
+ *	$Id: i4b_ifpi_pci.c,v 1.1.1.1 2004/09/22 07:23:21 t-momose Exp $
  *
  * $FreeBSD: src/sys/i4b/layer1/ifpi/i4b_ifpi_pci.c,v 1.6.2.1 2001/08/10 14:08:37 obrien Exp $
  *

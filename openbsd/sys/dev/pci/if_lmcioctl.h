@@ -1,5 +1,5 @@
 /*	$OpenBSD: if_lmcioctl.h,v 1.4 2000/11/10 15:33:09 provos Exp $ */
-/*	$Id: if_lmcioctl.h,v 1.1 2004/09/22 07:40:01 t-momose Exp $	*/
+/*	$Id: if_lmcioctl.h,v 1.1.1.1 2004/09/22 07:40:01 t-momose Exp $	*/
 
 /*
  * Copyright (c) 1997-1999 LAN Media Corporation (LMC)

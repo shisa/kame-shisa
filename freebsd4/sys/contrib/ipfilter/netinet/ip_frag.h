@@ -4,7 +4,7 @@
  * See the IPFILTER.LICENCE file for details on licencing.
  *
  * @(#)ip_frag.h	1.5 3/24/96
- * $Id: ip_frag.h,v 1.1 2004/09/22 07:21:35 t-momose Exp $
+ * $Id: ip_frag.h,v 1.1.1.1 2004/09/22 07:21:35 t-momose Exp $
  * $FreeBSD: src/sys/contrib/ipfilter/netinet/ip_frag.h,v 1.12.2.4 2002/08/31 16:24:52 darrenr Exp $
  */
 

@@ -27,7 +27,7 @@
  *	i4b_cause.h - causes and cause handling for i4b
  *	-----------------------------------------------
  *
- *	$Id: i4b_cause.h,v 1.1 2004/09/22 07:36:50 t-momose Exp $
+ *	$Id: i4b_cause.h,v 1.1.1.1 2004/09/22 07:36:50 t-momose Exp $
  *
  * $FreeBSD$
  *

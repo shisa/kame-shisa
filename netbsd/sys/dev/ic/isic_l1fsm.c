@@ -27,7 +27,7 @@
  *	i4b_l1fsm.c - isdn4bsd layer 1 I.430 state machine
  *	--------------------------------------------------
  *
- *	$Id: isic_l1fsm.c,v 1.1 2004/09/22 07:34:55 t-momose Exp $ 
+ *	$Id: isic_l1fsm.c,v 1.1.1.1 2004/09/22 07:34:55 t-momose Exp $ 
  *
  *      last edit-date: [Fri Jan  5 11:36:11 2001]
  *

@@ -27,7 +27,7 @@
  *	i4b_ifpi2_l1fsm.c - AVM Fritz PCI layer 1 I.430 state machine
  *	------------------------------------------------------------
  *
- *	$Id: i4b_ifpi2_l1fsm.c,v 1.1 2004/09/22 07:23:22 t-momose Exp $ 
+ *	$Id: i4b_ifpi2_l1fsm.c,v 1.1.1.1 2004/09/22 07:23:22 t-momose Exp $ 
  *
  * $FreeBSD: src/sys/i4b/layer1/ifpi2/i4b_ifpi2_l1fsm.c,v 1.1.2.1 2002/04/25 20:26:50 gj Exp $
  *

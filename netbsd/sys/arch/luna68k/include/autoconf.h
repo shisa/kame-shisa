@@ -1,4 +1,4 @@
-/* $Id: autoconf.h,v 1.1 2004/09/22 07:32:22 t-momose Exp $ */
+/* $Id: autoconf.h,v 1.1.1.1 2004/09/22 07:32:22 t-momose Exp $ */
 
 /*-
  * Copyright (c) 2000 The NetBSD Foundation, Inc.

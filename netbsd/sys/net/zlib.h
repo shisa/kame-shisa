@@ -43,7 +43,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 
-/* @(#) $Id: zlib.h,v 1.1 2004/09/22 07:36:44 t-momose Exp $ */
+/* @(#) $Id: zlib.h,v 1.1.1.1 2004/09/22 07:36:44 t-momose Exp $ */
 
 #ifndef _ZCONF_H
 #define _ZCONF_H

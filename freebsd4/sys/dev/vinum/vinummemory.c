@@ -33,7 +33,7 @@
  * otherwise) arising in any way out of the use of this software, even if
  * advised of the possibility of such damage.
  *
- * $Id: vinummemory.c,v 1.1 2004/09/22 07:22:53 t-momose Exp $
+ * $Id: vinummemory.c,v 1.1.1.1 2004/09/22 07:22:53 t-momose Exp $
  * $FreeBSD: src/sys/dev/vinum/vinummemory.c,v 1.22.2.1 2000/06/02 04:26:11 grog Exp $
  */
 

@@ -5,7 +5,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 
-/* @(#) $Id: zconf.h,v 1.1 2004/09/22 07:36:30 t-momose Exp $ */
+/* @(#) $Id: zconf.h,v 1.1.1.1 2004/09/22 07:36:30 t-momose Exp $ */
 
 #ifndef _ZCONF_H
 #define _ZCONF_H

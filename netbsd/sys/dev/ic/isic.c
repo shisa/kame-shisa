@@ -27,7 +27,7 @@
  *	i4b_isic.c - global isic stuff
  *	==============================
  *
- *	$Id: isic.c,v 1.1 2004/09/22 07:34:55 t-momose Exp $ 
+ *	$Id: isic.c,v 1.1.1.1 2004/09/22 07:34:55 t-momose Exp $ 
  *
  *      last edit-date: [Fri Jan  5 11:36:10 2001]
  *

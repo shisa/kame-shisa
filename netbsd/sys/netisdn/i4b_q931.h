@@ -27,7 +27,7 @@
  *	i4b_q931.h - Q931 handling header file
  *	--------------------------------------
  *
- *	$Id: i4b_q931.h,v 1.1 2004/09/22 07:36:52 t-momose Exp $ 
+ *	$Id: i4b_q931.h,v 1.1.1.1 2004/09/22 07:36:52 t-momose Exp $ 
  *
  * $FreeBSD$
  *

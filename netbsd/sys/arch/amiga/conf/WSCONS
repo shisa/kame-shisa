@@ -25,7 +25,7 @@ include "arch/amiga/conf/std.amiga"
 
 options 	INCLUDE_CONFIG_FILE	# embed config file in kernel binary
 
-#ident  		"GENERIC-$Revision: 1.1 $"
+#ident  		"GENERIC-$Revision: 1.1.1.1 $"
 
 maxusers	8
 options 	RTC_OFFSET=0

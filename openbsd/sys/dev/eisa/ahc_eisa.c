@@ -32,7 +32,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: ahc_eisa.c,v 1.1 2004/09/22 07:39:08 t-momose Exp $
+ *	$Id: ahc_eisa.c,v 1.1.1.1 2004/09/22 07:39:08 t-momose Exp $
  */
 
 #include "eisa.h"

@@ -1,4 +1,4 @@
-/* @(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/libpcap/ppp.h,v 1.1 2004/09/22 07:25:06 t-momose Exp $ (LBL) */
+/* @(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/libpcap/ppp.h,v 1.1.1.1 2004/09/22 07:25:06 t-momose Exp $ (LBL) */
 /*
  * Point to Point Protocol (PPP) RFC1331
  *

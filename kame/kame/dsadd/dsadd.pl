@@ -1,5 +1,5 @@
 #! @LOCALPREFIX@/bin/perl
-# $Id: dsadd.pl,v 1.1 2004/09/22 07:24:58 t-momose Exp $
+# $Id: dsadd.pl,v 1.1.1.1 2004/09/22 07:24:58 t-momose Exp $
 # Dead SA Detection
 
 require 'getopts.pl';

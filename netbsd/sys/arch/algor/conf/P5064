@@ -7,7 +7,7 @@ include	"arch/algor/conf/std.algor"
 
 #options 	INCLUDE_CONFIG_FILE	# embed config file in kernel binary
 
-#ident 		"P5064-$Revision: 1.1 $"
+#ident 		"P5064-$Revision: 1.1.1.1 $"
 
 maxusers 32
 

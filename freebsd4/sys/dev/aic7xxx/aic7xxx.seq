@@ -40,7 +40,7 @@
  * $FreeBSD: src/sys/dev/aic7xxx/aic7xxx.seq,v 1.94.2.20 2004/02/15 19:30:02 gibbs Exp $
  */
 
-VERSION = "$Id: aic7xxx.seq,v 1.1 2004/09/22 07:21:43 t-momose Exp $"
+VERSION = "$Id: aic7xxx.seq,v 1.1.1.1 2004/09/22 07:21:43 t-momose Exp $"
 PATCH_ARG_LIST = "struct ahc_softc *ahc"
 PREFIX = "ahc_"
 

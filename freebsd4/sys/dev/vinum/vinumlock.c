@@ -37,7 +37,7 @@
  * otherwise) arising in any way out of the use of this software, even if
  * advised of the possibility of such damage.
  *
- * $Id: vinumlock.c,v 1.1 2004/09/22 07:22:53 t-momose Exp $
+ * $Id: vinumlock.c,v 1.1.1.1 2004/09/22 07:22:53 t-momose Exp $
  * $FreeBSD: src/sys/dev/vinum/vinumlock.c,v 1.18.2.3 2001/04/04 06:27:11 grog Exp $
  */
 

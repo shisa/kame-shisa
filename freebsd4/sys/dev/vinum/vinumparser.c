@@ -33,7 +33,7 @@
  * otherwise) arising in any way out of the use of this software, even if
  * advised of the possibility of such damage.
  *
- * $Id: vinumparser.c,v 1.1 2004/09/22 07:22:53 t-momose Exp $
+ * $Id: vinumparser.c,v 1.1.1.1 2004/09/22 07:22:53 t-momose Exp $
  * $FreeBSD: src/sys/dev/vinum/vinumparser.c,v 1.20.2.5 2001/05/28 05:56:27 grog Exp $
  */
 

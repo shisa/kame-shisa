@@ -1,4 +1,4 @@
-/*	$Id: residual.c,v 1.1 2004/09/22 07:33:20 t-momose Exp $	*/
+/*	$Id: residual.c,v 1.1.1.1 2004/09/22 07:33:20 t-momose Exp $	*/
 
 /*-
  * Copyright (c) 2002 The NetBSD Foundation, Inc.

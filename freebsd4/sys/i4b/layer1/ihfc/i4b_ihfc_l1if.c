@@ -34,7 +34,7 @@
  *
  *      last edit-date: [Wed Jul 19 09:41:03 2000]
  *
- *      $Id: i4b_ihfc_l1if.c,v 1.1 2004/09/22 07:23:22 t-momose Exp $
+ *      $Id: i4b_ihfc_l1if.c,v 1.1.1.1 2004/09/22 07:23:22 t-momose Exp $
  *
  * $FreeBSD: src/sys/i4b/layer1/ihfc/i4b_ihfc_l1if.c,v 1.7.2.1 2001/08/10 14:08:37 obrien Exp $
  *

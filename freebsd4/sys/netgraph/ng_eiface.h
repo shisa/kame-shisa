@@ -26,7 +26,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * 	$Id: ng_eiface.h,v 1.1 2004/09/22 07:24:07 t-momose Exp $
+ * 	$Id: ng_eiface.h,v 1.1.1.1 2004/09/22 07:24:07 t-momose Exp $
  * $FreeBSD: src/sys/netgraph/ng_eiface.h,v 1.2.2.4 2002/12/12 23:36:39 julian Exp $
  */
 

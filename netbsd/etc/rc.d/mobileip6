@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: mobileip6,v 1.1 2004/09/22 07:30:39 t-momose Exp $
+# $Id: mobileip6,v 1.1.1.1 2004/09/22 07:30:39 t-momose Exp $
 
 # REQUIRE: network
 # PROVIDE: mobileip6

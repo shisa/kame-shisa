@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: exec.h,v 1.1 2004/09/22 07:38:30 t-momose Exp $
+ *	$Id: exec.h,v 1.1.1.1 2004/09/22 07:38:30 t-momose Exp $
  */
 
 #ifndef _POWERPC_EXEC_H_

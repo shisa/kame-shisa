@@ -33,7 +33,7 @@
  * otherwise) arising in any way out of the use of this software, even if
  * advised of the possibility of such damage.
  *
- * $Id: vinumio.c,v 1.1 2004/09/22 07:22:53 t-momose Exp $
+ * $Id: vinumio.c,v 1.1.1.1 2004/09/22 07:22:53 t-momose Exp $
  * $FreeBSD: src/sys/dev/vinum/vinumio.c,v 1.52.2.7 2004/03/09 10:18:47 le Exp $
  */
 

@@ -37,7 +37,7 @@
  * from: Utah Hdr: autoconf.c 1.31 91/01/21
  *
  *	from: @(#)autoconf.c	8.1 (Berkeley) 6/10/93
- *      $Id: autoconf.c,v 1.1 2004/09/22 07:38:12 t-momose Exp $
+ *      $Id: autoconf.c,v 1.1.1.1 2004/09/22 07:38:12 t-momose Exp $
  */
 
 /*

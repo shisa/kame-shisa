@@ -18,7 +18,7 @@
  *
  * From: if_sppp.h,v 1.14 1999/03/30 13:28:26 phk Exp
  *
- * $Id: i4b_isppp.h,v 1.1 2004/09/22 07:36:51 t-momose Exp $
+ * $Id: i4b_isppp.h,v 1.1.1.1 2004/09/22 07:36:51 t-momose Exp $
  */
 
 #ifndef _I4B_ISPPP_H_

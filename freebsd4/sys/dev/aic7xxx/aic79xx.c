@@ -37,7 +37,7 @@
  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGES.
  *
- * $Id: aic79xx.c,v 1.1 2004/09/22 07:21:41 t-momose Exp $
+ * $Id: aic79xx.c,v 1.1.1.1 2004/09/22 07:21:41 t-momose Exp $
  */
 
 #ifdef __linux__

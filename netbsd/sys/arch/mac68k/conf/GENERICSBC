@@ -6,7 +6,7 @@ include	"arch/mac68k/conf/std.mac68k"
 
 options 	INCLUDE_CONFIG_FILE	# embed config file in kernel binary
 
-#ident 		"GENERICSBC-$Revision: 1.1 $"
+#ident 		"GENERICSBC-$Revision: 1.1.1.1 $"
 
 maxusers	16		# estimated number of users
 

@@ -3,7 +3,7 @@
 # highly experimental (not working right at all) and very limited
 # functionality.
 #
-# $Id: faithd.rb,v 1.1 2004/09/22 07:24:59 t-momose Exp $
+# $Id: faithd.rb,v 1.1.1.1 2004/09/22 07:24:59 t-momose Exp $
 
 require "socket"
 require "thread"

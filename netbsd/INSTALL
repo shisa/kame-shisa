@@ -1,6 +1,6 @@
 Installation procedure - NetBSD
 KAME project
-$Id: INSTALL,v 1.1 2004/09/22 07:30:39 t-momose Exp $
+$Id: INSTALL,v 1.1.1.1 2004/09/22 07:30:39 t-momose Exp $
 
 
 You'll need to follow the steps below.  They can be separated into two major

@@ -1,5 +1,5 @@
 /*	$KAME: qop_jobs.h,v 1.1 2002/10/26 06:59:53 kjc Exp $	*/
-/*	$Id: qop_jobs.h,v 1.1 2004/09/22 07:25:01 t-momose Exp $	*/
+/*	$Id: qop_jobs.h,v 1.1.1.1 2004/09/22 07:25:01 t-momose Exp $	*/
 /*
  * Copyright (c) 2001-2002, by the Rector and Board of Visitors of the 
  * University of Virginia.

@@ -2,7 +2,7 @@
  * X680x0 ROM IOCS access definitions.
  *  based on Project C Library X68000 Programing Interface Definition
  *           /usr/include/sys/scsi.h
- *  $Id: scsi.h,v 1.1 2004/09/22 07:34:03 t-momose Exp $
+ *  $Id: scsi.h,v 1.1.1.1 2004/09/22 07:34:03 t-momose Exp $
  */
 /*
  * PROJECT C Library, X68000 PROGRAMMING INTERFACE DEFINITION

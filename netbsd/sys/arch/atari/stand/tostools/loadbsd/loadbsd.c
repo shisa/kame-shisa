@@ -53,7 +53,7 @@ int	s_flag  = 0;		/* St-ram only			*/
 int	t_flag  = 0;		/* Just test, do not execute	*/
 int	v_flag  = 0;		/* show version			*/
 
-const char version[] = "$Revision: 1.1 $";
+const char version[] = "$Revision: 1.1.1.1 $";
 
 /*
  * Default name of kernel to boot, large enough to patch

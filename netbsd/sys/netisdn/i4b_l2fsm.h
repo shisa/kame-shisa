@@ -27,7 +27,7 @@
  *      i4b_l2fsm.h - layer 2 FSM
  *      -------------------------
  *
- *	$Id: i4b_l2fsm.h,v 1.1 2004/09/22 07:36:51 t-momose Exp $ 
+ *	$Id: i4b_l2fsm.h,v 1.1.1.1 2004/09/22 07:36:51 t-momose Exp $ 
  *
  * $FreeBSD$
  *

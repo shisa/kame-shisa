@@ -1,4 +1,4 @@
-@(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/libpcap/INSTALL,v 1.1 2004/09/22 07:25:04 t-momose Exp $ (LBL)
+@(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/libpcap/INSTALL,v 1.1.1.1 2004/09/22 07:25:04 t-momose Exp $ (LBL)
 
 To build libpcap, first customize any paths in Makefile.in, then run
 "./configure" (a shell script). The configure script will determine

@@ -25,7 +25,7 @@
  *
  * $FreeBSD: src/sys/dev/lmc/if_lmcvar.h,v 1.3 2002/06/02 20:05:44 schweikh Exp $
  *	From NetBSD: if_devar.h,v 1.21 1997/10/16 22:02:32 matt Exp
- *	$Id: if_lmcvar.h,v 1.1 2004/09/22 07:27:38 t-momose Exp $
+ *	$Id: if_lmcvar.h,v 1.1.1.1 2004/09/22 07:27:38 t-momose Exp $
  */
 
 #if !defined(_DEV_LMC_IF_LMCVAR_H)

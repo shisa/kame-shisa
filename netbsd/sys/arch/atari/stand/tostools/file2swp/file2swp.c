@@ -45,7 +45,7 @@
 #include "cread.h"
 
 char		*Infile = "minifs.gz";
-const char	version[] = "$Revision: 1.1 $";
+const char	version[] = "$Revision: 1.1.1.1 $";
 
 extern const char	*program_name;
 

@@ -27,7 +27,7 @@
  *	i4b_usr_sti.c - USRobotics Sportster ISDN TA intern (Tina-pp)
  *	-------------------------------------------------------------
  *
- *	$Id: isic_isa_usr_sti.c,v 1.1 2004/09/22 07:35:11 t-momose Exp $ 
+ *	$Id: isic_isa_usr_sti.c,v 1.1.1.1 2004/09/22 07:35:11 t-momose Exp $ 
  *
  *      last edit-date: [Fri Jan  5 11:37:22 2001]
  *

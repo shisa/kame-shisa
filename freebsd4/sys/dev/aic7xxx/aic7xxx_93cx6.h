@@ -38,7 +38,7 @@
  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGES.
  *
- * $Id: aic7xxx_93cx6.h,v 1.1 2004/09/22 07:21:43 t-momose Exp $
+ * $Id: aic7xxx_93cx6.h,v 1.1.1.1 2004/09/22 07:21:43 t-momose Exp $
  *
  * $FreeBSD: src/sys/dev/aic7xxx/aic7xxx_93cx6.h,v 1.7.2.4 2002/08/31 07:25:53 gibbs Exp $
  */

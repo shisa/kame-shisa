@@ -23,7 +23,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * $FreeBSD: src/sys/dev/lmc/if_lmcioctl.h,v 1.4 2002/06/02 20:05:44 schweikh Exp $
- *	$Id: if_lmcioctl.h,v 1.1 2004/09/22 07:27:38 t-momose Exp $
+ *	$Id: if_lmcioctl.h,v 1.1.1.1 2004/09/22 07:27:38 t-momose Exp $
  */
 
 /*

@@ -30,7 +30,7 @@
  *	i4b_bsdi_ibc.c - isdn4bsd kernel BSD/OS point to point driver
  *	-------------------------------------------------------------
  *
- *	$Id: i4b_bsdi_ibc.c,v 1.1 2004/09/22 07:23:20 t-momose Exp $
+ *	$Id: i4b_bsdi_ibc.c,v 1.1.1.1 2004/09/22 07:23:20 t-momose Exp $
  *
  * $FreeBSD: src/sys/i4b/driver/i4b_bsdi_ibc.c,v 1.3.2.1 2001/08/10 14:08:35 obrien Exp $
  *

@@ -33,7 +33,7 @@
  *	Fritz!Card pcmcia specific routines for isic driver
  *	---------------------------------------------------
  *
- *	$Id: isic_pcmcia_avm_fritz.c,v 1.1 2004/09/22 07:35:51 t-momose Exp $ 
+ *	$Id: isic_pcmcia_avm_fritz.c,v 1.1.1.1 2004/09/22 07:35:51 t-momose Exp $ 
  *
  *      last edit-date: [Fri Jan  5 11:39:32 2001]
  *

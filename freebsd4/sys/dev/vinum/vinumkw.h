@@ -33,7 +33,7 @@
  * otherwise) arising in any way out of the use of this software, even if
  * advised of the possibility of such damage.
  *
- * $Id: vinumkw.h,v 1.1 2004/09/22 07:22:53 t-momose Exp $
+ * $Id: vinumkw.h,v 1.1.1.1 2004/09/22 07:22:53 t-momose Exp $
  * $FreeBSD: src/sys/dev/vinum/vinumkw.h,v 1.18.2.2 2001/05/28 05:56:27 grog Exp $
  */
 

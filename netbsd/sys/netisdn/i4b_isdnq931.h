@@ -27,7 +27,7 @@
  *	i4b_isdnq931.h - DSS1 layer 3 message types
  *	-------------------------------------------
  *
- *	$Id: i4b_isdnq931.h,v 1.1 2004/09/22 07:36:51 t-momose Exp $
+ *	$Id: i4b_isdnq931.h,v 1.1.1.1 2004/09/22 07:36:51 t-momose Exp $
  *
  * $FreeBSD$
  *

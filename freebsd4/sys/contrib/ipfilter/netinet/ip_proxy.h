@@ -3,7 +3,7 @@
  *
  * See the IPFILTER.LICENCE file for details on licencing.
  *
- * $Id: ip_proxy.h,v 1.1 2004/09/22 07:21:35 t-momose Exp $
+ * $Id: ip_proxy.h,v 1.1.1.1 2004/09/22 07:21:35 t-momose Exp $
  * $FreeBSD: src/sys/contrib/ipfilter/netinet/ip_proxy.h,v 1.9.2.5 2003/03/01 03:55:54 darrenr Exp $
  */
 

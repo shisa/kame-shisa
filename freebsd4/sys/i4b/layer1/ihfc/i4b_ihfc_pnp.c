@@ -33,7 +33,7 @@
  *
  *      last edit-date: [Tue Jan 23 16:03:33 2001]
  *
- *      $Id: i4b_ihfc_pnp.c,v 1.1 2004/09/22 07:23:22 t-momose Exp $
+ *      $Id: i4b_ihfc_pnp.c,v 1.1.1.1 2004/09/22 07:23:22 t-momose Exp $
  *
  * $FreeBSD: src/sys/i4b/layer1/ihfc/i4b_ihfc_pnp.c,v 1.5.2.1 2001/08/10 14:08:37 obrien Exp $
  *     

@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: maestro_reg.h,v 1.1 2004/09/22 07:40:05 t-momose Exp $
+ *	$Id: maestro_reg.h,v 1.1.1.1 2004/09/22 07:40:05 t-momose Exp $
  * $FreeBSD: /c/ncvs/src/sys/dev/sound/pci/maestro_reg.h,v 1.1 2000/09/06 20:10:54 cg Exp $
  */
 

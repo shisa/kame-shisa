@@ -35,7 +35,7 @@
 
 #include <sys/param.h>
 
-__KERNEL_RCSID(1, "$Id: netslot.c,v 1.1 2004/09/22 07:30:48 t-momose Exp $");
+__KERNEL_RCSID(1, "$Id: netslot.c,v 1.1.1.1 2004/09/22 07:30:48 t-momose Exp $");
 
 #include <sys/systm.h>
 #include <sys/kernel.h>

@@ -37,7 +37,7 @@
  *
  *      @(#)bpf.h       7.1 (Berkeley) 5/7/91
  *
- * @(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/libpcap/bpf/net/bpf.h,v 1.1 2004/09/22 07:25:06 t-momose Exp $ (LBL)
+ * @(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/libpcap/bpf/net/bpf.h,v 1.1.1.1 2004/09/22 07:25:06 t-momose Exp $ (LBL)
  */
 
 #ifndef BPF_MAJOR_VERSION

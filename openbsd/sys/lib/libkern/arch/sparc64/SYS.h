@@ -35,7 +35,7 @@
  *	@(#)SYS.h	8.1 (Berkeley) 6/4/93
  *
  *	from: Header: SYS.h,v 1.2 92/07/03 18:57:00 torek Exp
- *	$Id: SYS.h,v 1.1 2004/09/22 07:40:43 t-momose Exp $
+ *	$Id: SYS.h,v 1.1.1.1 2004/09/22 07:40:43 t-momose Exp $
  */
 
 #include <machine/asm.h>

@@ -38,7 +38,7 @@
  *  TODO:
  */
 
-#ident "$Id: iir_pci.c,v 1.1 2004/09/22 07:22:09 t-momose Exp $"
+#ident "$Id: iir_pci.c,v 1.1.1.1 2004/09/22 07:22:09 t-momose Exp $"
 
 /* #include "opt_iir.h" */
 

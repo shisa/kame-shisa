@@ -27,7 +27,7 @@
  *	i4b_i4bdrv.c - i4b userland interface driver
  *	--------------------------------------------
  *
- *	$Id: i4b_i4bdrv.c,v 1.1 2004/09/22 07:36:50 t-momose Exp $ 
+ *	$Id: i4b_i4bdrv.c,v 1.1.1.1 2004/09/22 07:36:50 t-momose Exp $ 
  *
  * $FreeBSD$
  *

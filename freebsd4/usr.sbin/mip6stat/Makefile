@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.1 2004/09/22 07:24:50 t-momose Exp $
+# $Id: Makefile,v 1.1.1.1 2004/09/22 07:24:50 t-momose Exp $
 #
 SRCDIR=	${.CURDIR}/../../kame/mip6stat
 

@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * @(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/libpcap/pcap-int.h,v 1.1 2004/09/22 07:25:05 t-momose Exp $ (LBL)
+ * @(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/libpcap/pcap-int.h,v 1.1.1.1 2004/09/22 07:25:05 t-momose Exp $ (LBL)
  */
 
 #ifndef pcap_int_h

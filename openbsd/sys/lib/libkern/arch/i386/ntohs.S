@@ -32,7 +32,7 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)ntohs.s	5.2 (Berkeley) 12/17/90
- *	$Id: ntohs.S,v 1.1 2004/09/22 07:40:42 t-momose Exp $
+ *	$Id: ntohs.S,v 1.1.1.1 2004/09/22 07:40:42 t-momose Exp $
  */
 
 #include <machine/asm.h>

@@ -20,7 +20,7 @@
  * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * @(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/ndp/gmt2local.h,v 1.1 2004/09/22 07:25:08 t-momose Exp $ (LBL)
+ * @(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/ndp/gmt2local.h,v 1.1.1.1 2004/09/22 07:25:08 t-momose Exp $ (LBL)
  */
 #ifndef gmt2local_h
 #define gmt2local_h

@@ -31,7 +31,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  * 
- * $Id: dcons_crom.c,v 1.1 2004/09/22 07:21:56 t-momose Exp $
+ * $Id: dcons_crom.c,v 1.1.1.1 2004/09/22 07:21:56 t-momose Exp $
  * $FreeBSD: src/sys/dev/dcons/dcons_crom.c,v 1.2.2.1 2003/11/14 12:16:46 simokawa Exp $
  */
 

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: aic7xxx_osm.h,v 1.1 2004/09/22 07:21:43 t-momose Exp $
+ * $Id: aic7xxx_osm.h,v 1.1.1.1 2004/09/22 07:21:43 t-momose Exp $
  *
  * $FreeBSD: src/sys/dev/aic7xxx/aic7xxx_osm.h,v 1.14.2.7 2004/02/15 19:30:02 gibbs Exp $
  */

@@ -1,5 +1,5 @@
 /* $OpenBSD: if_lmc_media.c,v 1.13 2003/02/11 19:20:27 mickey Exp $ */
-/* $Id: if_lmc_media.c,v 1.1 2004/09/22 07:40:01 t-momose Exp $ */
+/* $Id: if_lmc_media.c,v 1.1.1.1 2004/09/22 07:40:01 t-momose Exp $ */
 
 /*-
  * Copyright (c) 1997-1999 LAN Media Corporation (LMC)

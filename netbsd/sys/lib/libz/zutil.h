@@ -10,7 +10,7 @@
    subject to change. Applications should only use zlib.h.
  */
 
-/* @(#) $Id: zutil.h,v 1.1 2004/09/22 07:36:30 t-momose Exp $ */
+/* @(#) $Id: zutil.h,v 1.1.1.1 2004/09/22 07:36:30 t-momose Exp $ */
 
 #ifndef _Z_UTIL_H
 #define _Z_UTIL_H

@@ -1,4 +1,4 @@
-@(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/traceroute/INSTALL,v 1.1 2004/09/22 07:25:23 t-momose Exp $ (LBL)
+@(#) $Header: /home/keiichi/tmp/shisa/cvsroot-kame-shisa/kame/kame/kame/traceroute/INSTALL,v 1.1.1.1 2004/09/22 07:25:23 t-momose Exp $ (LBL)
 
 Traceroute is known to build and run under SunOS 4.1.4 and Solaris 5.4.
 If you are running a really old kernel, see the instructions under the

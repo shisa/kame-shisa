@@ -24,7 +24,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *      From NetBSD: if_de.c,v 1.56.2.1 1997/10/27 02:13:25 thorpej Exp
- *	$Id: if_lmc.c,v 1.1 2004/09/22 07:27:38 t-momose Exp $
+ *	$Id: if_lmc.c,v 1.1.1.1 2004/09/22 07:27:38 t-momose Exp $
  */
 
 #include <sys/cdefs.h>

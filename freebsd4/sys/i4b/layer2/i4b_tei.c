@@ -27,7 +27,7 @@
  *	i4b_tei.c - tei handling procedures
  *	-----------------------------------
  *
- *	$Id: i4b_tei.c,v 1.1 2004/09/22 07:23:24 t-momose Exp $ 
+ *	$Id: i4b_tei.c,v 1.1.1.1 2004/09/22 07:23:24 t-momose Exp $ 
  *
  * $FreeBSD: src/sys/i4b/layer2/i4b_tei.c,v 1.6.2.2 2001/08/10 14:08:41 obrien Exp $
  *

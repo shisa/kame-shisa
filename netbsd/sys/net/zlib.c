@@ -11,7 +11,7 @@
  * - added inflateIncomp and deflateOutputPending
  * - allow strm->next_out to be NULL, meaning discard the output
  *
- * $Id: zlib.c,v 1.1 2004/09/22 07:36:44 t-momose Exp $
+ * $Id: zlib.c,v 1.1.1.1 2004/09/22 07:36:44 t-momose Exp $
  */
 
 /* 
@@ -45,7 +45,7 @@ __KERNEL_RCSID(0, "$NetBSD: zlib.c,v 1.18 2002/05/07 09:14:20 tron Exp $");
    subject to change. Applications should only use zlib.h.
  */
 
-/* @(#) $Id: zlib.c,v 1.1 2004/09/22 07:36:44 t-momose Exp $ */
+/* @(#) $Id: zlib.c,v 1.1.1.1 2004/09/22 07:36:44 t-momose Exp $ */
 
 #ifndef _Z_UTIL_H
 #define _Z_UTIL_H
@@ -293,7 +293,7 @@ void   zcfree  __P((voidpf opaque, voidpf ptr));
    subject to change. Applications should only use zlib.h.
  */
 
-/* @(#) $Id: zlib.c,v 1.1 2004/09/22 07:36:44 t-momose Exp $ */
+/* @(#) $Id: zlib.c,v 1.1.1.1 2004/09/22 07:36:44 t-momose Exp $ */
 
 #ifndef _DEFLATE_H
 #define _DEFLATE_H
@@ -655,7 +655,7 @@ void _tr_stored_type_only __P((deflate_state *));
  *
  */
 
-/* @(#) $Id: zlib.c,v 1.1 2004/09/22 07:36:44 t-momose Exp $ */
+/* @(#) $Id: zlib.c,v 1.1.1.1 2004/09/22 07:36:44 t-momose Exp $ */
 
 /* #include "deflate.h" */
 
@@ -2019,7 +2019,7 @@ local block_state deflate_slow(s, flush)
  *          Addison-Wesley, 1983. ISBN 0-201-06672-6.
  */
 
-/* @(#) $Id: zlib.c,v 1.1 2004/09/22 07:36:44 t-momose Exp $ */
+/* @(#) $Id: zlib.c,v 1.1.1.1 2004/09/22 07:36:44 t-momose Exp $ */
 
 /* #define GEN_TREES_H */
 
@@ -5877,7 +5877,7 @@ void  zcfree (opaque, ptr)
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 
-/* @(#) $Id: zlib.c,v 1.1 2004/09/22 07:36:44 t-momose Exp $ */
+/* @(#) $Id: zlib.c,v 1.1.1.1 2004/09/22 07:36:44 t-momose Exp $ */
 
 /* #include "zlib.h" */
 

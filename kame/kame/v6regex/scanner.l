@@ -28,7 +28,7 @@
  * SUCH DAMAGE.
  */
 /*
- * KAME $Id: scanner.l,v 1.1 2004/09/22 07:25:24 t-momose Exp $
+ * KAME $Id: scanner.l,v 1.1.1.1 2004/09/22 07:25:24 t-momose Exp $
  */
 
 /*

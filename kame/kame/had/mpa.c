@@ -30,7 +30,7 @@
  */
 
 /*
- * $Id: mpa.c,v 1.1 2004/09/22 07:24:59 t-momose Exp $
+ * $Id: mpa.c,v 1.1.1.1 2004/09/22 07:24:59 t-momose Exp $
  */
 
 #include <sys/param.h>
