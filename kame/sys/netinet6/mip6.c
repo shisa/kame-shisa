@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.11 2004/10/12 10:25:16 keiichi Exp $	*/
+/*	$Id: mip6.c,v 1.12 2004/10/12 10:36:39 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -546,9 +546,26 @@ mip6_bce_update(cnaddr, hoa, coa, flags, bid)
 	    (flags & IP6_MH_BU_HOME) != 0) {
 		error = mip6_bc_proxy_control(&hoa->sin6_addr,
 		    &cnaddr->sin6_addr, RTM_ADD);
+		if (error) {
+			mip6log((LOG_ERR, "mip6_bce_update: "
+			    "adding a proxy ND entry failed.\n"));
+			goto done;
+		}
 		bce->mbc_encap = encap_attach_func(AF_INET6, IPPROTO_IPV6,
 		    mip6_rev_encapcheck,
 		    (struct protosw *)&mip6_tunnel_protosw, bce);
+		if (bce->mbc_encap == NULL) {
+			mip6log((LOG_ERR, "mip6_bce_update: "
+			    "attaching an encaptab on a home agent "
+			    "failed.\n"));
+			error = EIO; /* XXX ? */
+			if (mip6_bc_proxy_control(&hoa->sin6_addr,
+			    &cnaddr->sin6_addr, RTM_DELETE)) {
+				mip6log((LOG_ERR, "mip6_bce_update: "
+				    "removing a proxy ND entry failed.\n"));
+			}
+			goto done;
+		}
 	}
 
  bc_update_ipsecdb:
