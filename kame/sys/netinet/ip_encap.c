@@ -67,10 +67,6 @@
  * FreeBSD is excluded here as they make max_keylen a static variable, and
  * thus forbid definition of radix table other than proper domains.
  */
-#ifndef __FreeBSD__
-#define USE_RADIX
-#endif
-
 #ifdef __FreeBSD__
 #include "opt_mrouting.h"
 #include "opt_inet.h"
@@ -79,6 +75,13 @@
 #ifdef __NetBSD__
 #include "opt_mrouting.h"
 #include "opt_inet.h"
+#include "opt_mip6.h"
+#endif
+
+#ifndef __FreeBSD__
+#ifndef MIP6
+#define USE_RADIX
+#endif /* MIP6 */
 #endif
 
 #include <sys/param.h>
@@ -474,6 +477,7 @@ encap6_lookup(m, off, proto, dir)
 			prio = (*ep->func)(m, off, proto, ep->arg);
 		else {
 #ifdef USE_RADIX
+printf("FUCK???\n");
 			continue;
 #else
 			prio = mask_match(ep, (struct sockaddr *)&pack.mine,
