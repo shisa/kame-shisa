@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.21 2004/10/25 09:09:24 keiichi Exp $	*/
+/*	$Id: mip6.c,v 1.22 2004/10/26 06:26:18 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -960,6 +960,9 @@ mip6_bul_remove_all()
 	s = splnet();
 #endif
 
+#if defined(__FreeBSD__) && __FreeBSD_version >= 502000
+	IFNET_RLOCK();
+#endif /* __FreeBSD__ && __FreeBSD_version >= 502000 */
 #ifdef __FreeBSD__
 	TAILQ_FOREACH(ifp, &ifnet, if_link)
 #elif defined(__NetBSD__)
@@ -986,6 +989,9 @@ mip6_bul_remove_all()
 			}
 		}
 	}
+#if defined(__FreeBSD__) && __FreeBSD_version >= 502000
+	IFNET_RUNLOCK();
+#endif /* __FreeBSD__ && __FreeBSD_version >= 502000 */
 
 	splx(s);
 }
