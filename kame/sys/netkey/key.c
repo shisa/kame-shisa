@@ -410,7 +410,7 @@ static struct secpolicy *key_getsp __P((struct secpolicyindex *, int));
 #if NPF > 0
 static struct secpolicy *key_getspbytag __P((u_int16_t, int));
 #endif
-static u_int32_t key_newreqid __P((void));
+static u_int16_t key_newreqid __P((void));
 static struct mbuf *key_gather_mbuf __P((struct mbuf *,
 	const struct sadb_msghdr *, int, int, ...));
 static int key_spdadd __P((struct socket *, struct mbuf *,
@@ -452,7 +452,7 @@ static struct mbuf *key_setsadbaddr __P((u_int16_t,
 static struct mbuf *key_setsadbident __P((u_int16_t, u_int16_t, caddr_t,
 	int, u_int64_t));
 #endif
-static struct mbuf *key_setsadbxsa2 __P((u_int8_t, u_int32_t, u_int32_t));
+static struct mbuf *key_setsadbxsa2 __P((u_int8_t, u_int32_t, u_int16_t));
 static struct mbuf *key_setsadbxtag __P((u_int16_t));
 static struct mbuf *key_setsadblifetime __P((u_int16_t, u_int32_t,
 	u_int64_t, u_int64_t, u_int64_t));
@@ -1594,7 +1594,7 @@ key_msg2sp(xpl0, len, error)
 
 				/* allocate new reqid id if reqid is zero. */
 				if (xisr->sadb_x_ipsecrequest_reqid == 0) {
-					u_int32_t reqid;
+					u_int16_t reqid;
 					if ((reqid = key_newreqid()) == 0) {
 						key_freesp(newsp);
 						*error = ENOBUFS;
@@ -1683,13 +1683,13 @@ key_msg2sp(xpl0, len, error)
 	return newsp;
 }
 
-static u_int32_t
+static u_int16_t
 key_newreqid()
 {
-	static u_int32_t auto_reqid = IPSEC_MANUAL_REQID_MAX + 1;
+	static u_int16_t auto_reqid = IPSEC_MANUAL_REQID_MAX + 1;
 
-	auto_reqid = (auto_reqid == ~0
-			? IPSEC_MANUAL_REQID_MAX + 1 : auto_reqid + 1);
+	auto_reqid = (auto_reqid == 0xffff
+	    ? IPSEC_MANUAL_REQID_MAX + 1 : auto_reqid + 1);
 
 	/* XXX should be unique check */
 
@@ -3339,6 +3339,9 @@ key_setsaval(sav, m, mhp)
 		switch (mhp->msg->sadb_msg_satype) {
 		case SADB_SATYPE_AH:
 		case SADB_SATYPE_ESP:
+#ifdef TCP_SIGNATURE
+		case SADB_X_SATYPE_TCPSIGNATURE:
+#endif
 			if (len == PFKEY_ALIGN8(sizeof(struct sadb_key)) &&
 			    sav->alg_auth != SADB_X_AALG_NULL)
 				error = EINVAL;
@@ -3394,6 +3397,9 @@ key_setsaval(sav, m, mhp)
 			sav->key_enc = NULL;	/*just in case*/
 			break;
 		case SADB_SATYPE_AH:
+#ifdef TCP_SIGNATURE
+		case SADB_X_SATYPE_TCPSIGNATURE:
+#endif
 		default:
 			error = EINVAL;
 			break;
@@ -3428,6 +3434,9 @@ key_setsaval(sav, m, mhp)
 		break;
 	case SADB_SATYPE_AH:
 	case SADB_X_SATYPE_IPCOMP:
+#ifdef TCP_SIGNATURE
+	case SADB_X_SATYPE_TCPSIGNATURE:
+#endif
 		break;
 	default:
 		ipseclog((LOG_DEBUG, "key_setsaval: invalid SA type.\n"));
@@ -3626,6 +3635,26 @@ key_mature(sav)
 		checkmask = 4;
 		mustmask = 4;
 		break;
+#ifdef TCP_SIGNATURE
+	case IPPROTO_TCP:
+		if (sav->alg_auth != SADB_X_AALG_TCP_MD5) {
+			ipseclog((LOG_DEBUG, "key_mature: unsupported authentication algorithm %u\n",
+			    sav->alg_auth));
+			return (EINVAL);
+		}
+		if (sav->alg_enc != SADB_EALG_NONE) {
+			ipseclog((LOG_DEBUG, "%s : protocol and algorithm "
+			    "mismated.\n", __func__));
+			return(EINVAL);
+		}
+		if (sav->spi != htonl(0x1000)) {
+			ipseclog((LOG_DEBUG, "key_mature: SPI must be TCP_SIG_SPI (0x1000)\n"));
+			return (EINVAL);
+		}
+		checkmask = 2;
+		mustmask = 2;
+		break;
+#endif
 	default:
 		ipseclog((LOG_DEBUG, "key_mature: Invalid satype.\n"));
 		return EPROTONOSUPPORT;
@@ -4056,7 +4085,8 @@ key_setsadbident(exttype, idtype, string, stringlen, id)
 static struct mbuf *
 key_setsadbxsa2(mode, seq, reqid)
 	u_int8_t mode;
-	u_int32_t seq, reqid;
+	u_int32_t seq;
+	u_int16_t reqid;
 {
 	struct mbuf *m;
 	struct sadb_x_sa2 *p;
@@ -4661,6 +4691,8 @@ key_timehandler(arg)
     {
 	struct secashead *sah, *nextsah;
 	struct secasvar *sav, *nextsav;
+	int havesav;
+	u_int stateidx, state;
 
 	for (sah = LIST_FIRST(&sahtree);
 	     sah != NULL;
@@ -4821,6 +4853,23 @@ key_timehandler(arg)
 			 * (such as from SPD).
 			 */
 		}
+
+		/* move SA header to DEAD if there's no SA */
+		havesav = 0;
+		for (stateidx = 0;
+		     stateidx < _ARRAYLEN(saorder_state_alive);
+		     stateidx++) {
+			state = saorder_state_alive[stateidx];
+			if (LIST_FIRST(&sah->savtree[state])) {
+				havesav++;
+				break;
+			}
+		}
+		if (havesav == 0) {
+			ipseclog((LOG_DEBUG, "key_timehandler: "
+			       "move sah %p to DEAD (no more SAs)\n", sah));
+			sah->state = SADB_SASTATE_DEAD;
+		}
 	}
     }
 
@@ -4945,7 +4994,10 @@ key_satype2proto(satype)
 		return IPPROTO_ESP;
 	case SADB_X_SATYPE_IPCOMP:
 		return IPPROTO_IPCOMP;
-		break;
+#ifdef TCP_SIGNATURE
+	case SADB_X_SATYPE_TCPSIGNATURE:
+		return IPPROTO_TCP;
+#endif
 	default:
 		return 0;
 	}
@@ -4968,7 +5020,10 @@ key_proto2satype(proto)
 		return SADB_SATYPE_ESP;
 	case IPPROTO_IPCOMP:
 		return SADB_X_SATYPE_IPCOMP;
-		break;
+#ifdef TCP_SIGNATURE
+	case IPPROTO_TCP:
+		return SADB_X_SATYPE_TCPSIGNATURE;
+#endif
 	default:
 		return 0;
 	}
@@ -5001,7 +5056,7 @@ key_getspi(so, m, mhp)
 	u_int8_t proto;
 	u_int32_t spi;
 	u_int8_t mode;
-	u_int32_t reqid;
+	u_int16_t reqid;
 	int error;
 
 	/* sanity check */
@@ -5280,7 +5335,7 @@ key_update(so, m, mhp)
 	struct secasvar *sav;
 	u_int16_t proto;
 	u_int8_t mode;
-	u_int32_t reqid;
+	u_int16_t reqid;
 	int error;
 
 	/* sanity check */
@@ -5469,7 +5524,7 @@ key_add(so, m, mhp)
 	struct secasvar *newsav;
 	u_int16_t proto;
 	u_int8_t mode;
-	u_int32_t reqid;
+	u_int16_t reqid;
 	int error;
 
 	/* sanity check */
@@ -7503,6 +7558,9 @@ key_parse(m, so)
 	case SADB_SATYPE_AH:
 	case SADB_SATYPE_ESP:
 	case SADB_X_SATYPE_IPCOMP:
+#ifdef TCP_SIGNATURE
+	case SADB_X_SATYPE_TCPSIGNATURE:
+#endif
 		switch (msg->sadb_msg_type) {
 		case SADB_X_SPDADD:
 		case SADB_X_SPDDELETE:

@@ -1,4 +1,4 @@
-.\"	$KAME: dhcp6c.conf.5,v 1.23 2004/07/29 22:21:11 jinmei Exp $
+.\"	$KAME: dhcp6c.conf.5,v 1.26 2004/11/28 13:54:54 jinmei Exp $
 .\"
 .\" Copyright (C) 2002 WIDE Project.
 .\" All rights reserved.
@@ -192,10 +192,13 @@ requests a list of SIP server addresses.
 .Xc
 requests a SIP server domain name.
 .It Xo
-.Ic lifetime
+.Ic refreshtime
 .Xc
-means a lifetime option.
-This is particularly useful when sent with information-request messages.
+means an information refresh time option.
+This can only be specified when sent with information-request
+messages;
+.Nm dhcp6c
+will ignore this option for other messages.
 As of this writing, the option type for this option is not officially
 assigned.
 .Nm dhcp6c
@@ -449,7 +452,7 @@ realm and the key identifier.
 ;
 .Xc
 specifies the shared secret of this key.
-Ar \(dqsecret-value\(dq
+.Ar \(dqsecret-value\(dq
 is a base-64 encoded string of the secret.
 .It Xo
 .Ic expire Ar \(dqexpiration-time\(dq

@@ -55,7 +55,7 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 static char sccsid[] = "@(#)res_send.c	8.1 (Berkeley) 6/4/93";
-static char rcsid[] = "$Id: res_send.c,v 1.22 2004/06/26 08:37:01 jinmei Exp $";
+static char rcsid[] = "$Id: res_send.c,v 1.24 2004/12/03 12:53:11 jinmei Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 	/* change this to "0"
@@ -353,12 +353,63 @@ res_queriesmatch(buf1, eom1, buf2, eom2)
 	return (1);
 }
 
+/*
+ * Utility routines for timeout management
+ */
+static int timeval_lt __P((struct timeval *, struct timeval *));
+static void timeval_add __P((struct timeval *, struct timeval *,
+    struct timeval *));
+static void timeval_sub __P((struct timeval *, struct timeval *,
+    struct timeval *));
+static void timeval_fix __P((struct timeval *));
+
+static int
+timeval_lt(t1, t2)
+	struct timeval *t1, *t2;
+{
+	return ((t1->tv_sec < t2->tv_sec) ||
+	    (t1->tv_sec == t2->tv_sec && t1->tv_usec < t2->tv_usec));
+}
+
+static void
+timeval_add(t1, t2, tr)
+	struct timeval *t1, *t2, *tr;
+{
+	tr->tv_sec = t1->tv_sec + t2->tv_sec;
+	tr->tv_usec = t1->tv_usec + t2->tv_usec;
+	timeval_fix(tr);
+}
+
+static void
+timeval_sub(t1, t2, tr)
+	struct timeval *t1, *t2, *tr;
+{
+	tr->tv_sec = t1->tv_sec - t2->tv_sec;
+	tr->tv_usec = t1->tv_usec - t2->tv_usec;
+	timeval_fix(tr);
+}
+
+static void
+timeval_fix(t)
+	struct timeval *t;
+{
+	if (t->tv_usec < 0) {
+		t->tv_sec--;
+		t->tv_usec += 1000000;
+	}
+	if (t->tv_usec >= 1000000) {
+		t->tv_sec++;
+		t->tv_usec -= 1000000;
+	}
+}
+
 int
-res_send(buf, buflen, ans, anssiz)
+res_send_timeout(buf, buflen, ans, anssiz, timo_limit)
 	const u_char *buf;
 	int buflen;
 	u_char *ans;
 	int anssiz;
+	struct timeval *timo_limit;
 {
 	HEADER *hp = (HEADER *) buf;
 	HEADER *anhp = (HEADER *) ans;
@@ -367,6 +418,8 @@ res_send(buf, buflen, ans, anssiz)
 	u_int badns;	/* XXX NSMAX can't exceed #/bits in this var */
 	int changeserver = 0;
 	struct sockaddr_storage newnsap;
+
+	printf("res_send_timeout: %p\n", timo_limit);
 
 	if ((_res.options & RES_INIT) == 0 && res_init() == -1) {
 		/* errno should have been set by res_init() in this case. */
@@ -742,9 +795,28 @@ read_len:
 			if ((long) timeout.tv_sec <= 0)
 				timeout.tv_sec = 1;
 			timeout.tv_usec = 0;
+
 			gettimeofday(&now, NULL);
-			finish.tv_sec = now.tv_sec + timeout.tv_sec;
-			finish.tv_usec = now.tv_usec + timeout.tv_usec;
+			if (timo_limit != NULL) {
+				struct timeval diff_to_limit;
+
+				if (timeval_lt(timo_limit, &now)) {
+					/*
+					 * We have reached the limit of
+					 * timeouts.  Give up immediately.
+					 */
+					Dprint(_res.options & RES_DEBUG,
+					    (stdout, ";; timeouts limit\n"));
+					res_close();
+					errno = ETIMEDOUT;
+					return (-1);
+				}
+
+				timeval_sub(timo_limit, &now, &diff_to_limit);
+				if (timeval_lt(&diff_to_limit, &timeout))
+					timeout = diff_to_limit;
+			}
+			timeval_add(&now, &timeout, &finish);
     wait:
 			if (s < 0 || s >= FD_SETSIZE) {
 				Perror(stderr, "s out-of-bounds", EMFILE);
@@ -949,6 +1021,16 @@ read_len:
 	else
 		errno = terrno;
 	return (-1);
+}
+
+int
+res_send(buf, buflen, ans, anssiz)
+	const u_char *buf;
+	int buflen;
+	u_char *ans;
+	int anssiz;
+{
+	res_send_timeout(buf, buflen, ans, anssiz, NULL);
 }
 
 /*

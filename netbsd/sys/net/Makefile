@@ -12,6 +12,7 @@ INCS=	bpf.h bpfdesc.h dlt.h ethertypes.h if.h if_arc.h if_arp.h \
 	raw_cb.h route.h slcompress.h slip.h zlib.h
 INCS+=	radix_art.h radix_mpath.h
 INCS+=	pfvar.h
+INCS+=	if_ist.h
 INCS+=	mipsock.h if_mip.h
 
 .include <bsd.kinc.mk>

@@ -1,4 +1,4 @@
-/*	$KAME: common.c,v 1.118 2004/09/07 09:20:28 jinmei Exp $	*/
+/*	$KAME: common.c,v 1.122 2004/12/03 05:48:08 jinmei Exp $	*/
 /*
  * Copyright (C) 1998 and 1999 WIDE Project.
  * All rights reserved.
@@ -931,7 +931,7 @@ dhcp6_init_options(optinfo)
 
 	optinfo->pref = DH6OPT_PREF_UNDEF;
 	optinfo->elapsed_time = DH6OPT_ELAPSED_TIME_UNDEF;
-	optinfo->lifetime = DH6OPT_LIFETIME_UNDEF;
+	optinfo->refreshtime = DH6OPT_REFRESHTIME_UNDEF;
 
 	TAILQ_INIT(&optinfo->iapd_list);
 	TAILQ_INIT(&optinfo->reqopt_list);
@@ -1011,7 +1011,7 @@ dhcp6_copy_options(dst, src)
 	if (dhcp6_copy_list(&dst->prefix_list, &src->prefix_list))
 		goto fail;
 	dst->elapsed_time = src->elapsed_time;
-	dst->lifetime = src->lifetime;
+	dst->refreshtime = src->refreshtime;
 	dst->pref = src->pref;
 
 	if (src->relaymsg_msg != NULL) {
@@ -1307,7 +1307,7 @@ dhcp6_get_options(p, ep, optinfo)
 				struct dhcp6_vbuf vb;
 				char name[MAXDNAME + 1];
 
-				if (dnsdecode((u_char **)&val,
+				if (dnsdecode((u_char **)(void *)&val,
 				    (u_char *)(cp + optlen), name,
 				    sizeof(name)) == NULL) {
 					dprintf(LOG_INFO, FNAME, "failed to "
@@ -1383,7 +1383,7 @@ dhcp6_get_options(p, ep, optinfo)
 				struct dhcp6_vbuf vb;
 				char name[MAXDNAME + 1];
 
-				if (dnsdecode((u_char **)&val,
+				if (dnsdecode((u_char **)(void *)&val,
 				    (u_char *)(cp + optlen), name,
 				    sizeof(name)) == NULL) {
 					dprintf(LOG_INFO, FNAME, "failed to "
@@ -1471,19 +1471,35 @@ dhcp6_get_options(p, ep, optinfo)
 			if (get_delegated_prefixes(cp, cp + optlen, optinfo))
 				goto fail;
 			break;
-#ifdef USE_DH6OPT_LIFETIME
-		case DH6OPT_LIFETIME:
+#ifdef USE_DH6OPT_REFRESHTIME
+		case DH6OPT_REFRESHTIME:
 			if (optlen != 4)
 				goto malformed;
 			memcpy(&val32, cp, sizeof(val32));
 			val32 = ntohl(val32);
-			dprintf(LOG_DEBUG, "", "   lifetime: %lu", val32);
-			if (optinfo->lifetime != DH6OPT_LIFETIME_UNDEF) {
+			dprintf(LOG_DEBUG, "",
+			    "   information refresh time: %lu", val32);
+			if (val32 < DHCP6_IRT_MINIMUM) {
+				/*
+				 * A client MUST use the refresh time
+				 * IRT_MINIMUM if it receives the option with a
+				 * value less than IRT_MINIMUM.
+				 * [draft-ietf-dhc-lifetime-02.txt,
+				 *  Section 3.2]
+				 */
 				dprintf(LOG_INFO, FNAME,
-				    "duplicated lifetime option");
+				    "refresh time is too small (%d), adjusted",
+				    val32);
+				val32 = DHCP6_IRT_MINIMUM;
+			}
+			if (optinfo->refreshtime != DH6OPT_REFRESHTIME_UNDEF) {
+				dprintf(LOG_INFO, FNAME,
+				    "duplicated refresh time option");
 			} else
-				optinfo->lifetime = (int64_t)val32;
+				optinfo->refreshtime = (int64_t)val32;
 			break;
+#else
+			val32 = val32; /* XXX deceive compiler */
 #endif
 		default:
 			/* no option specific behavior */
@@ -1805,10 +1821,10 @@ sprint_uint64(buf, buflen, i64)
 {
 	u_int16_t rd0, rd1, rd2, rd3;
 
-	rd0 = ntohs(*(u_int16_t *)&i64);
-	rd1 = ntohs(*((u_int16_t *)&i64 + 1));
-	rd2 = ntohs(*((u_int16_t *)&i64 + 2));
-	rd3 = ntohs(*((u_int16_t *)&i64 + 3));
+	rd0 = ntohs(*(u_int16_t *)(void *)&i64);
+	rd1 = ntohs(*((u_int16_t *)(void *)(&i64 + 1)));
+	rd2 = ntohs(*((u_int16_t *)(void *)(&i64 + 2)));
+	rd3 = ntohs(*((u_int16_t *)(void *)(&i64 + 3)));
 
 	snprintf(buf, buflen, "%04x %04x %04x %04x", rd0, rd1, rd2, rd3);
 
@@ -1895,7 +1911,8 @@ copy_option(type, len, val, optp, ep, totallenp)
 }
 
 int
-dhcp6_set_options(optbp, optep, optinfo)
+dhcp6_set_options(type, optbp, optep, optinfo)
+	int type;
 	struct dhcp6opt *optbp, *optep;
 	struct dhcp6_optinfo *optinfo;
 {
@@ -1958,21 +1975,38 @@ dhcp6_set_options(optbp, optep, optinfo)
 	if (!TAILQ_EMPTY(&optinfo->reqopt_list)) {
 		struct dhcp6_listval *opt;
 		u_int16_t *valp;
+		int buflen;
 
 		tmpbuf = NULL;
-		optlen = dhcp6_count_list(&optinfo->reqopt_list) *
+		buflen = dhcp6_count_list(&optinfo->reqopt_list) *
 			sizeof(u_int16_t);
-		if ((tmpbuf = malloc(optlen)) == NULL) {
+		if ((tmpbuf = malloc(buflen)) == NULL) {
 			dprintf(LOG_ERR, FNAME,
 			    "memory allocation failed for options");
 			goto fail;
 		}
+		optlen = 0;
 		valp = (u_int16_t *)tmpbuf;
 		for (opt = TAILQ_FIRST(&optinfo->reqopt_list); opt;
-		     opt = TAILQ_NEXT(opt, link), valp++) {
+		     opt = TAILQ_NEXT(opt, link)) {
+			/*
+			 * Information request option can only be specified
+			 * in information-request messages.
+			 * [draft-ietf-dhc-lifetime-02.txt, Section 3.2]
+			 */
+			if (opt->val_num == DH6OPT_REFRESHTIME &&
+			    type != DH6_INFORM_REQ) {
+				dprintf(LOG_DEBUG, FNAME,
+				    "refresh time option is not requested "
+				    "for %s", dhcp6msgstr(type));
+			}
+
 			*valp = htons((u_int16_t)opt->val_num);
+			valp++;
+			optlen += sizeof(u_int16_t);
 		}
-		if (copy_option(DH6OPT_ORO, optlen, tmpbuf, &p,
+		if (optlen > 0 &&
+		    copy_option(DH6OPT_ORO, optlen, tmpbuf, &p,
 		    optep, &len) != 0) {
 			goto fail;
 		}
@@ -2216,12 +2250,12 @@ dhcp6_set_options(optbp, optep, optinfo)
 		}
 	}
 
-#ifdef USE_DH6OPT_LIFETIME
-	if (optinfo->lifetime != DH6OPT_LIFETIME_UNDEF) {
-		u_int32_t p32 = (u_int32_t)optinfo->lifetime;
+#ifdef USE_DH6OPT_REFRESHTIME
+	if (optinfo->refreshtime != DH6OPT_REFRESHTIME_UNDEF) {
+		u_int32_t p32 = (u_int32_t)optinfo->refreshtime;
 
 		p32 = htonl(p32);
-		if (copy_option(DH6OPT_LIFETIME, sizeof(p32), &p32, &p,
+		if (copy_option(DH6OPT_REFRESHTIME, sizeof(p32), &p32, &p,
 		    optep, &len) != 0) {
 			goto fail;
 		}
@@ -2411,7 +2445,7 @@ copyout_option(p, ep, optval)
 		memset(&ia, 0, sizeof(ia));
 		headlen = sizeof(ia);
 		opttype = DH6OPT_IA_PD;
-		opt = (struct dhcp6opt *)&ia;
+		opt = (struct dhcp6opt *)(void *)&ia;
 		break;
 	case DHCP6_LISTVAL_PREFIX6:
 		memset(&pd_prefix, 0, sizeof(pd_prefix));
@@ -2423,7 +2457,7 @@ copyout_option(p, ep, optval)
 		memset(&stcodeopt, 0, sizeof(stcodeopt));
 		headlen = sizeof(stcodeopt);
 		opttype = DH6OPT_STATUS_CODE;
-		opt = (struct dhcp6opt *)&stcodeopt;
+		opt = (struct dhcp6opt *)(void *)&stcodeopt;
 		break;
 	default:
 		/*
@@ -2674,13 +2708,13 @@ get_rdvalue(rdm, rdvalue, rdsize)
 	/* nsec should be smaller than 2^32 */
 	l32 = (u_int32_t)nsec;
 #else
-
 	if (gettimeofday(&tv, NULL) != 0) {
 		dprintf(LOG_WARNING, FNAME, "gettimeofday failed: %s",
 		    strerror(errno));
 		return (-1);
 	}
 	u32 = (u_int32_t)tv.tv_sec;
+	u32 += JAN_1970;
 	l32 = (u_int32_t)tv.tv_usec;
 #endif /* HAVE_CLOCK_GETTIME */
 
@@ -2759,9 +2793,9 @@ dhcp6optstr(type)
 		return ("IA_PD");
 	case DH6OPT_IA_PD_PREFIX:
 		return ("IA_PD prefix");
-#ifdef USE_DH6OPT_LIFETIME
-	case DH6OPT_LIFETIME:
-		return ("Lifetime");
+#ifdef USE_DH6OPT_REFRESHTIME
+	case DH6OPT_REFRESHTIME:
+		return ("information refresh time");
 #endif
 	default:
 		snprintf(genstr, sizeof(genstr), "opt_%d", type);

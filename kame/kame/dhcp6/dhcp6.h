@@ -1,4 +1,4 @@
-/*	$KAME: dhcp6.h,v 1.50 2004/07/28 22:33:59 jinmei Exp $	*/
+/*	$KAME: dhcp6.h,v 1.53 2004/11/28 11:59:37 jinmei Exp $	*/
 /*
  * Copyright (C) 1998 and 1999 WIDE Project.
  * All rights reserved.
@@ -83,6 +83,9 @@
 #define DHCP6_RELAY_MULTICAST_HOPS 32
 #define DHCP6_RELAY_HOP_COUNT_LIMIT 32
 
+#define DHCP6_IRT_DEFAULT 86400	/* 1 day */
+#define DHCP6_IRT_MINIMUM 600
+
 /* DUID: DHCP unique Identifier */
 struct duid {
 	size_t duid_len;	/* length */
@@ -145,7 +148,7 @@ struct dhcp6_optinfo {
 	int rapidcommit;	/* bool */
 	int pref;		/* server preference */
 	int32_t elapsed_time;	/* elapsed time (from client to server only) */
-	int64_t lifetime;	/* lifetime for stateless options */
+	int64_t refreshtime;	/* info refresh time for stateless options */
 
 	struct dhcp6_list iapd_list; /* list of IA_PD */
 	struct dhcp6_list reqopt_list; /* options in option request */
@@ -287,11 +290,11 @@ struct dhcp6_relay {
 #define USE_DH6OPT_NTP
 #endif
 #define DH6OPT_NTP CONF_DH6OPT_NTP
-#if CONF_DH6OPT_LIFETIME > 0
-#define USE_DH6OPT_LIFETIME
+#if CONF_DH6OPT_REFRESHTIME > 0
+#define USE_DH6OPT_REFRESHTIME
 #endif
-#define DH6OPT_LIFETIME CONF_DH6OPT_LIFETIME
-#  define DH6OPT_LIFETIME_UNDEF -1
+#define DH6OPT_REFRESHTIME CONF_DH6OPT_REFRESHTIME
+#  define DH6OPT_REFRESHTIME_UNDEF -1
 
 struct dhcp6opt {
 	u_int16_t dh6opt_type;

@@ -1,4 +1,4 @@
-/*	$KAME: keydb.h,v 1.24 2003/09/07 15:12:10 itojun Exp $	*/
+/*	$KAME: keydb.h,v 1.27 2004/12/02 08:39:18 itojun Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
@@ -36,6 +36,20 @@
 
 #include <netkey/key_var.h>
 
+#if (defined(__FreeBSD__) && __FreeBSD_version >= 503000)
+#ifndef	_SOCKADDR_UNION_DEFINED
+#define	_SOCKADDR_UNION_DEFINED
+/*
+ * The union of all possible address formats we handle.
+ */
+union sockaddr_union {
+	struct sockaddr		sa;
+	struct sockaddr_in	sin;
+	struct sockaddr_in6	sin6;
+};
+#endif	/* _SOCKADDR_UNION_DEFINED */
+#endif  /* defined(__FreeBSD__) && __FreeBSD_version >= 503000 */
+
 /* Security Assocciation Index */
 /* NOTE: Ensure to be same address family */
 struct secasindex {
@@ -43,7 +57,7 @@ struct secasindex {
 	struct sockaddr_storage dst;	/* destination address for SA */
 	u_int16_t proto;		/* IPPROTO_ESP or IPPROTO_AH */
 	u_int8_t mode;			/* mode of protocol, see ipsec.h */
-	u_int32_t reqid;		/* reqid id who owned this SA */
+	u_int16_t reqid;		/* reqid id who owned this SA */
 					/* see IPSEC_MANUAL_REQID_MAX. */
 };
 

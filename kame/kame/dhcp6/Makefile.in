@@ -58,7 +58,7 @@ CFLAGS+= @DHCPOPT_DNS@ @DH6OPT_DNSNAME@ \
 	-DCONF_DH6OPT_PREFIX_INFORMATION=@dhcpopt_pinfo@ \
 	-DCONF_DH6OPT_PREFIX_REQUEST=@dhcpopt_preq@ \
 	-DCONF_DH6OPT_NTP=@dhcpopt_ntp@ \
-	-DCONF_DH6OPT_LIFETIME=@dhcpopt_lifetime@
+	-DCONF_DH6OPT_REFRESHTIME=@dhcpopt_refreshtime@
 
 GENSRCS=cfparse.c cftoken.c
 CLIENTOBJS=	dhcp6c.o common.o config.o prefixconf.o dhcp6c_ia.o timer.o \
@@ -104,7 +104,7 @@ install::
 	$(INSTALL_DATA) -o bin -g bin dhcp6c.8 $(mandir)/man8
 	$(INSTALL_DATA) -o bin -g bin dhcp6s.8 $(mandir)/man8
 	$(INSTALL_DATA) -o bin -g bin dhcp6relay.8 $(mandir)/man8
-	$(INSTALL_DATA) -o bin -g bin dhcp6sctl.8 $(mandir)/man8
+	$(INSTALL_DATA) -o bin -g bin dhcp6ctl.8 $(mandir)/man8
 	$(INSTALL_DATA) -o bin -g bin dhcp6c.conf.5 $(mandir)/man5
 	$(INSTALL_DATA) -o bin -g bin dhcp6s.conf.5 $(mandir)/man5
 

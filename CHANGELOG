@@ -1,7 +1,82 @@
 			CHANGELOG for KAME kit
-$KAME: CHANGELOG,v 1.2682 2004/11/19 04:51:50 jinmei Exp $
+$KAME: CHANGELOG,v 1.2701 2004/12/03 12:57:23 jinmei Exp $
+
+<200412>
+2004-12-03  JINMEI, Tatuya  <jinmei@isl.rdc.toshiba.co.jp>
+	* freebsd5/lib/libinet6/res_send.c (res_send): made sure this
+	function return a valid value.
+
+2004-12-03  JINMEI, Tatuya  <jinmei@isl.rdc.toshiba.co.jp>
+	* kame/kame/dhcp6/common.c: silenced strict-aliasing warnings.
+	Otherwise dhcp6 could not be built with -O2 on FreeBSD 5.3.
+	(KAME-PR 851)
+
+2004-12-02  JINMEI, Tatuya  <jinmei@isl.rdc.toshiba.co.jp>
+	* kame/kame/dhcp6/config.c (configure_commit): corrected list
+	management operation.  (mostly harmless, but it was incorrect.)
+	From: Nicolas Dichtel
+
+2004-12-02  JINMEI, Tatuya  <jinmei@isl.rdc.toshiba.co.jp>
+	* freebsd5/lib/libinet6: imported some res_* files and related
+	header files from FreeBSD's source tree to be synchronized with
+	KAME's local changes.  libinet6 now includes getaddrinfo().
+
+2004-12-02 SUZUKI, Shinsuke <suz@crl.hitachi.co.jp>
+	* freebsd4/sys/miscfs/procfs/procfs_status.c,
+	  freebsd5/sys/fs/procfs/procfs_status.c,
+	  freebsd5/sys/compat/linprofcs/linprocfs.c:
+	FreeBSD Security Advisory: FreeBSD-SA-04:17.procfs
+
+2004-12-02  JINMEI, Tatuya  <jinmei@isl.rdc.toshiba.co.jp>
+	* *bsd/sys/netinet/tcp_subr.c (tcp[6]_notify):  implemented quick
+	fall-back optimization as described in
+	draft-gont-tcpm-tcp-soft-errors-01.
+
+2004-12-01 SUZUKI, Shinsuke <suz@crl.hitachi.co.jp>
+	* freebsd5/sys/netinet/tcp_subr.c,
+	  kame/sys/netinet6/ah_core.c,
+	  kame/sys/netkey/{key.[ch],keydb.h}:
+	supports TCP-MD5(IPv4) on FreeBSD5.
+
+2004-12-01 SUZUKI, Shinsuke <suz@crl.hitachi.co.jp>
+	* kame/kame/man/man4/ist.4, kame/sys/net/if_ist.[ch],
+	  kame/sys/netinet6/{in6.h, in6_ifattach.c, ip6_input.c},
+	  kame/kame/rtadvd, kame/kame/rtsold,
+	  *bsd/sys/if_types.h, *bsd/sys/*/conf/files, *bsd/*/GENERIC.KAME
+	  *bsd/sbin/ifconfig:
+	revived ISATAP, since the IPR issue has been solved!
 
 <200411>
+2004-11-28  JINMEI, Tatuya  <jinmei@isl.rdc.toshiba.co.jp>
+	* kame/kame/dhcp6: catch up draft-ietf-dhc-lifetime-02.
+	Specifically,
+	- renamed "lifetime" to "refreshtime".  Note that configuration
+	  compatibility was lost
+	- implemented the default and minimum timer values
+	- clarified that the refresh time option can only be available for
+	  Information-request and reply exchanges
+
+2004-11-28  JINMEI, Tatuya  <jinmei@isl.rdc.toshiba.co.jp>
+	* kame/kame/libinet6/getaddrinfo.c (res_queryN): set an
+	appropriate limit of query timeouts in order to mitigate hopeless
+	delay due to misbehaving DNS servers ignoring AAAA queries.
+	getaddrinfo() now sends A queries first with this change, but the
+	query ordering does not affect the ordering of the resulting
+	addrinfo list.
+	(FreeBSD only at the moment)
+
+2004-11-27  JINMEI, Tatuya  <jinmei@isl.rdc.toshiba.co.jp>
+	* kame/kame/libinet6/getaddrinfo.c (set_source): fixed a bug that
+	deprecated source addresses were not correctly identified for
+	address ordering (RFC3484).
+
+2004-11-27  JINMEI, Tatuya  <jinmei@isl.rdc.toshiba.co.jp>
+	* kame/kame/libinet6/getaddrinfo.c: suppress AAAA queries if the
+	node does not have IPv6 addresses other than the loopback and
+	link-local addresses.  Additionally, AI_ADDRCONFIG is now more
+	specification compliant in that getaddrinfo() issues AAAA queries
+	only when the node has non-loopback addresses.
+
 2004-11-18  JINMEI, Tatuya  <jinmei@isl.rdc.toshiba.co.jp>
 	* kame/sys/netinet6/in6.c (in6_if2idlen): introduced a new
 	function, which was previously a local module "if2idlen", and

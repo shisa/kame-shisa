@@ -606,17 +606,20 @@ addserv(n, ttl, comment)
 	struct sockaddr_in6 *sin6;
 	struct nsdb *ns;
 	int multicast;
+	int error;
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = PF_UNSPEC;
 	hints.ai_socktype = SOCK_DGRAM;		/*dummy*/
 	hints.ai_flags = AI_NUMERICHOST;
-	if (getaddrinfo(n, "0", &hints, &res) != 0)
+	if ((error = getaddrinfo(n, "0", &hints, &res)) != 0)
 		return -1;
+#if 0
 	if (res->ai_next) {
 		freeaddrinfo(res);
 		return -1;
 	}
+#endif
 	switch (res->ai_family) {
 	case AF_INET:
 		sin = (struct sockaddr_in *)res->ai_addr;
@@ -638,10 +641,12 @@ addserv(n, ttl, comment)
 	hints.ai_flags = AI_NUMERICHOST;
 	if (getaddrinfo(n, multicast ? mdstport : dstport, &hints, &res) != 0)
 		return -1;
+#if 0
 	if (res->ai_next) {
 		freeaddrinfo(res);
 		return -1;
 	}
+#endif
 
 	ns = newnsdb(res->ai_addr, res->ai_addrlen, comment);
 	if (ns == NULL) {

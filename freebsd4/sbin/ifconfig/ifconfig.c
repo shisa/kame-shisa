@@ -70,6 +70,10 @@ static const char rcsid[] =
 #include <netinet6/nd6.h>	/* Define ND6_INFINITE_LIFETIME */
 #endif
 
+#ifdef IFT_IST
+#include <net/if_ist.h>
+#endif
+
 #ifndef NO_IPX
 /* IPX */
 #define	IPXIP
@@ -154,6 +158,9 @@ void	status __P((const struct afswtch *afp, int addrcount,
 		    struct sockaddr_dl *sdl, struct if_msghdr *ifm,
 		    struct ifa_msghdr *ifam));
 void	tunnel_status __P((int s));
+#ifdef IFT_IST
+void	isatap_status(int s, struct rt_addrinfo *);
+#endif
 void	nexthop_status __P((int s));
 void	usage __P((void));
 void	ifmaybeload __P((char *name));
@@ -172,6 +179,10 @@ c_func	setifaddr, setifbroadaddr, setifdstaddr, setifnetmask;
 c_func2	settunnel;
 c_func	setnexthop;
 c_func	deletetunnel;
+#ifdef IFT_IST
+c_func	setisataprouter;
+c_func	deleteisataprouter;
+#endif
 c_func	deletenexthop;
 #ifdef INET6
 c_func	setifprefixlen;
@@ -245,6 +256,10 @@ struct	cmd {
 	{ "ipdst",	NEXTARG,	setifipdst },
 	{ "tunnel",	NEXTARG2,	NULL,	settunnel },
 	{ "deletetunnel", 0,		deletetunnel },
+#ifdef IFT_IST
+	{ "isataprtr",	NEXTARG,	setisataprouter },
+	{ "deleteisataprtr", NEXTARG,	deleteisataprouter },
+#endif
 	{ "nexthop",	NEXTARG,	setnexthop },
 	{ "deletenexthop", 0,		deletenexthop },
 	{ "link0",	IFF_LINK0,	setifflags },
@@ -944,6 +959,66 @@ deletenexthop(vname, param, s, afp)
 		err(1, "SIOCDIFPHYNEXTHOP");
 }
 
+#ifdef IFT_IST
+void
+setisataprouter(addr, param, s, afp)
+	const char *addr;
+	int param;
+	int s;
+	const struct afswtch *afp;
+{
+	struct addrinfo hints, *rtrres;
+	struct ifreq ifreq;
+	int ecode;
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = afp->af_af;
+	if ((ecode = getaddrinfo(addr, NULL, NULL, &rtrres)) != 0)
+		errx(1, "error in parsing address string: %s",
+		    gai_strerror(ecode));
+
+	if (rtrres->ai_addr->sa_family != AF_INET)
+		errx(1, "ISATAP router must be an IPv4 address");
+
+	memset(&ifreq, 0, sizeof(ifreq));
+	strncpy(ifreq.ifr_name, name, IFNAMSIZ);
+	memcpy(&ifreq.ifr_addr, rtrres->ai_addr, rtrres->ai_addr->sa_len);
+
+	if (ioctl(s, SIOCSISATAPRTR, &ifreq) < 0)
+		warn("SIOCSISATAPRTR");
+	freeaddrinfo(rtrres);
+}
+
+void
+deleteisataprouter(addr, param, s, afp)
+	const char *addr;
+	int param;
+	int s;
+	const struct afswtch *afp;
+{
+	struct addrinfo hints, *rtrres;
+	struct ifreq ifreq;
+	int ecode;
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = afp->af_af;
+	if ((ecode = getaddrinfo(addr, NULL, NULL, &rtrres)) != 0)
+		errx(1, "error in parsing address string: %s",
+		     gai_strerror(ecode));
+
+	if (rtrres->ai_addr->sa_family != AF_INET)
+		errx(1, "ISATAP router must be an IPv4 address");
+
+	memset(&ifreq, 0, sizeof(ifreq));
+	strncpy(ifreq.ifr_name, name, IFNAMSIZ);
+	memcpy(&ifreq.ifr_addr, rtrres->ai_addr, rtrres->ai_addr->sa_len);
+
+	if (ioctl(s, SIOCDISATAPRTR, &ifreq) < 0)
+		warn("SIOCDISATAPRTR");
+	freeaddrinfo(rtrres);
+}
+#endif /* IFT_IST */
+
 void
 setifnetmask(addr, dummy, s, afp)
 	const char *addr;
@@ -1313,6 +1388,10 @@ status(afp, addrcount, sdl, ifm, ifam)
 	if (iftype == IFT_L2VLAN && (allfamilies || afp->af_status == vlan_status))
 		vlan_status(s, NULL);
 #endif
+#ifdef IFT_IST
+	if (iftype == IFT_IST && (allfamilies || afp->af_status == isatap_status))
+		isatap_status(s, NULL);
+#endif
 #ifdef USE_IEEE80211
 	if (allfamilies || afp->af_status == ieee80211_status)
 		ieee80211_status(s, NULL);
@@ -1399,6 +1478,45 @@ tunnel_status(s)
 	printf("\ttunnel inet%s %s --> %s\n", ver,
 	    psrcaddr, pdstaddr);
 }
+
+#ifdef IFT_IST
+void
+isatap_status(s, rt)
+	int s;
+	struct rt_addrinfo *rt __unused;
+{
+	char *buf, *ptr, *lim;
+	size_t needed;
+	int mib[4] = {CTL_NET, PF_INET6, IPPROTO_IPV6, IPV6CTL_ISATAPRTR};
+
+	if (sysctl(mib, 4, NULL, &needed, NULL, 0) < 0)
+		return;
+	if (needed == 0)
+		return;
+	if ((buf = malloc(needed)) == NULL)
+		errx(1, "malloc");
+	if (sysctl(mib, 4, buf, &needed, NULL, 0) < 0)
+		errx(1, "actual retrieval of ISATAP router list");
+
+	lim = buf + needed;
+	ptr = buf;
+	while (ptr < lim) {
+		char rtraddr[NI_MAXHOST];
+		struct sockaddr *addr = (struct sockaddr *) ptr;
+
+		if (addr->sa_family != AF_INET) {
+			warnx("invalid addr family (%d)", addr->sa_family);
+			continue;
+		}
+		rtraddr[0] = '\0';
+		getnameinfo(addr, addr->sa_len,
+			    rtraddr, sizeof(rtraddr), 0, 0, NI_NUMERICHOST);
+		if (rtraddr[0])
+			printf("\tisataprtr %s\n", rtraddr);
+		ptr += addr->sa_len;
+	}
+}
+#endif
 
 void
 nexthop_status(s)
