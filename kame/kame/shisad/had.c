@@ -1,4 +1,4 @@
-/*	$Id: had.c,v 1.3 2004/10/08 13:59:28 t-momose Exp $	*/
+/*	$Id: had.c,v 1.4 2004/10/14 06:47:31 t-momose Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -535,6 +535,7 @@ send_haadrep(dst, anycastaddr, dhreq, ifindex)
 	struct mip6_dhaad_req *dhreq;
 	u_short ifindex;
 {
+	int src_decided = 0;
         struct msghdr msg;
         struct iovec iov;
         struct cmsghdr  *cmsgptr = NULL;
@@ -603,6 +604,10 @@ send_haadrep(dst, anycastaddr, dhreq, ifindex)
 
 		syslog(LOG_INFO, "add %s into DHAAD reply \n", ip6_sprintf(&hal->hal_ip6addr));
 		memcpy((buf + reqlen), &hal->hal_ip6addr, sizeof(struct in6_addr));
+		if ((hal->hal_flag == MIP6_HAL_OWN) && !src_decided) {
+			pi->ipi6_addr = hal->hal_ip6addr;
+			src_decided = 1;
+		}
 		reqlen += sizeof(struct in6_addr);
 	}
 	
