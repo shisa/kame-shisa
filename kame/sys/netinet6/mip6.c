@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.6 2004/10/08 06:01:09 keiichi Exp $	*/
+/*	$Id: mip6.c,v 1.7 2004/10/08 07:01:19 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -29,11 +29,13 @@
  */
 
 #if (defined(__FreeBSD__) && __FreeBSD__ >= 3)
+#include "opt_ipsec.h"
 #include "opt_inet.h"
 #include "opt_inet6.h"
 #include "opt_mip6.h"
 #endif
 #ifdef __NetBSD__
+#include "opt_ipsec.h"
 #include "opt_inet.h"
 #include "opt_mip6.h"
 #endif
@@ -68,6 +70,12 @@
 #include <netinet6/mip6.h>
 #include <netinet6/mip6_var.h>
 #include <net/if_mip.h>
+
+#if defined(IPSEC) && !defined(__OpenBSD__)
+#include <netinet6/ipsec.h>
+#include <netkey/key.h>
+#include <netkey/keydb.h>
+#endif /* IPSEC && !__OpenBSD__ */
 
 #ifndef MIP6_BC_HASH_SIZE
 #define MIP6_BC_HASH_SIZE 35			/* XXX */
@@ -488,6 +496,7 @@ mip6_bce_update(cnaddr, hoa, coa, flags, bid)
 	int error = 0;
 	struct mip6_bc_internal *bce = NULL;
 	struct ifaddr *ifa;
+	struct sockaddr_in6 hoa_sa, coa_sa, haaddr_sa;
 
 	/* Non IPv6 address is not support (only for MIP6) */
 	if ((cnaddr->sin6_family != AF_INET6) ||
@@ -535,6 +544,32 @@ mip6_bce_update(cnaddr, hoa, coa, flags, bid)
 						   mip6_rev_encapcheck,
 						   (struct protosw *)&mip6_tunnel_protosw,
 						   bce);
+#if 1
+/* racoon2 guys wants us to update ipsecdb. (2004.10.8) */
+		/* update ipsecdb. */
+		bzero(&hoa_sa, sizeof(struct sockaddr_in6));
+		hoa_sa.sin6_len = sizeof(struct sockaddr_in6);
+		hoa_sa.sin6_family = AF_INET6;
+		hoa_sa.sin6_addr = bce->mbc_hoa;
+
+		bzero(&coa_sa, sizeof(struct sockaddr_in6));
+		coa_sa.sin6_len = sizeof(struct sockaddr_in6);
+		coa_sa.sin6_family = AF_INET6;
+		coa_sa.sin6_addr = bce->mbc_coa;
+
+		bzero(&haaddr_sa, sizeof(struct sockaddr_in6));
+		haaddr_sa.sin6_len = sizeof(struct sockaddr_in6);
+		haaddr_sa.sin6_family = AF_INET6;
+		haaddr_sa.sin6_addr = bce->mbc_cnaddr;
+
+		if (key_mip6_update_home_agent_ipsecdb(&hoa_sa, NULL, &coa_sa,
+		    &haaddr_sa)) {
+			mip6log((LOG_ERR,
+			    "failed to update ipsec databse "
+			    "on a mobile node.\n"));
+			return (EINVAL);
+		}
+#endif
 	}
 
  done:
@@ -751,6 +786,7 @@ mip6_bul_add(peeraddr, hoa, coa, hoa_ifindex, flags, state, bid)
 	int error = 0;
 	struct in6_ifaddr *ia6_hoa;
 	struct mip6_bul_internal *mbul;
+	struct sockaddr_in6 hoa_sa, coa_sa, haaddr_sa;
 
 #if 0
 #if defined(__FreeBSD__) && __FreeBSD__ >= 5
@@ -816,6 +852,33 @@ mip6_bul_add(peeraddr, hoa, coa, hoa_ifindex, flags, state, bid)
 			
 			return (error);
 		}
+
+#if 1
+/* racoon2 guys wants us to update ipsecdb. (2004.10.8) */
+		/* update ipsecdb. */
+		bzero(&hoa_sa, sizeof(struct sockaddr_in6));
+		hoa_sa.sin6_len = sizeof(struct sockaddr_in6);
+		hoa_sa.sin6_family = AF_INET6;
+		hoa_sa.sin6_addr = mbul->mbul_hoa;
+
+		bzero(&coa_sa, sizeof(struct sockaddr_in6));
+		coa_sa.sin6_len = sizeof(struct sockaddr_in6);
+		coa_sa.sin6_family = AF_INET6;
+		coa_sa.sin6_addr = mbul->mbul_coa;
+
+		bzero(&haaddr_sa, sizeof(struct sockaddr_in6));
+		haaddr_sa.sin6_len = sizeof(struct sockaddr_in6);
+		haaddr_sa.sin6_family = AF_INET6;
+		haaddr_sa.sin6_addr = mbul->mbul_peeraddr;
+
+		if (key_mip6_update_mobile_node_ipsecdb(&hoa_sa, NULL, &coa_sa,
+		    &haaddr_sa)) {
+			mip6log((LOG_ERR,
+			    "failed to update ipsec databse "
+			    "on a mobile node.\n"));
+			return (EINVAL);
+		}
+#endif
 	}
 	
 	return (error);

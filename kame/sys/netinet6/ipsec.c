@@ -2375,7 +2375,8 @@ ipsec6_encapsulate(m, sav)
 	else {
 		/* ip6->ip6_plen will be updated in ip6_output() */
 	}
-
+#if 0
+/* racoon2 guys want us to update ipsecdb. (2004.10.8 keiichi) */
 #if defined(MIP6) && NMIP > 0
 	/* Fake IPsec for Mobile Node */
 #if 0
@@ -2402,6 +2403,7 @@ ipsec6_encapsulate(m, sav)
 		}
 	} else
 #endif /* MIP6 && NMIP > 0 */
+#endif
 	{
 	    bcopy(&((struct sockaddr_in6 *)&sav->sah->saidx.src)->sin6_addr,
 		  &ip6->ip6_src, sizeof(ip6->ip6_src));
@@ -2412,6 +2414,8 @@ ipsec6_encapsulate(m, sav)
 		return (error);
 	}
 
+#if 0
+/* racoon2 guys want us to update ipsecdb. (2004.10.8 keiichi) */
 #ifdef MIP6
 	if (MIP6_IS_HA
 	    /* other conditions */ ) {
@@ -2420,6 +2424,7 @@ ipsec6_encapsulate(m, sav)
 		    &ip6->ip6_dst, sizeof(ip6->ip6_dst));
 	} else
 #endif /* MIP6 */
+#endif
 	{
 	    bcopy(&((struct sockaddr_in6 *)&sav->sah->saidx.dst)->sin6_addr,
 		  &ip6->ip6_dst, sizeof(ip6->ip6_dst));

@@ -84,12 +84,12 @@ extern void key_sa_recordxfer __P((struct secasvar *, struct mbuf *));
 extern void key_sa_routechange __P((struct sockaddr *));
 extern void key_sa_stir_iv __P((struct secasvar *));
 
-#if defined(MIP6) && !defined(MIP6_NOHAIPSEC)
+#ifdef MIP6
 int key_mip6_update_mobile_node_ipsecdb(struct sockaddr_in6 *,
     struct sockaddr_in6 *, struct sockaddr_in6 *, struct sockaddr_in6 *);
 int key_mip6_update_home_agent_ipsecdb(struct sockaddr_in6 *,
     struct sockaddr_in6 *, struct sockaddr_in6 *, struct sockaddr_in6 *);
-#endif
+#endif /* MIP6 */
 
 #ifdef __FreeBSD__
 #ifdef MALLOC_DECLARE
