@@ -918,7 +918,6 @@ void *tcplike_recv_init(struct dccpcb *pcb)
 #if defined(__FreeBSD__) && __FreeBSD_version >= 500000
 	callout_init(&ccb->free_timer, 0);
 #elif defined(__OpenBSD__)
-#endif
 	callout_init(&ccb->free_timer);
 #endif
 	
