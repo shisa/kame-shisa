@@ -1219,7 +1219,7 @@ in6_update_ifa(ifp, ifra, ia, flags)
 #if defined(MIP6) && NMIP > 0
 	    && !(ia->ia6_flags & IN6_IFF_HOME) /* XXX XXX XXX */
 #endif /* MIP6 && NMIP > 0 */
-		)
+		) 
 		ia->ia6_flags |= IN6_IFF_TENTATIVE;
 
 	/*
@@ -1490,7 +1490,8 @@ in6_update_ifa(ifp, ifra, ia, flags)
 	 * disable DAD.
 	 */
 	if (hostIsNew && in6if_do_dad(ifp) &&
-	    (ifra->ifra_flags & IN6_IFF_NODAD) == 0)
+	    ((ifra->ifra_flags & IN6_IFF_NODAD) == 0) &&
+	    (ia->ia6_flags & IN6_IFF_TENTATIVE))
 	{
 		int mindelay, maxdelay;
 
