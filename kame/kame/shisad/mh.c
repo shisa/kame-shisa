@@ -1,4 +1,4 @@
-/*      $Id: mh.c,v 1.9 2004/10/18 10:19:04 keiichi Exp $  */
+/*      $Id: mh.c,v 1.10 2004/10/19 12:24:53 t-momose Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -74,6 +74,7 @@
 #ifdef MIP_CN
 struct mip6_nonces_info nonces_array[MIP6_NONCE_HISTORY];
 struct mip6_nonces_info *nonces_head;
+extern int homeagent_mode;
 #endif /* MIP_CN */
 
 #if (defined(MIP_MCOA) || defined(MIP_NEMO)) && !defined(MIP_HA)
@@ -698,8 +699,12 @@ receive_bu(src, dst, hoa, rtaddr, bu, mhlen)
 		 * If authenticator is not present, just
 		 * silently drop this BU 
 		 */
-		syslog(LOG_ERR, "No authenticator found in BU\n");
-		return (-1);
+		if (!(homeagent_mode && (flags & IP6_MH_BU_HOME))) {
+			syslog(LOG_ERR, "No authenticator found in BU\n");
+			return (-1);
+		} else {
+			return (0);
+		}
 #elif defined(MIP_HA)
 		/* go thorough (assuming IPsec protection in the kernel) */
 		;
