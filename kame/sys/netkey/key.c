@@ -8314,6 +8314,255 @@ key_mip6_update_mobile_node_ipsecdb(haddr, ocoa, ncoa, haaddr)
 	struct sockaddr_in6 *haaddr;
 {
 	struct secpolicy *sp;
+	struct secpolicyindex *spidx;
+	struct ipsecrequest *isr;
+	struct secashead *sa;
+	struct secasindex *sahint;
+	struct mbuf *m;
+
+	LIST_FOREACH(sp, &sptree[IPSEC_DIR_INBOUND], chain) {
+		/* check if we have a valid spidx. */
+		if ((spidx = sp->spidx) == NULL)
+			continue;
+		/* check addresses. */
+		if (!IN6_ARE_ADDR_EQUAL(&sa6_any.sin6_addr,
+			&((struct sockaddr_in6 *)&spidx->src)->sin6_addr))
+			continue;
+		if (!IN6_ARE_ADDR_EQUAL(&haddr->sin6_addr,
+			&((struct sockaddr_in6 *)&spidx->dst)->sin6_addr))
+			continue;
+		/* check if the SP has a SA hint. */
+		isr = sp->req;
+		if (isr == NULL)
+			continue;
+		sahint = &isr->saidx;
+		if (sahint == NULL)
+			continue;
+
+		/* update SA entries from a home agent to a mobile node. */
+		LIST_FOREACH(sa, &sahtree, chain) {
+			if (!IN6_ARE_ADDR_EQUAL(&haaddr->sin6_addr,
+				&((struct sockaddr_in6 *)&sa->saidx.src)->sin6_addr))
+				continue;
+/* XXX don't check the old CoA.  instead, we use a uniqid.
+			if (!IN6_ARE_ADDR_EQUAL(&ocoa->sin6_addr,
+				&((struct sockaddr_in6 *)&sa->saidx.dst)->sin6_addr))
+				continue;
+*/
+			if (sa->saidx.mode != IPSEC_MODE_TUNNEL)
+				continue;
+			if (sa->saidx.reqid == 0)
+				continue;
+			if (sa->saidx.reqid != sahint->reqid)
+				continue;
+
+			/* found. */
+			*(struct sockaddr_in6 *)&(sa->saidx.dst) = *ncoa;
+
+			/* free a cached route for the destination of
+			   the SA to update. */
+			if (sa->sa_route.ro_rt) {
+				RTFREE(sa->sa_route.ro_rt);
+				sa->sa_route.ro_rt = NULL;
+			}
+		}
+		/* update the tunnel endpoint of a mobile node side. */
+		*(struct sockaddr_in6 *)(&sahint->dst) = *ncoa;
+
+		/* announce the update. */
+		m = key_setdumpsp(sp, SADB_X_SPDUPDATE, 0, 0);
+		if (m == NULL)
+			continue;
+		key_sendup_mbuf(NULL, m, KEY_SENDUP_REGISTERED);
+	}
+
+	/* update outbound data. */
+	LIST_FOREACH(sp, &sptree[IPSEC_DIR_OUTBOUND], chain) {
+		/* check if we have a valid spidx. */
+		if ((spidx = sp->spidx) == NULL)
+			continue;
+		/* check addresses. */
+		if (!IN6_ARE_ADDR_EQUAL(&haddr->sin6_addr,
+			&((struct sockaddr_in6 *)&spidx->src)->sin6_addr))
+			continue;
+		if (!IN6_ARE_ADDR_EQUAL(&sa6_any.sin6_addr,
+			&((struct sockaddr_in6 *)&spidx->dst)->sin6_addr))
+			continue;
+		/* check if the SP has a SA hint. */
+		isr = sp->req;
+		if (isr == NULL)
+			continue;
+		sahint = &isr->saidx;
+		if (sahint == NULL)
+			continue;
+
+		/* update SA entries from a mobile node to a home agent. */
+		LIST_FOREACH(sa, &sahtree, chain) {
+/* XXX don't check the old CoA.  instead, we use uniqid.
+			if (!IN6_ARE_ADDR_EQUAL(&ocoa->sin6_addr,
+				&((struct sockaddr_in6 *)&sa->saidx.src)->sin6_addr))
+				continue;
+*/
+			if (!IN6_ARE_ADDR_EQUAL(&haaddr->sin6_addr,
+				&((struct sockaddr_in6 *)&sa->saidx.dst)->sin6_addr))
+				continue;
+			if (sa->saidx.mode != IPSEC_MODE_TUNNEL)
+				continue;
+			if (sa->saidx.reqid == 0)
+				continue;
+			if (sa->saidx.reqid != sahint->reqid)
+				continue;
+
+			/* found. */
+			*(struct sockaddr_in6 *)&(sa->saidx.src) = *ncoa;
+		}
+		/* update the tunnel endpoint of a mobile node side. */
+		*(struct sockaddr_in6 *)(&sahint->src) = *ncoa;
+
+		/* announce the update. */
+		m = key_setdumpsp(sp, SADB_X_SPDUPDATE, 1, 0);
+		if (m == NULL)
+			continue;
+		key_sendup_mbuf(NULL, m, KEY_SENDUP_REGISTERED);
+	}
+
+	return (0);
+}
+#endif /* NMIP > 0 */
+
+int
+key_mip6_update_home_agent_ipsecdb(haddr, ocoa, ncoa, haaddr)
+	struct sockaddr_in6 *haddr;
+	struct sockaddr_in6 *ocoa;
+	struct sockaddr_in6 *ncoa;
+	struct sockaddr_in6 *haaddr;
+{
+	struct secpolicy *sp;
+	struct secpolicyindex *spidx;
+	struct ipsecrequest *isr;
+	struct secashead *sa;
+	struct secasindex *sahint;
+	struct mbuf *m;
+
+	/* update outbound data. */
+	LIST_FOREACH(sp, &sptree[IPSEC_DIR_INBOUND], chain) {
+		/* check if we have a valid spidx. */
+		if ((spidx = sp->spidx) == NULL)
+			continue;
+		/* check addresses. */
+		if (!IN6_ARE_ADDR_EQUAL(&haddr->sin6_addr,
+			&((struct sockaddr_in6 *)&spidx->src)->sin6_addr))
+			continue;
+		if (!IN6_ARE_ADDR_EQUAL(&sa6_any.sin6_addr,
+			&((struct sockaddr_in6 *)&spidx->dst)->sin6_addr))
+			continue;
+		/* check if we have a SA hint. */
+		isr = sp->req;
+		if (isr == NULL)
+			continue;
+		sahint = &isr->saidx;
+		if (sahint == NULL)
+			continue;
+
+		/* update SA entries from a mobile node to a home agent. */
+		LIST_FOREACH(sa, &sahtree, chain) {
+/* XXX don't check the old CoA.  instead we use a uniqid.
+			if (!IN6_ARE_ADDR_EQUAL(&ocoa->sin6_addr,
+			    &((struct sockaddr_in6 *)&sa->saidx.src)->sin6_addr))
+				continue;
+*/
+			if (!IN6_ARE_ADDR_EQUAL(&haaddr->sin6_addr,
+				&((struct sockaddr_in6 *)&sa->saidx.dst)->sin6_addr))
+				continue;
+			if (sa->saidx.mode != IPSEC_MODE_TUNNEL)
+				continue;
+			if (sa->saidx.reqid == 0)
+				continue;
+			if (sa->saidx.reqid != sahint->reqid)
+				continue;
+
+			/* found. */
+			*(struct sockaddr_in6 *)&(sa->saidx.src) = *ncoa;
+		}
+		/* update a tunnel endpoint of a mobile node side. */
+		*(struct sockaddr_in6 *)(&sahint->src) = *ncoa;
+
+		/* announce the update */
+		m = key_setdumpsp(sp, SADB_X_SPDUPDATE, 0, 0);
+		if (m == NULL)
+			continue;
+		key_sendup_mbuf(NULL, m, KEY_SENDUP_REGISTERED);
+	}
+
+	/* update outbound data. */
+	LIST_FOREACH(sp, &sptree[IPSEC_DIR_OUTBOUND], chain) {
+		/* check if we have a valid spidx. */
+		if ((spidx = sp->spidx) == NULL)
+			continue;
+		/* check addresses. */
+		if (!IN6_ARE_ADDR_EQUAL(&sa6_any.sin6_addr,
+			&((struct sockaddr_in6 *)&spidx->src)->sin6_addr))
+			continue;
+		if (!IN6_ARE_ADDR_EQUAL(&haddr->sin6_addr,
+			&((struct sockaddr_in6 *)&spidx->dst)->sin6_addr))
+			continue;
+		/* check if we have a SA hint. */
+		isr = sp->req;
+		if (isr == NULL)
+			continue;
+		sahint = &isr->saidx;
+		if (sahint == NULL)
+			continue;
+
+		/* update SA entries from a home agent to a mobile node. */
+		LIST_FOREACH(sa, &sahtree, chain) {
+			if (!IN6_ARE_ADDR_EQUAL(&haaddr->sin6_addr,
+				&((struct sockaddr_in6 *)&sa->saidx.src)->sin6_addr))
+				continue;
+/* XXX don't check the old CoA.  instead, we use a uniqid.
+			if (!IN6_ARE_ADDR_EQUAL(&ocoa->sin6_addr,
+				&((struct sockaddr_in6 *)&sa->saidx.dst)->sin6_addr))
+				continue;
+*/
+			if (sa->saidx.mode != IPSEC_MODE_TUNNEL)
+				continue;
+			if (sa->saidx.reqid == 0)
+				continue;
+			if (sa->saidx.reqid != sahint->reqid)
+			continue;
+
+			/* found. */
+			*(struct sockaddr_in6 *)&(sa->saidx.dst) = *ncoa;
+			/* free the cached route for the destination of
+			   the SA to update. */
+			if (sa->sa_route.ro_rt) {
+				RTFREE(sa->sa_route.ro_rt);
+				sa->sa_route.ro_rt = NULL;
+			}
+		}
+		/* update a tunnel endpoint of a mobile node side. */
+		*(struct sockaddr_in6 *)(&sahint->dst) = *ncoa;
+	
+		/* announce the update */
+		m = key_setdumpsp(sp, SADB_X_SPDUPDATE, 1, 0);
+		if (m == NULL)
+			continue;
+		key_sendup_mbuf(NULL, m, KEY_SENDUP_REGISTERED);
+	}
+
+	return (0);
+}
+
+#if 0
+#if NMIP > 0
+int
+key_mip6_update_mobile_node_ipsecdb_obsoleted(haddr, ocoa, ncoa, haaddr)
+	struct sockaddr_in6 *haddr;
+	struct sockaddr_in6 *ocoa;   /* not used.  may be NULL. */
+	struct sockaddr_in6 *ncoa;
+	struct sockaddr_in6 *haaddr;
+{
+	struct secpolicy *sp;
 	struct ipsecrequest *isr;
 	struct secashead *sa;
 	struct secasindex *sahint;
@@ -8409,7 +8658,7 @@ key_mip6_update_mobile_node_ipsecdb(haddr, ocoa, ncoa, haaddr)
 #endif /* NMIP > 0 */
 
 int
-key_mip6_update_home_agent_ipsecdb(haddr, ocoa, ncoa, haaddr)
+key_mip6_update_home_agent_ipsecdb_obsoleted(haddr, ocoa, ncoa, haaddr)
 	struct sockaddr_in6 *haddr;
 	struct sockaddr_in6 *ocoa;
 	struct sockaddr_in6 *ncoa;
@@ -8552,4 +8801,5 @@ key_mip6_find_sp(dir, src, dst)
 	}
 	return (sp);
 }
+#endif
 #endif /* MIP6 */
