@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.4 2004/10/06 11:35:26 keiichi Exp $	*/
+/*	$Id: mip6.c,v 1.5 2004/10/08 05:48:12 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -790,11 +790,11 @@ mip6_bul_add(peeraddr, hoa, coa, hoa_ifindex, flags, state, bid)
 
 	/* binding update list is created here */
 #ifndef MIP6_MCOA
-	mbul = mip6_bul_create(peeraddr, hoa, coa, 
-			       flags, state, (struct mip_softc *)ia6_hoa->ia_ifp);
+	mbul = mip6_bul_create(peeraddr, hoa, coa, flags, state,
+	    (struct mip_softc *)ia6_hoa->ia_ifp);
 #else
-	mbul = mip6_bul_create(peeraddr, hoa, coa, 
-			       flags, state, (struct mip_softc *)ia6_hoa->ia_ifp, bid);
+	mbul = mip6_bul_create(peeraddr, hoa, coa, flags, state,
+	    (struct mip_softc *)ia6_hoa->ia_ifp, bid);
 #endif /* MIP6_MCOA */
 	if (mbul == NULL)
 		return (-1);
@@ -805,12 +805,10 @@ mip6_bul_add(peeraddr, hoa, coa, hoa_ifindex, flags, state, bid)
 	 * registration. (and not for the basic NEMO protocol)
 	 */
 	if ((mbul->mbul_flags & IP6_MH_BU_HOME) && 
-		(mbul->mbul_flags & IP6_MH_BU_ROUTER) == 0) {
-		mbul->mbul_encap =
-			encap_attach_func(AF_INET6, IPPROTO_IPV6,
-					  mip6_bu_encapcheck,
-					  (struct protosw *)&mip6_tunnel_protosw,
-					  mbul);
+	    (mbul->mbul_flags & IP6_MH_BU_ROUTER) == 0) {
+		mbul->mbul_encap = encap_attach_func(AF_INET6, IPPROTO_IPV6,
+		    mip6_bu_encapcheck, (struct protosw *)&mip6_tunnel_protosw,
+		    mbul);
 		if (error) {
 			mip6log((LOG_ERR, "tunnel move failed.\n"));
 			/* XXX notifiy to upper XXX */
