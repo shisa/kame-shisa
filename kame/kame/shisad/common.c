@@ -1,4 +1,4 @@
-/*      $Id: common.c,v 1.4 2004/10/19 12:26:27 t-momose Exp $  */
+/*      $Id: common.c,v 1.5 2004/11/02 08:25:24 ryuji Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -137,6 +137,7 @@ icmp6sock_open()
 	int error = 0;
 	struct icmp6_filter filter;	
 
+	icmp6sock = -1;
 	icmp6sock = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
 	if (icmp6sock < 0) {
 		perror("socket for ICMPv6");

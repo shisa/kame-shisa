@@ -1,4 +1,4 @@
-/*	$Id: had.c,v 1.5 2004/10/19 12:27:12 t-momose Exp $	*/
+/*	$Id: had.c,v 1.6 2004/11/02 08:25:24 ryuji Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -378,6 +378,7 @@ had_init_homeprefix (char *ifname, int preference)
 		/* retrieve flags for the ifa addr */
                 if((ioctl_s = socket(AF_INET6, SOCK_DGRAM, 0)) < 0) {
 			perror("socket\n");
+			freeifaddrs(ifap);
 			return;
 		}
 		memset(&ifreq6, 0, sizeof(ifreq6));
@@ -441,7 +442,7 @@ had_add_hal(hpfx_entry, gladdr, lladdr, lifetime, preference, flag)
 	uint16_t preference;
 	int flag;
 {
-	struct home_agent_list *hal = NULL, *haln = NULL, *halnew;
+	struct home_agent_list *hal = NULL, *haln = NULL, *halnew = NULL;
 
 	hal = mip6_get_hal(hpfx_entry, gladdr);
 	if (hal) {
