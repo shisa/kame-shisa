@@ -2204,13 +2204,19 @@ nd6_output(ifp, origifp, m0, dst, rt0)
 		if ((bul != NULL) && (bul->mbul_mip != NULL) && 
 			(bul->mbul_flags & IP6_MH_BU_ROUTER) == 0) {
 
-			cnbul = mip6_bul_get(&ip6->ip6_src, &ip6->ip6_dst);
-			if ((cnbul == NULL)
-			    || !(cnbul->mbul_state & MIP6_BUL_STATE_NEEDTUNNEL)) {
-				mip6_notify_rr_hint(&ip6->ip6_src,
-				    &ip6->ip6_dst);
-			}
+			if (IN6_IS_ADDR_MULTICAST(&ip6->ip6_dst))
+				goto dontstartrr;
+			if (IN6_IS_ADDR_LINKLOCAL(&ip6->ip6_dst))
+				goto dontstartrr;
 
+			cnbul = mip6_bul_get(&ip6->ip6_src, &ip6->ip6_dst);
+			if (cnbul != NULL)
+				goto dontstartrr;
+
+			/* send a hint to start RR to this node. */
+			mip6_notify_rr_hint(&ip6->ip6_src, &ip6->ip6_dst);
+
+		dontstartrr:
 			/* send this packet via bi-directional tunnel. */
 			return ((*bul->mbul_mip->mip_if.if_output)(
 			    (struct ifnet *)bul->mbul_mip, m,
