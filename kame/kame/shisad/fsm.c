@@ -1,4 +1,4 @@
-/*	$Id: fsm.c,v 1.7 2004/10/28 06:22:18 keiichi Exp $	*/
+/*	$Id: fsm.c,v 1.8 2004/11/16 19:04:11 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -238,12 +238,6 @@ bul_kick_fsm_by_mh(src, dst, hoa, rtaddr, mh, mhlen)
 		break;
 
 	case IP6_MH_TYPE_BERROR:
-		hinfo = hoainfo_find_withhoa(dst);  
-		if (hinfo == NULL) {
-			syslog(LOG_NOTICE,
-			    "no related HoA found with this BE.\n");
-			return (-1);
-		}
 		ip6mhbe = (struct ip6_mh_binding_error *)mh;
 
 #ifndef MIP_MCOA 
