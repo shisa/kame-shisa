@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.12 2004/10/12 10:36:39 keiichi Exp $	*/
+/*	$Id: mip6.c,v 1.13 2004/10/13 16:29:01 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -102,6 +102,9 @@ int mip6ctl_debug = 1;
 #else
 int mip6ctl_debug = 0;
 #endif
+#if NMIP > 0
+int mip6ctl_rr_hint_ppslim = 10;
+#endif /* NMIP > 0 */
 
 extern struct ip6protosw mip6_tunnel_protosw;
 
@@ -172,6 +175,9 @@ mip6_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 	case MIP6CTL_USE_IPSEC:
 		return sysctl_int(oldp, oldlenp, newp, newlen,
 		    &mip6ctl_use_ipsec);
+	case MIP6CTL_RR_HINT_PPSLIM:
+		return sysctl_int(oldp, oldlenp, newp, newlen,
+		    &mip6ctl_rr_hint_ppslim);
 	default:
 		return (EOPNOTSUPP);
 	}
@@ -186,6 +192,8 @@ SYSCTL_INT(_net_inet6_mip6, MIP6CTL_DEBUG, debug, CTLFLAG_RW,
     &mip6ctl_debug, 0, "");
 SYSCTL_INT(_net_inet6_mip6, MIP6CTL_USE_IPSEC, use_ipsec, CTLFLAG_RW,
     &mip6ctl_use_ipsec, 0, "");
+SYSCTL_INT(_net_inet6_mip6, MIP6CTL_RR_HINT_PPSLIM, rr_hint_ppslimit, CTLFLAG_RW,
+    &mip6ctl_rr_hint_ppslim, 0, "");
 #endif /* __FreeBSD__ */
 
 /*
@@ -1529,7 +1537,7 @@ mip6_rr_hint_ratelimit(dst, src)
 
 	/* PPS limit XXX 1 per 1 second. */
 	if (!ppsratecheck(&mip6_rr_hint_ppslim_last, &mip6_rr_hint_pps_count,
-	    1)) {
+	    mip6ctl_rr_hint_ppslim)) {
 		/* The packet is subject to rate limit */
 		ret++;
 	}
