@@ -328,7 +328,7 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 	int needipsec = 0;
 #endif
 #ifdef MIP6
-	struct mip6_bc_internal *bce;
+	struct mip6_bc_internal *mbc;
 #if NMIP > 0
 	struct mip6_bul_internal *mbul = NULL;
 #endif /* MIP6 */
@@ -411,15 +411,21 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 #ifdef MIP6
 	/* Find binding cache entry */
 #ifndef MIP6_MCOA
-	bce = mip6_bce_get(&ip6->ip6_dst, &ip6->ip6_src);
+	mbc = mip6_bce_get(&ip6->ip6_dst, &ip6->ip6_src);
 #else
 	/* XXX need policy to determine bid */
-	bce = mip6_bce_get(&ip6->ip6_dst, &ip6->ip6_src, NULL, 0); 
+	mbc = mip6_bce_get(&ip6->ip6_dst, &ip6->ip6_src, NULL, 0); 
 #endif /* MIP6_MCOA */
-	if (bce && (ip6->ip6_nxt != IPPROTO_MH)) {
+	/*
+	 * If a node has a corresponding binding cache, put a Type 2
+	 * Routing Header to directly deliver the packet.  Except, a
+	 * caller didn't specify a Type 2 Routing Header explicitly.
+	 */
+	if ((mbc != NULL) && (ip6->ip6_nxt != IPPROTO_MH) &&
+	    (exthdrs.ip6e_rthdr2 == NULL)) {
 		struct ip6_rthdr2 *rthdr2;
 
-		rthdr2 = mip6_create_rthdr2(&bce->mbc_coa);
+		rthdr2 = mip6_create_rthdr2(&mbc->mbc_coa);
 		if (rthdr2 == NULL)
 			goto freehdrs;
 		
@@ -430,12 +436,11 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 
 #if defined(MIP6) && NMIP > 0
 	/* 
-	 * If correspondent binding update list is found and its
-	 * status is successful registration, a packet is sent
-	 * directly to the destination with a home address
-	 * option.
+	 * If a correspondent binding update list is found and its
+	 * status is BOUND, a packet is sent directly to the
+	 * destination with a Home Address Option.  Except a caller
+	 * didn't specify a Home Address Option explicitly.
 	 */
-
 #ifndef MIP6_MCOA
 	mbul = mip6_bul_get(&ip6->ip6_src, &ip6->ip6_dst);
 #else /* !MIP6_MCOA */
@@ -444,7 +449,7 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 	/* 
 	 * Route Optimization: appending a HoA option. 
 	 */
-	if (mbul) {
+	if ((mbul != NULL) && (exthdrs.ip6e_hoa == NULL)) {
 		u_int8_t *hoa_opt;
 
 		if (mbul->mbul_state & MIP6_BUL_STATE_NEEDTUNNEL)
