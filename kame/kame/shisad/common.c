@@ -1,4 +1,4 @@
-/*      $Id: common.c,v 1.3 2004/10/08 13:59:28 t-momose Exp $  */
+/*      $Id: common.c,v 1.4 2004/10/19 12:26:27 t-momose Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -571,6 +571,7 @@ icmp6_input_common(fd)
 		if (hpfxhead == NULL)
 			break;
 
+		hai_lifetime = ntohs(ra->nd_ra_router_lifetime);
 		if (ndopts.ndpi) {
 			hai_pfxlen = ndopts.ndpi->nd_opt_pi_prefix_len;
 			in6_gladdr = &ndopts.ndpi->nd_opt_pi_prefix;
@@ -619,7 +620,7 @@ icmp6_input_common(fd)
 		 * if lifetime is zero, correspondent HA must be 
 		 * removed from home agent list 
 		 */
-		if (hai_lifetime == 0 || ntohs(ra->nd_ra_router_lifetime) == 0 ||
+		if (hai_lifetime == 0 || 
 		    !(ra->nd_ra_flags_reserved & ND_RA_FLAG_HOME_AGENT)) {
 			/* if prefix is not specified, just ignore RA */
 			if (ndopts.ndpi == NULL)
