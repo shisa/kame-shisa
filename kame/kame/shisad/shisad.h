@@ -1,4 +1,4 @@
-/*	$Id: shisad.h,v 1.2 2004/10/08 13:59:28 t-momose Exp $	*/
+/*	$Id: shisad.h,v 1.3 2004/10/13 16:04:06 keiichi Exp $	*/
 /*
  * Copyright (C) 2004 WIDE Project.
  * All rights reserved.
@@ -35,6 +35,9 @@ extern struct mip6_mninfo mninfo;
 extern int mipsock, mhsock, icmp6sock;
 extern struct mip6stat mip6stat;
 extern struct mip6_hinfo_list hoa_head;
+
+/* protocol configuration variables. */
+extern int first_initial_back_timeout;
 
 /* return routability parameters. */
 #define MIP6_MAX_TOKEN_LIFE	210

@@ -1,4 +1,4 @@
-/*	$Id: fsm.c,v 1.1 2004/09/27 04:06:01 t-momose Exp $	*/
+/*	$Id: fsm.c,v 1.2 2004/10/13 16:04:06 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -60,6 +60,8 @@
 #include "callout.h"
 #include "shisad.h"
 #include "fsm.h"
+
+int first_initial_back_timeout = 2; /* the spec says more than 1.5 sec. */
 
 extern struct mip6stat mip6stat;
 
@@ -420,7 +422,7 @@ bul_reg_fsm(bul, event, data)
 
 				bul->bul_retrans_count = 0;
 				bul_set_retrans_timer(bul,
-				    1 << bul->bul_retrans_count);
+				    first_initial_back_timeout);
 
 				bul_set_expire_timer(bul,
 				    bul->bul_lifetime << 2);
@@ -1812,6 +1814,17 @@ bul_reg_fsm(bul, event, data)
 
 	case MIP6_BUL_REG_FSM_STATE_DHAAD:
 		switch (event) {
+		case MIP6_BUL_FSM_EVENT_RETURNING_HOME:
+			/* in MIP6_BUL_REG_FSM_STATE_DHAAD */
+			/*
+			 * Stop retransmission timer,
+			 * Stop expire timer.
+			 */
+			bul_stop_timers(bul);
+
+			REGFSMS = MIP6_BUL_REG_FSM_STATE_IDLE;
+			break;
+
 		case MIP6_BUL_FSM_EVENT_DHAAD_REPLY:
 			/* in MIP6_BUL_REG_FSM_STATE_DHAAD */
 			/*
@@ -1836,8 +1849,7 @@ bul_reg_fsm(bul, event, data)
 			}
 
 			bul->bul_retrans_count = 0;
-			bul_set_retrans_timer(bul,
-			    1 << bul->bul_retrans_count);
+			bul_set_retrans_timer(bul, first_initial_back_timeout);
 
 			bul_set_expire_timer(bul, bul->bul_lifetime << 2);
 
@@ -1966,8 +1978,13 @@ bul_rr_fsm(bul, event, fsmmsg)
 			/*
 			 * Store keygen token, nonce index.
 			 */
-			bul_fsm_save_hot_info(bul,
-			    (struct ip6_mh_home_test *)(fsmmsg->fsmm_data));
+			if (bul_fsm_save_hot_info(bul,
+			    (struct ip6_mh_home_test *)(fsmmsg->fsmm_data))) {
+				syslog(LOG_ERR, "bul_rr_fsm: "
+				    "saving hot failed.\n");
+				/* keep current state. */
+				break;
+			}
 
 			RRFSMS = MIP6_BUL_RR_FSM_STATE_WAITC;
 
@@ -1978,8 +1995,13 @@ bul_rr_fsm(bul, event, fsmmsg)
 			/*
 			 * Store token, nonce index.
 			 */
-			bul_fsm_save_cot_info(bul,
-			    (struct ip6_mh_careof_test *)(fsmmsg->fsmm_data));
+			if (bul_fsm_save_cot_info(bul,
+			    (struct ip6_mh_careof_test *)(fsmmsg->fsmm_data))) {
+				syslog(LOG_ERR, "bul_rr_fsm: "
+				    "saving cot failed.\n");
+				/* keep current state. */
+				break;
+			}
 
 			RRFSMS = MIP6_BUL_RR_FSM_STATE_WAITH;
 
@@ -2029,9 +2051,13 @@ bul_rr_fsm(bul, event, fsmmsg)
 			 * Stop retrans timer,
 			 * RR done.
 			 */
-			bul_fsm_save_hot_info(bul,
-			    (struct ip6_mh_home_test *)(fsmmsg->fsmm_data));
-
+			if (bul_fsm_save_hot_info(bul,
+			    (struct ip6_mh_home_test *)(fsmmsg->fsmm_data))) {
+				syslog(LOG_ERR, "bul_rr_fsm: "
+				    "saving hot failed.\n");
+				/* keep current state. */
+				break;
+			}
 			bul_stop_retrans_timer(bul);
 
 			error = bul_reg_fsm(bul, MIP6_BUL_FSM_EVENT_RR_DONE,
@@ -2086,9 +2112,13 @@ bul_rr_fsm(bul, event, fsmmsg)
 			 * Stop retransmission timer,
 			 * RR done.
 			 */
-			bul_fsm_save_cot_info(bul,
-			    (struct ip6_mh_careof_test *)(fsmmsg->fsmm_data));
-
+			if (bul_fsm_save_cot_info(bul,
+			    (struct ip6_mh_careof_test *)(fsmmsg->fsmm_data))) {
+				syslog(LOG_ERR, "bul_rr_fsm: "
+				    "saving cot failed.\n");
+				/* keep current state. */
+				break;
+			}
 			bul_stop_retrans_timer(bul);
 
 			error = bul_reg_fsm(bul, MIP6_BUL_FSM_EVENT_RR_DONE,
@@ -2150,6 +2180,12 @@ bul_fsm_save_hot_info(bul, ip6mhht)
 	if (bul == NULL || ip6mhht == NULL)
 		return (-1);
 
+	if (memcmp((void *)ip6mhht->ip6mhht_cookie,
+	    (void *)bul->bul_home_cookie, sizeof(mip6_cookie_t)) != 0) {
+		syslog(LOG_INFO, "bul_fsm_save_hot_info: "
+		    "the cookie doesn't match.\n");
+		return (-1);
+	}
 	bul->bul_home_nonce_index = htons(ip6mhht->ip6mhht_nonce_index);
 	memcpy(bul->bul_home_token, ip6mhht->ip6mhht_keygen8,
 	    sizeof(ip6mhht->ip6mhht_keygen8));
@@ -2165,6 +2201,12 @@ bul_fsm_save_cot_info(bul, ip6mhct)
 	if (bul == NULL || ip6mhct == NULL)
 		return (-1);
 
+	if (memcmp((void *)ip6mhct->ip6mhct_cookie,
+	    (void *)bul->bul_careof_cookie, sizeof(mip6_cookie_t)) != 0) {
+		syslog(LOG_INFO, "bul_fsm_save_cot_info: "
+		    "the cookie doesn't match.\n");
+		return (-1);
+	}
 	bul->bul_careof_nonce_index = htons(ip6mhct->ip6mhct_nonce_index);
 	memcpy(bul->bul_careof_token, ip6mhct->ip6mhct_keygen8,
 	    sizeof(ip6mhct->ip6mhct_keygen8));
