@@ -70,7 +70,7 @@ main(int argc,char **argv) {
 
 		switch(miphdr->miph_type) {
 		case MIPM_BC_ADD:
-		case MIPM_BC_CHANGE:
+		case MIPM_BC_UPDATE:
 		case MIPM_BC_REMOVE: {
 
 			struct mipm_bc_info *mipc;
@@ -84,8 +84,8 @@ main(int argc,char **argv) {
 			
 			if (miphdr->miph_type == MIPM_BC_ADD)
 				printf("** Binding Cache Add request **\n");
-			else if (miphdr->miph_type == MIPM_BC_CHANGE)
-				printf("** Binding Cache Change request **\n");
+			else if (miphdr->miph_type == MIPM_BC_UPDATE)
+				printf("** Binding Cache Update request **\n");
 			else if (miphdr->miph_type == MIPM_BC_REMOVE)
 				printf("** Binding Cache Remove request **\n");
 
@@ -114,7 +114,7 @@ main(int argc,char **argv) {
 			break;
 		}
 		case MIPM_BUL_ADD:
-		case MIPM_BUL_CHANGE:
+		case MIPM_BUL_UPDATE:
 		case MIPM_BUL_REMOVE: {
 			struct mipm_bul_info *mipu;
 
@@ -127,8 +127,8 @@ main(int argc,char **argv) {
 			
 			if (miphdr->miph_type == MIPM_BUL_ADD)
 				printf("** Binding Update List Add request **\n");
-			else if (miphdr->miph_type == MIPM_BUL_CHANGE)
-				printf("** Binding Update List Change request **\n");
+			else if (miphdr->miph_type == MIPM_BUL_UPDATE)
+				printf("** Binding Update List Update request **\n");
 			else if (miphdr->miph_type == MIPM_BUL_REMOVE)
 				printf("** Binding Update List Remove request **\n");
 

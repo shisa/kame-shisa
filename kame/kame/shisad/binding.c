@@ -1,4 +1,4 @@
-/*      $Id: binding.c,v 1.7 2004/10/19 12:22:11 t-momose Exp $  */
+/*      $Id: binding.c,v 1.8 2004/10/20 03:37:07 keiichi Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -144,7 +144,7 @@ mip6_bc_add(hoa, coa, recvaddr, lifetime, flags, seqno, bid)
 		bc->bc_seqno = seqno;
 		/* update BC in the kernel via mipsock */
 		bc->bc_coa = *coa;
-		mipscok_bc_request(bc, MIPM_BC_CHANGE);
+		mipscok_bc_request(bc, MIPM_BC_UPDATE);
 
 		goto done;
 	} 
@@ -351,8 +351,13 @@ mipscok_bc_request(bc, command)
 	struct mipm_bc_info *bcinfo;
 	struct sockaddr_in6 hoa_s6, coa_s6, cn_s6;
 	
-	if (command < MIPM_BC_ADD || command > MIPM_BC_REMOVE)
+	if (command != MIPM_BC_ADD &&
+	    command != MIPM_BC_UPDATE &&
+	    command != MIPM_BC_REMOVE) {
+		syslog(LOG_ERR, "mipsock_bc_request: "
+		    "invalid command %d\n", command);
 		return;
+	}
 	
 	memset(&hoa_s6, 0, sizeof(hoa_s6));
 	memset(&coa_s6, 0, sizeof(coa_s6));
@@ -396,8 +401,8 @@ mipscok_bc_request(bc, command)
 		case MIPM_BC_ADD:
 			syslog(LOG_INFO, "binding cache add request\n");
 			break;
-		case MIPM_BC_CHANGE:
-			syslog(LOG_INFO, "binding cache change request\n");
+		case MIPM_BC_UPDATE:
+			syslog(LOG_INFO, "binding cache update request\n");
 			break;
 		case MIPM_BC_REMOVE:
 			syslog(LOG_INFO, "binding cache remove request\n");

@@ -1,4 +1,4 @@
-/*      $Id: nemo_netconfig.c,v 1.1 2004/09/27 04:06:04 t-momose Exp $  */
+/*      $Id: nemo_netconfig.c,v 1.2 2004/10/20 03:37:07 keiichi Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -522,7 +522,7 @@ mainloop() {
 			mhdr = (struct mip_msghdr *)buf;
                         switch (mhdr->miph_type) {
                         case MIPM_BUL_ADD:
-                        case MIPM_BUL_CHANGE:
+                        case MIPM_BUL_UPDATE:
                                 /* tunnel setup and route add for MNPs */
 
 				if (mode != MODE_MR)
@@ -635,7 +635,7 @@ mainloop() {
                                 }
                                 break;
 			case MIPM_BC_ADD:
-			case MIPM_BC_CHANGE:
+			case MIPM_BC_UPDATE:
 				if (mode != MODE_HA)
 					break;
 

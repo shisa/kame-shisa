@@ -34,10 +34,10 @@
 /* the binding update list entry used in the kernel */
 struct mip6_bul_internal {
 	LIST_ENTRY(mip6_bul_internal) mbul_entry;
-	struct in6_addr     mbul_peeraddr;   /* peer addr of this BU */
+	struct in6_addr     mbul_peeraddr;   /* peer addr of this BUL */
 	struct in6_addr     mbul_hoa;        /* HoA */
 	struct in6_addr     mbul_coa;        /* CoA */
-	u_int16_t           mbul_flags;      /* Flag Ack, LL, Key, Home flag */
+	u_int16_t           mbul_flags;      /* Flags: Ack, LL, Key, Home */
 	struct mip_softc    *mbul_mip;       /* back pointer to mip */
 #ifdef MIP6_MCOA
 	u_int16_t           mbul_bid;        /* Binding Unique Identifier */
@@ -53,11 +53,11 @@ struct mip6_bul_internal {
 /* the binding cache entry used in the kernel */
 struct mip6_bc_internal {
 	LIST_ENTRY(mip6_bc_internal) mbc_entry;
-	struct in6_addr mbc_cnaddr;		/* peer addr of this BU */
-	struct in6_addr mbc_hoa;		/* HoA */
-	struct in6_addr mbc_coa;		/* CoA */
+	struct in6_addr mbc_cnaddr;	/* my addr of this BC */
+	struct in6_addr mbc_hoa;	/* HoA */
+	struct in6_addr mbc_coa;	/* CoA */
 	struct ifaddr	*mbc_ifaddr;
-	u_int16_t       mbc_flags;      /* Flag Ack, LL, Key, Home flag */
+	u_int16_t       mbc_flags;      /* Flags: Ack, LL, Key, Home */
 	int 		mbc_hash_cache;
 #ifdef MIP6_MCOA
 	u_int16_t       mbc_bid;      /* Binding Unique Identifier */
@@ -165,16 +165,16 @@ int mip6_bce_remove(struct sockaddr_in6 *, struct sockaddr_in6 *,
 struct ip6_rthdr2 *mip6_create_rthdr2(struct in6_addr *);
 
 /* home agent functions. */
-int mip6_bc_proxy_control(struct in6_addr *, struct in6_addr *local, int);
+int mip6_bc_proxy_control(struct in6_addr *, struct in6_addr *, int);
 
 /* mobile node functions. */
 #ifndef MIP6_MCOA
-int mip6_bul_add(const struct in6_addr *, const struct in6_addr *,
+int mip6_bul_update(const struct in6_addr *, const struct in6_addr *,
     const struct in6_addr *, u_short, u_int16_t, u_int8_t);
 struct mip6_bul_internal *mip6_bul_get(const struct in6_addr *,
     const struct in6_addr *);
 #else
-int mip6_bul_add(const struct in6_addr *, const struct in6_addr *,
+int mip6_bul_update(const struct in6_addr *, const struct in6_addr *,
     const struct in6_addr *, u_short, u_int16_t, u_int8_t, u_int16_t);
 struct mip6_bul_internal *mip6_bul_get(const struct in6_addr *,
     const struct in6_addr *, u_int16_t);

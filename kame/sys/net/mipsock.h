@@ -1,4 +1,4 @@
-/* $Id: mipsock.h,v 1.1 2004/09/27 09:58:55 t-momose Exp $ */
+/* $Id: mipsock.h,v 1.2 2004/10/20 03:37:07 keiichi Exp $ */
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -181,19 +181,19 @@ struct mipm_be_hint {
 
 #define MIP_VERSION	1
 
-#define MIPM_BC_ADD		1
-#define MIPM_BC_CHANGE		2
-#define MIPM_BC_REMOVE		3
-#define MIPM_BUL_ADD		4
-#define MIPM_BUL_CHANGE		5
-#define MIPM_BUL_REMOVE		6
-#define MIPM_NODETYPE_INFO	7
-#define MIPM_HOME_HINT		8
+#define MIPM_NODETYPE_INFO	1
+#define MIPM_BC_ADD		2
+#define MIPM_BC_UPDATE		3
+#define MIPM_BC_REMOVE		4
+#define MIPM_BC_FLUSH		5
+#define MIPM_BUL_ADD		6
+#define MIPM_BUL_UPDATE		7
+#define MIPM_BUL_REMOVE		8
 #define MIPM_BUL_FLUSH		9
 #define MIPM_MD_INFO		10
-#define MIPM_RR_HINT		11
-#define MIPM_BE_HINT		12
-#define MIPM_BC_FLUSH		13
+#define MIPM_HOME_HINT		11
+#define MIPM_RR_HINT		12
+#define MIPM_BE_HINT		13
 
 void mips_notify_home_hint(u_int16_t, struct in6_addr *, u_int16_t);
 void mips_notify_rr_hint(struct in6_addr *, struct in6_addr *);

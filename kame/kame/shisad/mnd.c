@@ -1,4 +1,4 @@
-/*	$Id: mnd.c,v 1.7 2004/10/13 16:13:43 keiichi Exp $	*/
+/*	$Id: mnd.c,v 1.8 2004/10/20 03:37:07 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -323,7 +323,7 @@ mn_lists_init()
 
 /* mipsock BUL add and delete functions */
 int
-mipsock_bul_request (bul, command)
+mipsock_bul_request(bul, command)
 	struct binding_update_list *bul;
 	u_char command;
 {
@@ -332,11 +332,19 @@ mipsock_bul_request (bul, command)
 	struct mipm_bul_info *buinfo;
 	struct sockaddr_in6 hoa_s6, coa_s6, peer_s6;
 
-	if (command < MIPM_BUL_ADD || command > MIPM_BUL_REMOVE)
+	if (command != MIPM_BUL_ADD &&
+	    command != MIPM_BUL_UPDATE &&
+	    command != MIPM_BUL_REMOVE) {
+		syslog(LOG_ERR, "mipsock_bul_request: "
+		    "invalid command %d\n", command);
 		return (EOPNOTSUPP);
+	}
 
-	if (bul->bul_hoainfo == NULL) 
+	if (bul->bul_hoainfo == NULL) {
+		syslog(LOG_ERR, "mipsock_bul_request: "
+		    "no related home address info\n");
 		return (EINVAL);
+	}
 
 	memset(&hoa_s6, 0, sizeof(hoa_s6));
 	memset(&coa_s6, 0, sizeof(coa_s6));
@@ -880,10 +888,10 @@ mipsock_input(miphdr)
 
 	switch (miphdr->miph_type) {
 	case MIPM_BC_ADD:
-        case MIPM_BC_CHANGE:
+        case MIPM_BC_UPDATE:
         case MIPM_BC_REMOVE:
         case MIPM_BUL_ADD:
-        case MIPM_BUL_CHANGE:
+        case MIPM_BUL_UPDATE:
         case MIPM_BUL_REMOVE:
 	case MIPM_NODETYPE_INFO:
 	case MIPM_BUL_FLUSH:

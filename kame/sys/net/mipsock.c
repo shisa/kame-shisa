@@ -1,4 +1,4 @@
-/* $Id: mipsock.c,v 1.2 2004/10/04 11:24:07 keiichi Exp $ */
+/* $Id: mipsock.c,v 1.3 2004/10/20 03:37:07 keiichi Exp $ */
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -331,18 +331,17 @@ mipus_output(m, va_alist)
 
 	switch (miph->miph_type) {
 	case MIPM_BC_ADD:
-	case MIPM_BC_CHANGE:
+	case MIPM_BC_UPDATE:
 		mipc = (struct mipm_bc_info *)miph;
 #ifndef MIP6_MCOA
 		error = mip6_bce_update((struct sockaddr_in6 *)MIPC_CNADDR(mipc),
-					(struct sockaddr_in6 *)MIPC_HOA(mipc),
-					(struct sockaddr_in6 *)MIPC_COA(mipc),
-					mipc->mipc_flags);
+		    (struct sockaddr_in6 *)MIPC_HOA(mipc),
+		    (struct sockaddr_in6 *)MIPC_COA(mipc), mipc->mipc_flags);
 #else
 		error = mip6_bce_update((struct sockaddr_in6 *)MIPC_CNADDR(mipc),
-					(struct sockaddr_in6 *)MIPC_HOA(mipc),
-					(struct sockaddr_in6 *)MIPC_COA(mipc),
-					mipc->mipc_flags, mipc->mipc_bid);
+		    (struct sockaddr_in6 *)MIPC_HOA(mipc),
+		    (struct sockaddr_in6 *)MIPC_COA(mipc), mipc->mipc_flags,
+		    mipc->mipc_bid);
 #endif /* MIP6_MCOA */
 		break;
 
@@ -350,15 +349,18 @@ mipus_output(m, va_alist)
 		mipc = (struct mipm_bc_info *)miph;
 #ifndef MIP6_MCOA
 		error = mip6_bce_remove((struct sockaddr_in6 *)MIPC_CNADDR(mipc),
-					(struct sockaddr_in6 *)MIPC_HOA(mipc),
-					(struct sockaddr_in6 *)MIPC_COA(mipc),
-					mipc->mipc_flags);
+		    (struct sockaddr_in6 *)MIPC_HOA(mipc),
+		    (struct sockaddr_in6 *)MIPC_COA(mipc), mipc->mipc_flags);
 #else
 		error = mip6_bce_remove((struct sockaddr_in6 *)MIPC_CNADDR(mipc),
-					(struct sockaddr_in6 *)MIPC_HOA(mipc),
-					(struct sockaddr_in6 *)MIPC_COA(mipc),
-					mipc->mipc_flags, mipc->mipc_bid);
+		    (struct sockaddr_in6 *)MIPC_HOA(mipc),
+		    (struct sockaddr_in6 *)MIPC_COA(mipc), mipc->mipc_flags,
+		    mipc->mipc_bid);
 #endif /* MIP6_MCOA */
+		break;
+
+	case MIPM_BC_FLUSH:
+		mip6_bce_remove_all();
 		break;
 
 	case MIPM_NODETYPE_INFO:
@@ -385,7 +387,7 @@ mipus_output(m, va_alist)
 
 #if NMIP > 0
 	case MIPM_BUL_ADD:
-	case MIPM_BUL_CHANGE:
+	case MIPM_BUL_UPDATE:
 		mipu = (struct mipm_bul_info *)miph;
 
 		/* Non IPv6 address is not support (only for MIP6) */
@@ -394,48 +396,50 @@ mipus_output(m, va_alist)
 		    (MIPU_COA(mipu))->sa_family == AF_INET6)
 		    
 #ifndef MIP6_MCOA
-			error = mip6_bul_add(&((struct sockaddr_in6 *)MIPU_PEERADDR(mipu))->sin6_addr,
-					     &((struct sockaddr_in6 *)MIPU_HOA(mipu))->sin6_addr,
-					     &((struct sockaddr_in6 *)MIPU_COA(mipu))->sin6_addr,
-					     mipu->mipu_hoa_ifindex, mipu->mipu_flags, mipu->mipu_state);
+			error = mip6_bul_update(&((struct sockaddr_in6 *)MIPU_PEERADDR(mipu))->sin6_addr,
+			    &((struct sockaddr_in6 *)MIPU_HOA(mipu))->sin6_addr,
+			    &((struct sockaddr_in6 *)MIPU_COA(mipu))->sin6_addr,
+			    mipu->mipu_hoa_ifindex, mipu->mipu_flags,
+			    mipu->mipu_state);
 #else
-			error = mip6_bul_add(&((struct sockaddr_in6 *)MIPU_PEERADDR(mipu))->sin6_addr,
-					     &((struct sockaddr_in6 *)MIPU_HOA(mipu))->sin6_addr,
-					     &((struct sockaddr_in6 *)MIPU_COA(mipu))->sin6_addr,
-					     mipu->mipu_hoa_ifindex, mipu->mipu_flags, mipu_state, mipu->mipu_bid);
+			error = mip6_bul_update(&((struct sockaddr_in6 *)MIPU_PEERADDR(mipu))->sin6_addr,
+			    &((struct sockaddr_in6 *)MIPU_HOA(mipu))->sin6_addr,
+			    &((struct sockaddr_in6 *)MIPU_COA(mipu))->sin6_addr,
+			    mipu->mipu_hoa_ifindex, mipu->mipu_flags,
+			    mipu_state, mipu->mipu_bid);
 #endif /* MIP6_COA */
 		else
 			error = EPFNOSUPPORT; /* XXX ? */
 		break;
+
 	case MIPM_BUL_REMOVE:
 		mipu = (struct mipm_bul_info *)miph;
 #ifndef MIP6_MCOA
 		mbul = mip6_bul_get(&((struct sockaddr_in6 *)MIPU_HOA(mipu))->sin6_addr,
-				    &((struct sockaddr_in6 *)MIPU_PEERADDR(mipu))->sin6_addr);
+		    &((struct sockaddr_in6 *)MIPU_PEERADDR(mipu))->sin6_addr);
 #else
 		mbul = mip6_bul_get(&((struct sockaddr_in6 *)MIPU_HOA(mipu))->sin6_addr,
-				    &((struct sockaddr_in6 *)MIPU_PEERADDR(mipu))->sin6_addr, mipu->mipu_bid);
+		    &((struct sockaddr_in6 *)MIPU_PEERADDR(mipu))->sin6_addr,
+		    mipu->mipu_bid);
 #endif /* MIP6_COA */
 		if (mbul == NULL) 
-			return ENOENT;
+			return (ENOENT);
 
 		mip6_bul_remove(mbul);
 		break;
 
-	case MIPM_HOME_HINT:
 	case MIPM_BUL_FLUSH:
 		mip6_bul_remove_all();
 		break;
 
+	case MIPM_HOME_HINT:
 	case MIPM_MD_INFO:
 		/* do nothing in kernel, just forward it to all receivers */
 		break;
-	case MIPM_BC_FLUSH:
-		mip6_bce_remove_all();
-		break;
 #endif /* NMIP > 0 */
+
 	default:
-		return 0;
+		return (0);
 	}
 	
 	raw_input(m, &mips_proto, &mips_src, &mips_dst);
