@@ -1,4 +1,4 @@
-/*	$Id: cnd.c,v 1.3 2004/10/07 09:26:11 keiichi Exp $	*/
+/*	$Id: cnd.c,v 1.4 2004/10/19 12:23:08 t-momose Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -72,6 +72,7 @@ struct command_table command_table[] = {
 int mhsock, mipsock, icmp6sock;
 int debug = 0, numerichost = 0;
 struct mip6stat mip6stat;
+int homeagent_mode = 0;
 
 static char *pid_file = CND_PIDFILE;
 
@@ -208,10 +209,14 @@ int
 mipsock_input(miphdr)
 	struct mip_msghdr *miphdr;
 {
-
 	int err = 0;
+	struct mipm_nodetype_info *nodeinfo;
 
 	switch (miphdr->miph_type) {
+	case MIPM_NODETYPE_INFO:
+		nodeinfo = (struct mipm_nodetype_info *)miphdr;
+		if (nodeinfo->mipmni_nodetype == MIP6_NODETYPE_HOME_AGENT)
+			homeagent_mode = nodeinfo->mipmni_enable;
 	case MIPM_BE_HINT:
 		mipsock_behint_input(miphdr);
 		break;
