@@ -1,9 +1,8 @@
-#! /bin/sh
-# $Id: rc.mobileip6,v 1.3 2004/09/27 10:34:01 t-momose Exp $
+#! /bin/sh -x
+# $Id: rc.mobileip6,v 1.4 2004/10/18 10:24:28 keiichi Exp $
 
 # Mobile IPv6 startup
 
-# daemons should be executed after the syslog service started
 mobileip6_pass2() {
 	echo -n 'Doing Mobile IPv6 network setup:'
 
@@ -39,12 +38,14 @@ mobileip6_pass2() {
 			done
 		fi
 
+		sysctl net.inet6.ip6.accept_rtadv=1
 		echo -n ' mnd'
 		mnd -n -i mip0
 		echo -n ' mdd'
 		mdd -n
+		echo -n ' cnd'
+		cnd -n
 		echo -n ' rtsold'
-		sysctl net.inet6.ip6.accept_rtadv=1
 		rtsold -a -m
 		;;
 	[Hh][Oo][Mm][Ee]_[Aa][Gg][Ee][Nn][Tt])
@@ -73,6 +74,8 @@ mobileip6_pass2() {
 
 			echo -n ' had'
 			had -i ${ipv6_mobile_home_interface}
+			echo -n ' cnd'
+			cnd -n
 			echo -n ' rtadvd'
 			rtadvd -m ${ipv6_mobile_home_interface}
 			# take in Router Advertisement
