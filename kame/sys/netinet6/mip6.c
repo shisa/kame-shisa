@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.2 2004/10/01 10:42:17 t-momose Exp $	*/
+/*	$Id: mip6.c,v 1.3 2004/10/06 02:55:56 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -963,12 +963,17 @@ mip6_create_hoa_opt(coa)
 	struct ip6_opt_home_address *ha_opt;
 	struct ip6_dest *ip6dest;
 	register char *optbuf;
-	size_t pad, optlen = sizeof(ip6dest), buflen;
+	size_t pad, optlen, buflen;
 
-	/* calculate padding size */
-	pad = MIP6_PADLEN(optlen, 8, 6);/* HoA alignment: 8n+6 */
+	optlen = sizeof(struct ip6_dest);
 
-	/* Allocating a new buffer space for home address option */
+	/*
+	 * calculate the padding size for a home address destination
+	 * option (8n + 6).
+	 */
+	pad = MIP6_PADLEN(optlen, 8, 6);
+
+	/* allocating a new buffer space for a home address option. */
 	buflen = optlen + pad + sizeof(struct ip6_opt_home_address);
 	optbuf = (char *)malloc(buflen, M_IP6OPT, M_NOWAIT);
 	if (optbuf == NULL)
@@ -977,17 +982,16 @@ mip6_create_hoa_opt(coa)
 
 	ip6dest = (struct ip6_dest *)optbuf;
 		
-	/* filling zero for padding  */
+	/* filling zero for padding. */
 	MIP6_FILL_PADDING(optbuf + optlen, pad);
 	optlen += pad;
 
-	/* filing home address option fields */
+	/* filing a home address destination option fields. */
 	ha_opt = (struct ip6_opt_home_address *)(optbuf + optlen);
 	ha_opt->ip6oh_type = IP6OPT_HOME_ADDRESS;
 	ha_opt->ip6oh_len = IP6OPT_HALEN;
-	bcopy(coa, ha_opt->ip6oh_addr , sizeof(*coa));
-
-	optlen += sizeof(*ha_opt);
+	bcopy(coa, ha_opt->ip6oh_addr , sizeof(struct in6_addr));
+	optlen += sizeof(struct ip6_opt_home_address);
 
 	ip6dest->ip6d_nxt = 0;
 	ip6dest->ip6d_len = ((optlen) >> 3) - 1;
