@@ -124,6 +124,13 @@ struct mip6stat {
 	    log arg;		\
 } while (/*CONSTCOND*/ 0)
 
+/* macros for a nodetype check. */
+#define MIP6_IS_MN ((mip6_nodetype & MIP6_NODETYPE_MOBILE_NODE) || \
+	(mip6_nodetype & MIP6_NODETYPE_MOBILE_ROUTER))
+#define MIP6_IS_MR ((mip6_nodetype & MIP6_NODETYPE_MOBILE_ROUTER))
+#define MIP6_IS_HA ((mip6_nodetype & MIP6_NODETYPE_HOME_AGENT))
+#define MIP6_IS_CN ((mip6_nodetype & MIP6_NODETYPE_CORRESPONDENT_NODE))
+
 /* Calculation pad length to be appended */
 /* xn + y; x must be 2^m */
 #define MIP6_PADLEN(cur_offset, x, y)	\

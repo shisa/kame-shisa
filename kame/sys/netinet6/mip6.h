@@ -1,4 +1,4 @@
-/*	$Id: mip6.h,v 1.3 2004/10/28 04:22:30 keiichi Exp $	*/
+/*	$Id: mip6.h,v 1.4 2004/10/28 06:17:27 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -39,12 +39,6 @@
 #define MIP6_NODETYPE_HOME_AGENT		0x02
 #define MIP6_NODETYPE_MOBILE_NODE		0x04
 #define MIP6_NODETYPE_MOBILE_ROUTER		0x08
-
-#define MIP6_IS_MN ((mip6_nodetype & MIP6_NODETYPE_MOBILE_NODE) || \
-	(mip6_nodetype & MIP6_NODETYPE_MOBILE_ROUTER))
-#define MIP6_IS_MR ((mip6_nodetype & MIP6_NODETYPE_MOBILE_ROUTER))
-#define MIP6_IS_HA ((mip6_nodetype & MIP6_NODETYPE_HOME_AGENT))
-#define MIP6_IS_CN ((mip6_nodetype & MIP6_NODETYPE_CORRESPONDENT_NODE))
 
 /*
  * Names for Mobile IPv6 sysctl objects

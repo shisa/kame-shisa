@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.23 2004/10/28 02:44:34 keiichi Exp $	*/
+/*	$Id: mip6.c,v 1.24 2004/10/28 06:17:27 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -57,6 +57,7 @@
 #include <net/if_types.h>
 #include <net/route.h>
 #include <net/mipsock.h>
+#include <net/net_osdep.h>
 
 #include <netinet/in.h>
 #include <netinet/ip6.h>
@@ -77,6 +78,8 @@
 #include <netkey/keydb.h>
 #endif /* IPSEC && !__OpenBSD__ */
 
+#include "mip.h"
+
 #ifndef MIP6_BC_HASH_SIZE
 #define MIP6_BC_HASH_SIZE 35			/* XXX */
 #endif
@@ -89,8 +92,6 @@
 	 % MIP6_BC_HASH_SIZE)
 struct mip6_bc_internal *mip6_bc_hash[MIP6_BC_HASH_SIZE];
 struct mip6_bc_list mip6_bc_list = LIST_HEAD_INITIALIZER(mip6_bc_list);
-
-#include "mip.h"
 
 struct mip6stat mip6stat;
 u_int8_t mip6_nodetype = MIP6_NODETYPE_NONE;
@@ -112,34 +113,24 @@ static struct timeval mip6_rr_hint_ppslim_last;
 
 #ifndef MIP6_MCOA
 static struct mip6_bul_internal *mip6_bul_create(const struct in6_addr *,
-						 const struct in6_addr *, 
-						 const struct in6_addr *, 
-						 u_int16_t,
-						 u_int8_t,
-						 struct mip_softc *);
+    const struct in6_addr *, const struct in6_addr *, u_int16_t, u_int8_t,
+    struct mip_softc *);
 #else
 static struct mip6_bul_internal *mip6_bul_create(const struct in6_addr *,
-						 const struct in6_addr *, 
-						 const struct in6_addr *, 
-						 u_int16_t,
-						 u_int8_t,
-						 struct mip_softc *, u_int16_t);
+    const struct in6_addr *, const struct in6_addr *, u_int16_t, u_int8_t,
+    struct mip_softc *, u_int16_t);
 #endif /* MIP6_MCOA */
-int mip6_bu_encapcheck(const struct mbuf *, int, int, void *arg);
-#endif
+int mip6_bul_encapcheck(const struct mbuf *, int, int, void *arg);
+#endif /* NMIP > 0 */
 int mip6_rev_encapcheck(const struct mbuf *, int, int, void *arg);
 
 #ifndef MIP6_MCOA
 static struct mip6_bc_internal *mip6_bce_new_entry(struct in6_addr *,
-						   struct in6_addr *,
-						   struct in6_addr *,
-						   struct ifaddr *, u_int16_t);
+    struct in6_addr *, struct in6_addr *, struct ifaddr *, u_int16_t);
 #else
 static struct mip6_bc_internal *mip6_bce_new_entry(struct in6_addr *,
-						   struct in6_addr *,
-						   struct in6_addr *,
-						   struct ifaddr *, 
-						   u_int16_t, u_int16_t);
+    struct in6_addr *, struct in6_addr *, struct ifaddr *, u_int16_t,
+    u_int16_t);
 #endif /* MIP6_MCOA */
 
 static void mip6_bc_list_insert(struct mip6_bc_internal *);
@@ -149,6 +140,17 @@ static void mip6_bc_list_remove(struct mip6_bc_internal *);
 static int mip6_rr_hint_ratelimit(const struct in6_addr *,
     const struct in6_addr *);
 #endif /* NMIP > 0 */
+
+static int mhdefaultlen[] = {
+	sizeof(struct ip6_mh_binding_request), 
+	sizeof(struct ip6_mh_home_test_init), 
+	sizeof(struct ip6_mh_careof_test_init),
+	sizeof(struct ip6_mh_home_test),
+	sizeof(struct ip6_mh_careof_test),
+	sizeof(struct ip6_mh_binding_update),
+	sizeof(struct ip6_mh_binding_ack),
+	sizeof(struct ip6_mh_binding_error)
+};
 
 /*
  * sysctl knobs.
@@ -195,7 +197,7 @@ SYSCTL_INT(_net_inet6_mip6, MIP6CTL_RR_HINT_PPSLIM, rr_hint_ppslimit, CTLFLAG_RW
 #endif /* __FreeBSD__ */
 
 /*
- * Mobility header processing.
+ * Mobility Header processing.
  */
 int
 mip6_input(mp, offp, proto)
@@ -207,16 +209,6 @@ mip6_input(mp, offp, proto)
 	struct ip6_mh *mh;
 	int off = *offp, mhlen;
 	int sum;
-	int mhdefaultlen[] = {
-		sizeof(struct ip6_mh_binding_request), 
-		sizeof(struct ip6_mh_home_test_init), 
-		sizeof(struct ip6_mh_careof_test_init),
-		sizeof(struct ip6_mh_home_test),
-		sizeof(struct ip6_mh_careof_test),
-		sizeof(struct ip6_mh_binding_update),
-		sizeof(struct ip6_mh_binding_ack),
-		sizeof(struct ip6_mh_binding_error)
-	};
 
 	mip6stat.mip6s_mh++;
 
@@ -879,8 +871,8 @@ mip6_bul_update(peeraddr, hoa, coa, hoa_ifindex, flags, state, bid)
 	if ((mbul->mbul_flags & IP6_MH_BU_HOME) && 
 	    (mbul->mbul_flags & IP6_MH_BU_ROUTER) == 0) {
 		mbul->mbul_encap = encap_attach_func(AF_INET6, IPPROTO_IPV6,
-		    mip6_bu_encapcheck, (struct protosw *)&mip6_tunnel_protosw,
-		    mbul);
+		    mip6_bul_encapcheck,
+		    (struct protosw *)&mip6_tunnel_protosw, mbul);
 		if (error) {
 			mip6log((LOG_ERR, "tunnel move failed.\n"));
 			/* XXX notifiy to upper XXX */
@@ -1254,7 +1246,7 @@ mip6_ifa6_is_addr_valid_hoa(ifa6)
 }
 
 int
-mip6_bu_encapcheck(m, off, proto, arg)
+mip6_bul_encapcheck(m, off, proto, arg)
 	const struct mbuf *m;
 	int off;
 	int proto;
