@@ -1,4 +1,4 @@
-/*      $Id: mh.c,v 1.2 2004/09/29 11:44:45 t-momose Exp $  */
+/*      $Id: mh.c,v 1.3 2004/10/06 11:46:30 keiichi Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -64,6 +64,7 @@
 
 #include <openssl/sha.h>
 #include <openssl/hmac.h>
+#include <openssl/rand.h>
 
 #include "callout.h"
 #include "shisad.h"
@@ -930,6 +931,9 @@ send_hoti(struct binding_update_list *bul)
 	hoti.ip6mhhti_hdr.ip6mh_len =  (sizeof(hoti) >> 3) - 1;
 	hoti.ip6mhhti_hdr.ip6mh_type = IP6_MH_TYPE_HOTI;
 
+	(void)RAND_pseudo_bytes((u_char *)bul->bul_home_cookie,
+	    MIP6_COOKIE_SIZE);
+
 	memcpy((void *)hoti.ip6mhhti_cookie,
 	    (const void *)bul->bul_home_cookie, 
 		 sizeof(hoti.ip6mhhti_cookie)); 
@@ -962,6 +966,9 @@ send_coti(struct binding_update_list *bul)
 	coti.ip6mhcti_hdr.ip6mh_proto = IPPROTO_NONE;
 	coti.ip6mhcti_hdr.ip6mh_len = (sizeof(coti) >> 3) - 1;
 	coti.ip6mhcti_hdr.ip6mh_type = IP6_MH_TYPE_COTI;
+
+	(void)RAND_pseudo_bytes((u_char *)bul->bul_careof_cookie,
+	    MIP6_COOKIE_SIZE);
 
 	memcpy((void *)coti.ip6mhcti_cookie,
 	       (const void *)bul->bul_careof_cookie,
@@ -1900,26 +1907,9 @@ init_nonces ()
 struct mip6_nonces_info *
 generate_nonces(struct mip6_nonces_info *ninfo)
 {
-        int i;
-        struct timeval tp;
+	(void)RAND_pseudo_bytes(ninfo->node_key, MIP6_NODEKEY_SIZE);
+	(void)RAND_pseudo_bytes(ninfo->nonce, MIP6_NONCE_SIZE);
 
-	/* generate node key Kcn */
-        for (i = 0; 
-	     i < MIP6_NODEKEY_SIZE / sizeof(long); 
-	     i ++) {
-                gettimeofday(&tp, NULL);
-                srandom(tp.tv_usec);
-                ((u_long *)ninfo->node_key)[i] = random();
-        }
-
-	/* generate nonces */
-        for (i = 0; 
-	     i < (MIP6_NONCE_SIZE / sizeof(long)); 
-	     i ++) {
-                gettimeofday(&tp, NULL);
-                srandom(tp.tv_usec);
-                ((u_long *)ninfo->nonce)[i] = random(); 
-        }
 	ninfo->nonce_index = (nonces_head->nonce_index + 1); /* incremented */
 	time(&ninfo->nonce_lasttime); /* timestamp */
 
