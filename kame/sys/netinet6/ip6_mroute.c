@@ -1,4 +1,4 @@
-/*	$KAME: ip6_mroute.c,v 1.130 2004/08/12 04:36:11 jinmei Exp $	*/
+/*	$KAME: ip6_mroute.c,v 1.133 2004/09/30 10:05:18 suz Exp $	*/
 
 /*
  * Copyright (C) 1998 WIDE Project.
@@ -709,14 +709,10 @@ ip6_mrouter_done()
 	/*
 	 * Reset register interface
 	 */
-	if (inet6domain.dom_ifdetach) {
-		ifp = &multicast_register_if;
-		if (ifp->if_afdata[AF_INET6])
-			inet6domain.dom_ifdetach(ifp, ifp->if_afdata[AF_INET6]);
-		ifp->if_afdata[AF_INET6] = NULL;
+	if (reg_mif_num != (mifi_t)-1) {
+		if_detach(&multicast_register_if);
+		reg_mif_num = (mifi_t)-1;
 	}
-	reg_mif_num = -1;
-
 	ip6_mrouter = NULL;
 	ip6_mrouter_ver = 0;
 
@@ -795,7 +791,7 @@ add_m6if(mifcp)
 	 * XXX: some OSes can remove ifp and clear ifindex2ifnet[id]
 	 * even for id between 0 and if_index.
 	 */
-#if defined(__FreeBSD__) && __FreeBSD__ >= 5
+#if defined(__FreeBSD__) && __FreeBSD_version > 500000
 	ifp = ifnet_byindex(mifcp->mif6c_pifi);
 #else
 	ifp = ifindex2ifnet[mifcp->mif6c_pifi];
@@ -824,10 +820,7 @@ add_m6if(mifcp)
 			ifp->if_flags |= IFF_LOOPBACK;
 			ifp->if_index = mifcp->mif6c_mifi;
 			reg_mif_num = mifcp->mif6c_mifi;
-			if (inet6domain.dom_ifattach) {
-				ifp->if_afdata[AF_INET6]
-				    = inet6domain.dom_ifattach(ifp);
-			}
+			if_attach(ifp);
 		}
 
 	} /* if REGISTER */
@@ -914,14 +907,6 @@ del_m6if(mifip)
 	s = splnet();
 #endif
 
-	if ((mifp->m6_flags & MIFF_REGISTER) && reg_mif_num != (mifi_t) -1) {
-		reg_mif_num = -1;
-		if (inet6domain.dom_ifdetach) {
-			ifp = &multicast_register_if;
-			inet6domain.dom_ifdetach(ifp, ifp->if_afdata[AF_INET6]);
-			ifp->if_afdata[AF_INET6] = NULL;
-		}
-	}
 	if (!(mifp->m6_flags & MIFF_REGISTER)) {
 		/*
 		 * XXX: what if there is yet IPv4 multicast daemon
@@ -936,6 +921,11 @@ del_m6if(mifip)
 		ifr.ifr_addr.sin6_addr = in6addr_any;
 		(*ifp->if_ioctl)(ifp, SIOCDELMULTI, (caddr_t)&ifr);
 #endif
+	} else {
+		if (reg_mif_num != (mifi_t)-1) {
+			if_detach(&multicast_register_if);
+			reg_mif_num = (mifi_t)-1;
+		}
 	}
 
 #ifdef notyet
@@ -1796,7 +1786,7 @@ phyint_send(ip6, mifp, m)
 		im6o.im6o_multicast_loop = 1;
 		error = ip6_output(mb_copy, NULL, &ro,
 				   IPV6_FORWARDING, &im6o, NULL
-#if defined(__FreeBSD__) && __FreeBSD_version >= 480000
+#ifdef __FreeBSD__
 				   , NULL
 #endif
 				  );
@@ -2152,14 +2142,8 @@ pim6_input(mp, offp, proto)
 #endif
 
 #ifdef __FreeBSD__
-#if (__FreeBSD_version >= 410000)
 		rc = if_simloop(mif6table[reg_mif_num].m6_ifp, m,
 		    dst.sin6_family, NULL);
-#else
-		rc = if_simloop(mif6table[reg_mif_num].m6_ifp, m,
-		    (struct sockaddr *)&dst, NULL);
-
-#endif
 #else
 		rc = looutput(mif6table[reg_mif_num].m6_ifp, m,
 		    (struct sockaddr *)&dst, (struct rtentry *) NULL);
