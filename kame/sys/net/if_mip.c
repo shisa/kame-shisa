@@ -1,4 +1,4 @@
-/*	$Id: if_mip.c,v 1.1 2004/09/27 09:58:55 t-momose Exp $	*/
+/*	$Id: if_mip.c,v 1.2 2004/09/29 11:18:14 t-momose Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -36,12 +36,11 @@
 #endif
 #ifdef __NetBSD__
 #include "opt_inet.h"
+#include "opt_mip6.h"
 #endif
 
 #include <sys/param.h>
-#ifdef __NetBSD__
 #include <sys/systm.h>
-#endif
 #include <sys/kernel.h>
 #include <sys/socket.h>
 #include <sys/sockio.h>
@@ -109,6 +108,8 @@ mipattach(dummy)
 	for (i = 0 ; i < NMIP; sc++, i++) {
 #if defined(__NetBSD__) || defined(__OpenBSD__)
 		sprintf(sc->mip_if.if_xname, "mip%d", i);
+#elif defined(__FreeBSD__) && __FreeBSD_version > 501000
+		if_initname(&sc->mip_if, "mip", i);
 #else
 		sc->mip_if.if_name = "mip";
 		sc->mip_if.if_unit = i;

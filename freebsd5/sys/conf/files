@@ -1281,8 +1281,8 @@ net/if_stf.c		count stf
 net/if_tun.c		optional tun
 net/if_tap.c		optional tap
 net/if_vlan.c		optional vlan
-net/if_mip.c		count mip optional mip6
-net/if_nemo.c		count nemo optional mip6
+net/if_mip.c		count mip mip6
+net/if_nemo.c		count nemo mip6
 net/net_osdep.c		standard
 net/netisr.c		standard
 net/ppp_deflate.c	optional ppp_deflate
