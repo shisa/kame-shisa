@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.14 2004/10/14 06:57:39 keiichi Exp $	*/
+/*	$Id: mip6.c,v 1.15 2004/10/14 07:06:08 t-momose Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -1422,14 +1422,15 @@ mip6_rev_encapcheck(m, off, proto, arg)
 	int proto;
 	void *arg;
 {
-	struct ip6_hdr *ip6;
+	struct ip6_hdr *oip6, *iip6;
 	struct mip6_bc_internal *bce = (struct mip6_bc_internal *)arg;
 
-	ip6 = mtod(m, struct ip6_hdr *);
+	oip6 = mtod(m, struct ip6_hdr *);
+	iip6 = oip6 + 1;
 	
-	/* check outer source */
-	if (!IN6_ARE_ADDR_EQUAL(&ip6->ip6_src, &bce->mbc_coa)) {
-		printf("outer IPheader check failed\n");
+	/* check addresses in inner and outer header */
+	if (!IN6_ARE_ADDR_EQUAL(&oip6->ip6_src, &bce->mbc_coa) ||
+	    !IN6_ARE_ADDR_EQUAL(&iip6->ip6_src, &bce->mbc_hoa)) {
 		return (0);
 	}
 	return (128);
