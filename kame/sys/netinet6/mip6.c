@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.16 2004/10/20 03:37:07 keiichi Exp $	*/
+/*	$Id: mip6.c,v 1.17 2004/10/20 03:40:31 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -102,9 +102,7 @@ int mip6ctl_debug = 1;
 #else
 int mip6ctl_debug = 0;
 #endif
-#if NMIP > 0
 int mip6ctl_rr_hint_ppslim = 10;
-#endif /* NMIP > 0 */
 
 extern struct ip6protosw mip6_tunnel_protosw;
 

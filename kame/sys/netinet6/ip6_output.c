@@ -1526,8 +1526,9 @@ skip_ipsec2:;
 		if (exthdrs.ip6e_hoa) {
 			nextproto = *mtod(exthdrs.ip6e_hoa, u_char *);
 			*mtod(exthdrs.ip6e_hoa, u_char *) = IPPROTO_FRAGMENT;
+		} else
 #endif /* NMIP > 0 */
-		} else if (exthdrs.ip6e_rthdr2) {
+		if (exthdrs.ip6e_rthdr2) {
 			nextproto = *mtod(exthdrs.ip6e_rthdr2, u_char *);
 			*mtod(exthdrs.ip6e_rthdr2, u_char *) = IPPROTO_FRAGMENT;
 		} else
