@@ -159,6 +159,8 @@ nemoattach(dummy)
 #if defined(__NetBSD__) || defined(__OpenBSD__)
 		snprintf(sc->nemo_if.if_xname, sizeof(sc->nemo_if.if_xname),
 		    "nemo%d", i);
+#elif defined(__FreeBSD__) && __FreeBSD_version > 501000
+		if_initname(&sc->nemo_if, "nemo", i);
 #else
 		sc->nemo_if.if_name = "nemo";
 		sc->nemo_if.if_unit = i;

@@ -2491,6 +2491,10 @@ if2idlen(ifp)
 		return (64);
 	case IFT_IEEE1394:	/* RFC3146 */
 		return (64);
+#ifdef MIP6
+	case IFT_GIF:
+		return (0);
+#endif /* MIP6 */
 	default:
 		return (-1);	/* unknown link type */
 	}
