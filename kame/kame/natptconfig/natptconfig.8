@@ -1,0 +1,372 @@
+.\"	$KAME: natptconfig.8,v 1.24 2002/10/04 07:50:40 fujisawa Exp $
+.\"
+.\" Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000 and 2001 WIDE Project.
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. Neither the name of the project nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE PROJECT OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.\" Note: The date here should be updated whenever a non-trivial
+.\" change is made to the manual page.
+.Dd December 25, 1999
+.Dt NATPTCONFIG 8
+.\" Note: Only specify the operating system when the command
+.\" is FreeBSD specific, otherwise use the .Os macro with no
+.\" arguments.
+.Os KAME
+.\"
+.Sh NAME
+.Nm natptconfig
+.Nd configure IPv6-to-IPv4 translator
+.\"
+.Sh SYNOPSIS
+.Nm
+.Op Fl q
+.Op Fl d Ar debuglevel
+.Fl f Ar configfile
+.Nm
+.Op Fl q
+.Op Fl d Ar debuglevel
+subcommand
+.Op Ar args ...
+.\"
+.Sh DESCRIPTION
+.Nm
+configures and control the IPv6-to-IPv4 translator implemented in the
+kernel.
+.Pp
+.Nm
+takes the following command line options.
+.Bl -tag -width Ds
+.It Fl q
+Suppress error message sent to stderr.
+.It Fl d Ar debuglevel
+Set debug level to
+.Ar debuglevel .
+This option is for debug.
+.It Fl f Ar configfile
+Evaluate the contents of file specified as configfile.  By specifying
+.Ql -
+as a file name, standard input is used.
+.El
+.Pp
+The first form
+.Pq with Fl f
+takes directives from the specified configuration file.  This file
+will be read line by line and applied as argument to the
+.Nm
+utility.  The second form is to give single directive directly from
+the command line.
+.Pp
+.Nm
+configuration is made of a list of numbered rules, which is scanned
+for each incoming IPv6 and IPV4 packet until match is found and the
+relevant translation action is performed.  When no match is found,
+packet is not translated into.  In most case, this means the packet is
+dropped.  Translation rule is examined from a small number
+sequentially.  If matched rule is found, search is finished, and
+action is performed.
+.Pp
+Rules can be added with the
+.Sy map
+command; delete individually with the
+.Sy map delete
+command, and globally with the
+.Sy map flush
+command;  Rule number can be renumbered with the
+.Sy map renum
+command.  Finally, rules can be displayed with
+.Sy show
+command.
+.Pp
+To ease configuration, rules can be put into a file which is processed
+using
+.Fl f
+option in the first synopsis line.
+See
+.Xr natpt.conf 5
+for more detail about
+.Sy map
+command.
+.\"
+.Sh RETURN VALUES
+.Nm
+returns non ZERO value when detects error of syntax.  Actually, return
+value is number of error which natptconfig detected.
+.\"
+.Sh DIRECTIVES
+Keywords and special characters that the parser expects exactly are
+displayed using
+.Sy this
+font.  Parameters are specified with
+.Em this
+font.  Square brackets (
+.Ql \&[
+and
+.Ql \&]
+) are used to show optional keywords and parameters.  Parentheses(
+.Ql \&(
+and
+.Ql \&)
+) are used to group keywords and parameters when necessary.  The
+vertical bar
+.Pq Ql \&|
+is used to indicate a choice between optional
+parameters.
+.Pp
+You can put all directives into file and process using
+.Fl f
+option, here we describe directives mainly executed from command line.
+The following directives are available.
+.Bl -tag -width Ds -offset indent
+.\"
+.It Xo Sy \&?
+.Xc
+Show available actions on each stage.
+.\"
+.It Xo Sy map delete Ar number
+.Xc
+Delete translation rule specified by
+.Ar number .
+Error does not occur even if specified rule does not exist.
+.\"
+.It Xo Sy map renum Op Ar number1 Op Ar number2
+.Xc
+Renumber translation rule.  The
+.Ar number1
+is the start number of rule
+number.  The
+.Ar number2
+is interval of rule number.  When
+.Ar number1
+or
+.Ar number2
+is omitted, "100" is used.
+.\"
+.It Xo Sy show Ar subcommand
+.Op Ar args ...
+.Xc
+Show various useful information.
+.Nm
+read this information from kernel, so you must have read permission of
+/dev/kmem.  Available subcommands are listed below.
+.Bl -tag -width XXX
+.It Xo Sy \&?
+.Xc
+Show available subcommands on this stage.
+.It Xo Sy prefix
+.Xc
+Show NAT-PT prefix and prefix mask.
+.It Xo Sy rules
+.Op Sy cui
+.Xc
+Show NAT-PT rules.  When
+.Sy cui
+is specified,
+.Sy show rules
+command shows translation rule with CUI format instead of natptconfig
+format.
+.Nm
+does not accept this CUI format.  Because CUI format is for a special
+intended use, a general people does not use it.
+.It Xo Sy xlate
+.Op Sy long
+.Op Ar interval
+.Xc
+Show NAT-PT current translation table entry.  An entry of this table
+is empty at first.  Kernel forms an entry that packet flows, 1 entry
+per 1 TCP session, 1 entry per 1 UDP/ICMP packet.
+.Bl -bullet -offset indent
+.It
+.Sy long
+shows with long format.
+.It
+.Em interval
+is a number, and if this option is specified,
+.Nm
+shows the information shown with
+.Sq xlate
+subcommand regularly in specified second interval.
+.El
+.Pp
+By default, this command displays IPv6 address with short format
+.Pq 22 columns per address ,
+and when
+.Sy long
+was specified, this command displays IPv6 address without shortening
+it.
+.Pp
+It is useful to see this
+table entry when this translator seems not to work.  See
+.Em TABLE FORMAT
+section below for more detail.
+.It Xo Sy variables
+.Op all | tslot | caddr
+.Xc
+Show variables that was set by
+.Sq set
+subcommand.  If nothing is specified after
+.Sq variables ,
+this subcommand shows only variables to use usually.
+.Pp
+Meaning of words that can specify is as follows.
+.Bl -tag -width XX
+.It Xo Sy all
+.Xc
+Show all variables.
+.It Xo Sy tslot
+.Xc
+Show timer related variables.  You can change behavor of NAT-PT when
+you change a value of these variables.
+.It Xo Sy caddr
+.Xc
+Show start address of inner table.  These variables are read only, and
+are for debug.
+.El
+.Pp
+See
+.Xr natpt.conf 5
+for meaning of each indicated variables.
+.It Xo Sy mapping
+.Xc
+Show current translation status.  Status is displayed as
+.Sy enable
+or
+.Sy disable .
+.El
+.It Xo Sy test Ar subcommand
+.Op Ar args ...
+.Xc
+Test the log system.  You must run natptlog command.  When only log
+specified, send LOGTESTPATTERN to translator, and translator send this
+pattern to log system.  When you running natptlog command, this
+command display LOGTESTPATTERN.  Current available subcommands are
+shown.
+.Bl -tag -width XXX
+.It Xo Sy \&?
+.Xc
+Show available subcommands on this stage.
+.It Xo Sy log
+.Xc
+Send predefined pattern LOGTESTPATTERN to the log system.
+.It Xo Sy log Li name
+.Xc
+Send one word to the log system.
+.It Xo Sy log Qq string
+.Xc
+Send double quoted string to the log system.
+.El
+.Pp
+This is for log sysgem debug.
+.El
+.\"
+.Sh FILES
+.Bl -tag -width /dev/kmemxxx -compact
+.It Pa /kernel
+default kernel namelist
+.It Pa /dev/kmem
+default memory file
+.El
+.\"
+.Sh TABLE FORMAT
+This section describes a table format indicated with
+.Dl # natptconfig show xlate
+command.
+.Pp
+Here is an example of command output with v6->v4 translation.  Because
+this command's output is too long, line is bent over to two lines.
+.Bd -literal -offset
+tcp 3ffe=fe20:c157.1095 3ffe=:caf9:b2a.23
+    10.0.0.102.32768  202.249.11.42.23  1  2  00:00:18  CLOSED
+.Ed
+.Pp
+This entry has 9 fields.  Meaning of each field is as follows.
+.Bl -bullet -compact
+.It
+The leftmost field shows protocol
+.Pq icmp|icmp6|tcp|udp .
+.It
+The second and third field shows source.port and destination.port of
+incoming packet.
+.It
+The fourth and
+fifth field shows source.port and destination.port of outgoing packet.
+.It
+The sixth and seventh field shows each packet count of incoming and
+outgoing.
+.It
+The eighth field shows the time (seconds) from last packet matches
+this entry.
+.It
+The last field has TCP status that is kept in the kernel.  Of course,
+the last field appears TCP only.
+.El
+.Pp
+This entry is same as the next example, but IPv6 address was shrunk to
+14 columns, in order to keep total length in 128 characters.  Each
+IPv6 address was shown as first 4 characters and last 9 characters
+connecting with
+.Sq =
+character.
+.Pp
+When you invoke command as follows,
+.Dl # natptconfig show xlate long
+the output seems to be next.  This line is more long than above
+example, line is bent over to two lines, too.
+.Bd -literal -offset
+tcp 3ffe:501:ffff:face:203:47ff:fe20:c157.1095 3ffe:501:ffff:c1ad::caf9:b2a.23
+    10.0.0.102.32768  202.249.11.42.23  1  2  00:00:28  CLOSED
+.Ed
+.Pp
+Meaning of each field is same as the above example, but IPv6 address
+is not shortening.
+.\"
+.Sh SEE ALSO
+.Xr natpt.conf 5 ,
+.Xr natptlog 8
+.Rs
+.%A Eric Nordmark
+.%R RFC
+.%N 2765
+.%D February 2000
+.%T Stateless IP/ICMP Translation Algorithm (SIIT)
+.Re
+.Rs
+.%A George Tsirtsis
+.%R RFC
+.%N 2766
+.%D February 2000
+.%T Network Address Translation - Protocol Translation (NAT-PT)
+.Re
+.\"
+.Sh HISTORY
+The
+.Nm
+command first appeared in WIDE/KAME IPv6 protocol stack kit.
+.\"
+.Sh BUGS
+The
+.Nm
+command is now under development.  It's user interface and overall
+functionality are subjects to future improvements and changes.

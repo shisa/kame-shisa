@@ -1,0 +1,318 @@
+Support coverage table for KAME/*BSD and KAME-merged *BSD
+KAME project
+$KAME: COVERAGE,v 1.134 2003/11/05 14:06:27 suz Exp $
+
+
+x: supported/integrated
+-: not supported/not integrated
+
+
+		KAME
+		net16	open32	free228	free35	free49	bsdi31	bsdi42
+		--	--	--	--	--	--	--
+TCP/UDP		see IMPLEMENTATION for details
+
+ALTQ		x	x	x	x	x	-	-
+
+IPsec		x	(*1)	x	x	x	x	x
+    (*1) OpenBSD IPsec is available for both IPv4/IPv6.  Not really tested.
+	 If you would like to use OpenBSD IPsec for production system,
+	 use unpatched (non-KAME) OpenBSD.
+
+KAME mobile-ip6
+		?	?	-	-	(*1)	-	-
+    (*1) being worked on
+
+NAT/PT		-	-	x	(*1)	x	(*1)	?
+    (*1) compilable but not tested
+
+2292bis on TCP	x	(*1)	x	x	?	x	x
+    (*1) code exists, but not tested
+
+getaddrinfo obeys configured resolv order
+		x	x	-	-	x	-	x
+
+KAME extended resolver (IPv6 transport, EDNS0, bogus address filtering)
+		x	x	x	x	-	x	x
+
+PULLDOWN_TEST codepath
+		x	x	x	-	-	x	x
+
+CMSG passing in unix domain socket obeys CMSG_xx
+		x	-	-	-	x	-	?
+
+faithd support in inetd
+		x	-	-	-	-	x	-
+
+IPv6 PMTUD DoS prevention
+		(*1)	(*1)	-	-	(*3)	(*2)	(*2)
+    (*1) validates ICMPv6 too big by using TCP/connected UDP/ESP/AH connection
+	 table.  PMTUD does not work for other random protocols like ping6.
+    (*2) validates ICMPv6 too big by presense of cloned route.  subject to
+	 local DoS.
+    (*3) validates ICMPv6 too big by presense of cloned route.  Local
+	 DoS is prevented in a different mechanism.
+
+CMSG_ALIGN	sysctl	ALIGN	ALIGN	ALIGN	ALIGN	ALIGN	ALIGN
+			(*1)	(*1)	(*1)	(*2)	(*1)	(*1)
+    (*1) has namespace pollution bug, KAME PR 230.
+    (*2) requires separate inclusion of machine/param.h.
+    (all) backward binary compatibility for old code that uses old CMSG_xx
+	  is not provided (yet).
+
+ART routing table lookup algorithm
+		x	x	-	-	-	x	(*1)
+    (*1) IPv6 only
+
+multipath support in routing table
+		x	-	-	-	-	-	-
+
+Userland PPP	-	?	x	x	x	?	?
+Kernel PPP	x	?	-	-	x	?	?
+
+
+
+(+): see above for KAME/*BSD differences
+
+		KAME	merged *-current	merged
+		*BSD	net	open	free	net16	open32	free49	bsdi42
+		--	--	--	--	--	--	--	---
+KAME IPv6 as of	latest	early	early	0528	early	early	0528	apr00
+			jun00	jun00	2001	jun00	jun00	2001
+
+KAME IPsec as of
+		latest	12jun00	-	0528	12jun00	-	0528	apr00
+					2001			2001
+
+IPv4 IPsec	KAME	KAME	openbsd	KAME	KAME	openbsd	KAME	KAME
+
+IPv6 IPsec	KAME	KAME	openbsd	KAME	KAME	openbsd	KAME	KAME
+				(*1)			(*1)
+    (*1) no extension header support yet (fragment header is supported),
+	hardware acceleration is available.  tunnel mode may need more work.
+
+IPsec ESP, rc5-cbc
+		-	-	(*1)	-	-	(*1)	-	-
+    (*1) not based on kame
+
+IPsec ESP, blowfish/des on LP64
+		x	x	(*1)	x	x	(*1)	x	?
+    (*1) not based on kame
+
+IPsec ESP, des on big endian
+		x	x	(*1)	x	x	(*1)	x	?
+    (*1) not based on kame
+
+IPsec ESP, crypto backend uses block cipher (esp_cbc_encrypt)
+		x	x	(*1)	x	x	(*1)	x	-
+    (*1) not based on kame
+
+RFC2367 conformance: sadb_msg
+		x	x	(*1)	x	x	(*1)	x	-
+    (*1) not based on kame
+
+RFC2367 conformance: SADB_[EAC]ALG
+		x	x	(*1)	x	x	(*1)	x	-
+    (*1) not based on kame
+
+TCP/UDP		see IMPLEMENTATION for details
+
+TCP6 drops packets with unspecified IPv6 source
+		x	x	x	x	x	x	x	-
+
+ip6_forward rejects packets with unspecified IPv6 source
+		x	x	x	x	x	x	x	-
+
+ip6_mforward rejects packets with unspecified IPv6 source
+		x	x	x	x	x	x	x	-
+
+draft-ietf-ipngwg-p2p-pingpong-00.txt
+		x	x	x	-	-	-	-	-
+
+advanced API	2292bis	2292	2292	2292	2292	2292	2292	2292bis
+		(*1)
+    (*1) 2292 API is supplied for binary backward compatibility
+
+CMSG_FIRSTHDR validates msg_controllen
+		x	x	x	-	-	-	-	-
+
+getifaddrs	x	x	x	x	x	x	x	x
+
+icmp6 nodeinfo	07	07	07	07	07	07	07	?
+					(*1/2)			(*1/2)
+    (all) spec conformance is still low.
+    (*1) does not join NI group address
+    (*2) node addresses reply does not have TTL attached
+
+net.inet6.icmp6.nodeinfo is a bitmap
+		x	x	x	x	x	x	x	-
+
+nd6_proxyall	-	-	-	x	-	-	x	-
+
+ndp -s proxy	x	x	x	x	x	x	x	x
+
+ndp -I		x	x	x	x	x	x	x	x
+
+NUD on p2p	x	x	x	x	x	x	x	?
+  (ndp -i)
+
+NUD on p2p only if real neighbor
+		x	x	x	x	x	x	x	?
+
+ND6 WAITDELETE state (should be removed)
+		-	-	-	x	-	-	x	x
+
+expiration of ND6 STALE entries (nd6_gctimer)
+		x	x	x	x	x	x	x	-
+
+pfctlinput2	(*1)	x	-	?	x	-	?	-
+    (*1) in ip6_input.c
+
+xx_ctlinput scope friendliness
+		x	x	x	x	x	x	x	-
+
+icmp6 beyondscope
+		x	x	x	x	x	x	x	x
+
+ping6 with short -s
+		x	x	x	x	x	x	x	?
+
+CMSG_ALIGN	ALIGN	sysctl	ALIGN	ALIGN	sysctl	ALIGN	ALIGN	ALIGN
+		(*1)		(*1)	(*2)		(*1)	(*2)	(*2)
+    (*1) has namespace pollution bug, KAME PR 230.
+    (*2) requires separate inclusion of machine/param.h.
+    (all) backward binary compatibility for old code that uses old CMSG_xx
+	  is not provided (yet).
+
+CMSG passing in unix domain socket obeys CMSG_xx
+		(+)	x	-	x	x	-	x	?
+
+rip6stat	x	x	-	x	-	-	x	-
+
+IPV6_V6ONLY	x	x	-	x	-	-	x	-
+
+getaddrinfo obeys configured resolv order
+		(+)	x	x	x	x	x	x	-
+
+getaddrinfo supports AI_ADDRCONFIG (RFC3493)
+		-	-	-	x	-	-	x	-
+    (*1) enabled by default, cannot turn it off
+
+getaddrinfo returns official hostname in hosts(5) (leftmost) in ai_canonname
+		(*1)	x	x	x	x	x	x	?
+    (*1) netbsd, openbsd, freebsd4 are "x", others are "-"
+
+getnameinfo uses addr%numeric for scopeid > maxifindex
+		x	x	x	x	x	x	x	x
+
+getnameinfo, 2nd arg type is socklen_t
+		x	x	x	x	x	x	x	-
+
+getnameinfo uses EAI_xx as return value (RFC3493)
+		x	x	x	x	x	x	x	-
+
+getnameinfo always return a string with scope
+		x	x	x	-	x	x	-	-
+
+'options insecure1' in /etc/resolv.conf
+		x	x	x	-	x	x	-	-
+
+ALTQ		(+)	x	x	-	x	x	-	-
+
+NAT/PT		(+)	-	-	-	-	-	-	-
+
+mobile-ip6	(+)	-	-	-	-	-	-	(*1)
+    (*1) old Ericsson mobile-ip6
+
+IPv6 RPC	-	x	-	-	x	-	-	-
+
+IPv6 NFS	-	x	-	x	x	-	-	-
+
+NIS ipnodes map support for hostname lookup
+		-	x	-	-	x	-	-	-
+
+resolver support for IPv6 transport
+		(+)	(*1)	(*1)	x	(*1)	(*1)	x	-
+    (*1) libc resolver can handle IPv6 transport (IPv6 address in
+	/etc/resolv.conf), but not with userland tools like nslookup or dig.
+
+scoped addr in /etc/hosts (getaddrinfo)
+		(+)	x	x	x	x	x	x	-
+
+scoped addr in /etc/resolv.conf "nameserver" line
+		(+)	x	x	x	x	x	x	-
+
+ipsec socket passing to ip{6,}_output
+		aux	aux	-	aux	aux	-	aux	aux
+
+ipsec esp, encryption logic
+		new	new	(*1)	new	new	(*1)	new	old
+    new: unified cbc logic, old: per-algorithm cbc logic
+    (*1): not based on kame
+
+ipsec esp, blowfish-cbc codebase (before/after aug28, 2000)
+		new	new	(*1)	new	new	(*1)	new	old
+    (*1): not based on kame
+
+ipsec esp, rijndael support
+		(*1)	x	(*2)	x	x	(*2)	x	-
+    (*1) except openbsd
+    (*2): not based on kame
+
+ipsec esp, twofish support
+		(*1)	-	(*2)	x	-	(*2)	x	-
+    (*1) experimental, based on draft-ietf-ipsec-ciph-aes-cbc-00.txt
+    (*2): not based on kame
+
+router renumbering declaration does not use bitfield (sys/netinet/icmp6.h)
+		x	x	x	x	x	x	x	-
+
+router renumbering bit declaration conforms RFC2894/2292bis-02
+		x	x	x	x	x	x	x	-
+
+source address selection
+		latest	may00	may00	may00	may00	may00	may00	apr00?
+
+IPv6 PMTUD DoS prevention
+		(+)	(*1)	(*1)	-	(*1)	(*1)	-	-
+    (*1) validates ICMPv6 too big by using TCP/connected UDP/ESP/AH connection
+	 table.  PMTUD does not work for other random protocols like ping6.
+
+6to4 intface	x	x	-	x	x	-	x	x
+
+RFC3041 privacy extensions for IPv6 stateless autoconfiguration
+		x	-	-	x	-	-	x	x
+
+basic userland	x	x	x	x	x	x	x	(*1)
+    (*1) ftpd is totally broken from standard conformance POV.  it does not
+	interoperate with any other clients.  we have informed bsdi about this.
+
+route6d		x	x	x	x	x	x	x	x
+hroute6d	x	-	-	-	-	-	-	x
+bgpd		x	-	-	-	-	-	-	x
+pim6dd		x	pkgsrc	-	-	pkgsrc	-	-	x
+pim6sd		x	pkgsrc	-	-	pkgsrc	-	-	x
+
+rtsol/rtsold	x	x	x	x	x	x	x	x
+rtadvd		x	x	x	x	x	x	x	x
+rrenumd		x	-	-	x	-	-	x	x
+
+ip6fw		x	-	-	x	-	-	x	x
+faithd		x	x	x	x	x	x	x	x
+		(*1)	(*1)
+    (*1) inetd support
+
+syslogd		x	x	-	x	x	-	x	?
+lpr/lpd		x	x	-	-	x	-	-	?
+
+default sendmail is IPv6 ready
+		(+)	x	x	x	x	x	x	-
+
+default sendmail.cf is IPv6 ready
+		(+)	x	x	-	x	x	-	-
+
+racoon		x	x/pkg	-	-	x/pkg	-	-	x
+racoon version	latest	021120	-	ports	020507	-	ports	?
+
+Userland PPP	(+)	-	?	x	-	?	-	?
+Kernel PPP	(+)	x	?	x	x	?	x	?

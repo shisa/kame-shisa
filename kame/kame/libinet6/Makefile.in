@@ -1,0 +1,98 @@
+srcdir=	@srcdir@
+.PATH:	@srcdir@ @srcdir@/resolv
+VPATH=	@srcdir@ @srcdir@/resolv
+
+prefix=	@prefix@
+exec_prefix=@exec_prefix@
+libdir=	@libdir@
+mandir=	@mandir@
+includedir=	@includedir@
+
+CC=	@CC@
+CPP=	@CPP@
+INSTALL=@INSTALL@
+INSTALL_PROGRAM=@INSTALL_PROGRAM@
+INSTALL_DATA=@INSTALL_DATA@
+
+CFLAGS=	@DEFS@ @CFLAGS@ $(CPPFLAGS)
+CPPFLAGS=@CPPFLAGS@
+LDFLAGS=@LDFLAGS@
+
+OBJS=	getaddrinfo.o getnameinfo.o
+OBJS+=	if_indextoname.o if_nameindex.o if_nametoindex.o
+OBJS+=	getifaddrs.o
+OBJS+=	@V6OBJS@
+
+MAN3=	getaddrinfo.3 getnameinfo.3 gethostbyname.3 resolver.3 \
+	rresvport_af.3 if_indextoname.3 getipnodebyname.3 inet6_option_space.3 \
+	inet6_rthdr_space.3 bindresvport.3 inet6_opt_init.3 inet6_rth_space.3 \
+	getifaddrs.3
+MLINKS+=	getipnodebyname.3 getipnodebyaddr.3 \
+		getipnodebyname.3 freehostent.3 \
+		getaddrinfo.3 freeaddrinfo.3 \
+		getaddrinfo.3 gai_strerror.3 \
+		if_indextoname.3 if_nametoindex.3 \
+		if_indextoname.3 if_nameindex.3 \
+		if_indextoname.3 if_freenameindex.3 \
+		inet6_option_space.3 inet6_option_init.3 \
+		inet6_option_space.3 inet6_option_append.3 \
+		inet6_option_space.3 inet6_option_alloc.3 \
+		inet6_option_space.3 inet6_option_next.3 \
+		inet6_option_space.3 inet6_option_find.3 \
+		inet6_rthdr_space.3 inet6_rthdr_init.3 \
+		inet6_rthdr_space.3 inet6_rthdr_add.3 \
+		inet6_rthdr_space.3 inet6_rthdr_lasthop.3 \
+		inet6_rthdr_space.3 inet6_rthdr_reverse.3 \
+		inet6_rthdr_space.3 inet6_rthdr_segments.3 \
+		inet6_rthdr_space.3 inet6_rthdr_getaddr.3 \
+		inet6_rthdr_space.3 inet6_rthdr_getflags.3 \
+		bindresvport.3 bindresvport_sa.3 \
+		inet6_opt_init.3 inet6_opt_append.3 \
+		inet6_opt_init.3 inet6_opt_finish.3 \
+		inet6_opt_init.3 inet6_opt_set_val.3 \
+		inet6_opt_init.3 inet6_opt_next.3 \
+		inet6_opt_init.3 inet6_opt_find.3 \
+		inet6_opt_init.3 inet6_opt_get_val.3 \
+		inet6_rth_space.3 inet6_rth_init.3 \
+		inet6_rth_space.3 inet6_rth_add.3 \
+		inet6_rth_space.3 inet6_rth_reverse.3 \
+		inet6_rth_space.3 inet6_rth_segments.3 \
+		inet6_rth_space.3 inet6_rth_getaddr.3 \
+		getifaddrs.3 freeifaddrs.3
+
+libinet6.a: $(OBJS)
+	$(AR) cq libinet6.a $(OBJS)
+
+install:
+	$(INSTALL_DATA) libinet6.a $(libdir)
+	mkdir -p $(includedir)
+	if test \! -f /usr/include/ifaddrs.h; then \
+		$(INSTALL_DATA) missing/ifaddrs.h $(includedir); \
+	fi
+	$(INSTALL_DATA) missing/addrinfo.h $(includedir)
+	mkdir -p $(mandir)/man3
+	$(INSTALL_DATA) $(MAN3) $(mandir)/man3
+	@set ${MLINKS}; \
+	while test $$# -ge 2; do \
+		name=$$1; \
+		shift; \
+		dir=$(mandir)/man$${name##*.}; \
+		l=$${dir}/$$name; \
+		name=$$1; \
+		shift; \
+		dir=$(mandir)/man$${name##*.}; \
+		t=$${dir}${MANSUBDIR}/$$name; \
+		if [ -z "${UPDATE}" -o ! -f $$t ]; then \
+		    echo $$t -\> $$l; \
+		    ln -f $$l $$t; \
+		fi; \
+	done
+
+test: test.o libinet6.a
+	$(CC) $(LDFLAGS) -o test test.o -L${.CURDIR} -linet6
+
+clean:
+	/bin/rm -f libinet6.a *.o test
+
+distclean: clean
+	/bin/rm -f Makefile config.log config.cache config.status

@@ -1,0 +1,146 @@
+$NetBSD: podules,v 1.9.2.1 2002/11/01 11:12:40 tron Exp $
+
+/*
+ * Copyright (c) 1996 Mark Brinicombe
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. All advertising materials mentioning features or use of this software
+ *    must display the following acknowledgement:
+ *      This product includes software developed by Mark Brinicombe
+ *	for the NetBSD Project.
+ * 4. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * List of known podule manufacturers
+ */
+
+manufacturer	ACORN		0x0000	Acorn Computers
+manufacturer	OLIVETTI	0x0002	Olivetti
+manufacturer	WATFORD		0x0003	Watford Electronics
+manufacturer	CCONCEPTS	0x0004	Computer Concepts
+manufacturer	ARMADILLO	0x0007	Armadillo Systems
+manufacturer	WILDVISION	0x0009	Wild Vision
+manufacturer	HCCS		0x000c	HCCS
+manufacturer	ATOMWIDE	0x0011	Atomwide
+manufacturer	ATOMWIDE2	0x0017	Atomwide
+manufacturer	LINGENUITY	0x001a	Lingenuity
+manufacturer	IRLAM		0x001f	Irlam Instruments
+manufacturer	OAK		0x0021	Oak Solutions
+manufacturer	BEEBUG		0x0023	BEEBUG (RISC Developments)
+manufacturer	SJ		0x0029	SJ Research
+manufacturer	MORLEY		0x002b	Morley
+manufacturer	HCCS2		0x002d	HCCS
+manufacturer	VTI		0x0035	Vertical Twist
+manufacturer	DTSOFT		0x0037	D.T. Software
+manufacturer	CUMANA		0x003a	Cumana
+manufacturer	ICS		0x003c	ICS
+manufacturer	SERIALPORT	0x003f	Serial Port
+manufacturer	ARXE		0x0041	ARXE
+manufacturer	ALEPH1		0x0042	Aleph 1
+manufacturer	ICUBED		0x0046	I-Cubed
+manufacturer	BRINI		0x0050	Brini
+manufacturer	ANT		0x0053	ANT
+manufacturer	CASTLE		0x0055	Castle Technology
+manufacturer	ALSYSTEMS	0x005b	Alsystems
+manufacturer	SIMTEC		0x005f	Simtec Electronics
+manufacturer	YES		0x0060	Yellowstone Educational Solutions
+manufacturer	MCS		0x0063	MCS
+manufacturer	EESOX		0x0064	EESOX
+
+/*
+ * List of known podules.
+ */
+
+podule	ACORN_SCSI		0x0002	Acorn SCSI interface
+podule	ETHER1			0x0003	Ether1 interface
+podule	ROMRAM			0x0005	ROM/RAM podule
+podule	BBCIO			0x0006	BBC I/O podule
+podule	FAXPACK			0x0007	FaxPack modem
+podule	ST506			0x000b	ST506 HD interface
+podule	ACORN_MIDI		0x0013	MIDI interface
+podule	LASERDIRECT		0x0014	LaserDirect (Canon LBP-4)
+podule	A448			0x0016	A448 sound sampler
+podule	HCCS_IDESCSI		0x0022	HCCS IDE or SCSI interface
+podule	CUMANA_SCSI2		0x003a	SCSI II interface
+podule	ACORN_USERMIDI		0x003f	User Port/MIDI interface
+podule	LINGENUITY_SCSI8	0x0040	8 bit SCSI interface
+podule	ARXE_SCSI		0x0041	16 bit SCSI interface
+podule	COLOURCARD		0x0050	ColourCard
+podule	HAWKV9			0x0052	Hawk v9 mark2
+podule	WILDVISION_SOUNDSAMPLER	0x0054	Wild Vision Sound Sampler
+podule	DTSOFT_IDE		0x0055	IDE interface
+/* XXX ID 0x0058 is used by Oak ClassNet (EtherO) Ethernet cards */
+podule	OAK_SCSI		0x0058	16 bit SCSI interface
+podule	ETHER2			0x0061	Ether2 interface
+podule	ULTIMATE		0x0063	Ultimate micropodule carrier
+podule	WILDVISION_CENTRONICS	0x006f	Bi-directional Centronics
+podule	NEXUS			0x0064	Nexus interface (Podule)
+podule	MORLEY_SCSI		0x0067	SCSI interface
+podule	MORLEY_USERANALOGUE	0x006d	User and Analogue ports
+podule	HCCS_USERANALOGUE	0x006e	User and Analogue ports
+podule	LINGENUITY_SCSI8SHARE	0x008c	8 bit SCSIShare interface
+podule	VTI_SCSI		0x008d	SCSI interface
+podule	NEXUSNS			0x008f	Nexus interface (A3020 netslot)
+podule	ATOMWIDE_SERIAL		0x0090	multiport serial interface
+podule	LINGENUITY_SCSI		0x0095	16 bit SCSI interface
+podule	LINGENUITY_SCSISHARE	0x0096	16 bit SCSIShare interface
+podule	BEEBUG_IDE8		0x0097	8 bit IDE
+podule	CUMANA_SCSI1		0x00a0	SCSI I interface
+podule	ETHER3			0x00a4	Ether3/Ether5 interface
+podule	ICS_IDE			0x00ae	IDE Interface
+podule	SERIALPORT_DUALSERIAL	0x00b9	Serial interface
+podule	ETHERLAN200		0x00bd	EtherLan 200-series
+podule	SCANLIGHTV256		0x00cb	ScanLight Video 256
+podule	EAGLEM2			0x00cc	Eagle M2
+podule	LARKA16			0x00ce	Lark A16
+podule	ETHERLAN100		0x00cf	EtherLan 100-series
+podule	ETHERLAN500		0x00d4	EtherLan 500-series
+podule	ETHERM			0x00d8	EtherM dual interface NIC
+podule	CUMANA_SLCD		0x00dd	CDFS & SLCD expansion card
+podule	BRINILINK		0x00df	BriniLink transputer link adapter
+podule	ETHERB			0x00e4	EtherB network slot interface
+podule	24I16			0x00e6	24i16 digitiser
+podule	PCCARD			0x00ea	PC card
+podule	ETHERLAN600		0x00ec	EtherLan 600-series
+podule	CASTLE_SCSI16SHARE	0x00f3  8 or 16 bit SCSI2Share interface
+podule	CASTLE_ETHERSCSISHARE	0x00f4  8 or 16 bit SCSI2Share interface, possibly with Ethernet
+podule	CASTLE_ETHERSCSI	0x00f5  EtherSCSI
+podule	CASTLE_SCSI16		0x00f6  8 or 16 bit SCSI2 interface
+podule	ALSYSTEMS_SCSI		0x0107	SCSI II host adapter
+podule	RAPIDE			0x0114	RapIDE32 interface
+podule	ETHERLAN100AEH		0x011c	AEH77 (EtherLan 102)
+podule	ETHERLAN200AEH		0x011d	AEH79 (EtherLan 210)
+podule	ETHERLAN600AEH		0x011e	AEH62/78/99 (EtherLan 602)
+podule	ETHERLAN500AEH		0x011f	AEH75 (EtherLan 512)
+podule	CONNECT32		0x0125	Connect32 SCSI II interface
+podule	CASTLE_SCSI32		0x012b  32 bit SCSI2 + DMA interface
+podule	ETHERLAN700AEH		0x012e	AEH98 (EtherLan 700-series)
+podule	ETHERLAN700		0x012f	EtherLan 700-series
+podule	SIMTEC_IDE8		0x0130	8 bit IDE interface
+podule	SIMTEC_IDE		0x0131	16 bit IDE interface
+podule	MIDICONNECT		0x0133	Midi-Connect
+podule	ETHERI			0x0139	EtherI interface
+podule	MIDIMAX			0x0200	MIDI max
+podule	MMETHERV		0x1234	Multi-media/EtherV
+podule	ETHERN			0x5678	EtherN interface

@@ -1,0 +1,374 @@
+	Portability guideline
+	KAME project
+	$KAME: PORTABILITY,v 1.68 2003/09/09 11:22:42 itojun Exp $
+
+
+Source code in the "kame" directory will be shared among operating systems
+and hardware platforms.  Here are several guidelines to be portable
+across those possibilities.
+
+- Developers MUST compile the code on two or more platforms, before committing
+  it to the repository (trivial changes or comment typos are okay).
+
+- Do not break paren-match.
+  Always try to keep paren-match correctly, regardless of #ifdef.
+  The following is WRONG example:
+	#if foo
+		if (foo) {
+	#else
+		if (foo && bar) {
+	#endif
+			....
+		}
+
+		baz(this, that,
+	#if foo
+			something);
+	#else
+			something, anything);
+	#endif
+  It should be written like follows:
+	#if foo
+		if (foo)
+	#else
+		if (foo && bar)
+	#endif
+		{
+			....
+		}
+
+	#ifdef foo
+		baz(this, that, something);
+	#else
+		baz(this, that, something, anything);
+	#endif
+
+		/* latter part can also be like follows... */
+		baz(this, that,
+			something
+	#ifndef foo
+			, anything
+	#endif
+			);
+
+  It is also advised to add extra comment to help paren match,
+  if you need to write widow paren in string.  For example:
+	printf("(");		/* ) */
+  (note that there are opinions against it too - it depends)
+
+- Avoid use of "#if" as much as possible, stick to "#ifdef" or "#ifndef"
+  if possible (Avoid "#if defined(foo)" if you only have single "foo").
+  "#if" is relatively new syntax and is not friendly with old tools like
+  unifdef(1).
+
+- Follow NetBSD KNF.
+  They are the most strict guys about source code formatting.
+  If you obey NetBSD KNF, other platforms are happy.
+  More information on KNF is available at:
+	http://www.netbsd.org/Documentation/kernel/programming.html
+
+- Pointer can be 64bit (for example, on alpha).
+  When taking integer from pointer, use u_long, or long.
+  This is WRONG:
+	void *p;
+	/* alignment check */
+	if ((1 & (int)p) == 0) {
+		...
+	}
+  This is correct (but actually may not be future-proven):
+	void *p;
+	/* alignment check */
+	if ((1 & (u_long)p) == 0) {
+		...
+	}
+  
+- size_t can be 64bit, and may not be of same size as int.
+  When doing printf(), cast size_t to u_long and print it as %lu.
+	size_t siz;
+	printf("%lu", (u_long)siz);
+  Use of "%p" is more appropriate than casting, for pointers.
+
+- If you would like to use printf() against variable typed u_quad_t,
+  cast them to unsigned long long and use %llu.
+	u_quad_t x;
+	printf("%llu", (unsigned long long)x);
+  %qu is outside of standard, and %llu is in C99 standard.
+
+  Also note that FreeBSD prior to 3.2 cannot handle %llu correctly - you need
+  to use %qu on these platforms (3.2 and later are okay).
+  So you end up doing #ifdef __FreeBSD__.
+
+  KAME libinet6 includes vfprintf() with %llu support where necessary,
+  to ease code sharing in KAME userland code.
+
+- tv.tv_sec is not typed as time_t.
+  If you want time_t, explicitly copy the value.
+
+- Packed structs must be used with care.
+  Unaligned structure can cause problem on certain architectures.
+  You'll need to copy the return value to aligned structure before accessing.
+
+  Structure returned by SIOCGIFCONF falls into this category.
+
+- When you define wire format as C struct, (1) avoid bitfield.  (2) use
+  __attribute__((__packed__)) to control member and overall alignment.
+  NOTE: (2) is not portable across platforms - it is a GCC-ism.
+
+- 2nd arg to ioctl() must be u_long, not int, on non-FreeBSD2 platforms.
+
+- If you define multi-statement #define, define that like:
+	#define foobar (x, y) \
+	do { \
+		/*something*/ \
+		/*something*/ \
+	} while (0)
+  Without this wrapper nasty mistakes can happen.
+
+- Compiler options need to be configured differently into Makefile.
+  For NetBSD and OpenBSD, CFLAGS and CPPFLAGS are defined separately:
+	CPPFLAGS+=-I/usr/local/include
+	CFLAGS+=-g
+  CPPFLAGS contains -I and -D only (items that needs to be passed to cpp).
+  CFLAGS can contain other flags.
+  For FreeBSD and BSDI, there's no distinction.
+	CFLAGS+=-I/usr/local/include
+	CFLAGS+=-g
+
+- To refer objects and machine-generated source code, FreeBSD needs to use
+  ${.OBJDIR}.  This is because because FreeBSD completely separates "obj" tree
+  and "src" tree and has no symlink from ${.CURDIR}/obj to /usr/obj/foobar.
+
+  On NetBSD, "make print-objdir" is the right way to probe "obj" directory.
+
+  On other platforms, ${.CURDIR}/obj should do in most cases.
+
+- On manpage installation and shlib generation in Makefile.
+  for BSDI3, you need to set MAN[0-9] in Makefile like below.  MANDIR must
+  point to "catN" directory, not "manN", without "N":
+	MANDIR=	/usr/local/v6/man/cat
+	MAN5=	foo.0
+	MAN8=	baz.0
+	MLINKS=	foo.5 bar.5
+  BSDI4 is much like the same as BSDI3.  The only exception is shlib
+  generation.  NODYNAMIC=yes would prevent dynamic library from created:
+	MANDIR=	/usr/local/v6/man/cat
+	MAN5=	foo.0
+	MAN8=	baz.0
+	MLINKS=	foo.5 bar.5
+	NODYNAMIC=yes	# if you do not want shlib, define it
+  For NetBSD, you need to set MAN (not MAN[0-9]).  MANDIR needs to point to
+  "man" directory right above "catN" or "manN" directory:
+	MANDIR=	/usr/local/v6/man
+	MAN=	foo.5 baz.8
+	MLINKS=	foo.5 bar.5
+	MKPIC=	# if you do not want shlib, make it empty
+  For OpenBSD, you need to set MAN (not MAN[0-9]).  MANDIR needs to point to
+  "catN" directory, without "N":
+	MANDIR=	/usr/local/v6/man/cat
+	MAN=	foo.5 baz.8
+	MLINKS=	foo.5 bar.5
+	NOPIC=	yes	# if you do not want shlib, define it
+  For FreeBSD, you need to set MAN[0-9] like below.  MANDIR needs to point
+  to "manN" directory, without "N":
+	MANDIR=	/usr/local/v6/man/man
+	MAN5=	foo.5
+	MAN8=	baz.8
+	MLINKS=	foo.5 bar.5
+	# if you do not want shlib, do not define SHLIB_{MAJOR,MINOR}
+
+- If you use yacc/lex, be aware that FreeBSD bsd.prog.mk behaves very
+  strange with yacc's -o option (non-trivial .if statement is placed).
+  You may need to add the following into Makefile for code sharing.
+  The following fragment will force the build to generate y.tab.h, instead
+  of foo.h.
+	SRCS+=y.tab.h
+	y.tab.h: foo.y
+  Be sure to include y.tab.h, not foo.h, from *.l.
+
+  On NetBSD, YHEADER is quite useful.
+
+- BSDI3 /usr/bin/cc is gcc 1.42, and it does not support __FUNCTION__.
+  If you need to use __FUNCTION__, you need to set CC to "gcc", or "shlicc2"
+  explicitly.
+  __FUNCTION__ macro is not included in the ANSI standard, so it is best to
+  avoid __FUNCTION__, or make it optional, for portability.
+  if you ever need to use one, use __func__, which is defined in ANSI C99.
+
+- sys/queue.h are very different in each of *BSDs.  Most of macros found in
+  FreeBSD3 are not available in other systems.  Simply avoid those, make sure
+  your code compile on non-FreeBSD3 systems.
+  Avoid xx_FOREACH(), which is only available in FreeBSD3.  Just use
+	for (x = xx_FIRST(); x; x = xx_NEXT(x))
+  and do not try to make #if section for FreeBSD3.  More #if introduces
+  more bugs.
+
+- It is better to avoid insque() and rmque(), they are from old VAX days
+  and some platform now tries to avoid these.
+
+- To identify FreeBSD3, use the following:
+	#if defined(__FreeBSD__) && __FreeBSD__ >= 3
+		this is freebsd3.
+	#endif
+
+- To identify BSDI4, use the following:
+	#if defined(__bsdi__) && _BSDI_VERSION >= 199802
+		this is bsdi4.
+	#endif
+
+- RFC2553 defines sockaddr_storage to have __ss_{family,len} member.  During
+  the discusson for the draft on ipngwg, ss_len was proposed and final result
+  was not very clear.  X/Open document mentions ss_len, not __ss_len.
+  Therefore, you can see both definition on operating system platforms.
+  The most portable way of dealing with it is to:
+  (1) have -Dss_len=__ss_len to unify all occurences (including header file)
+  into __ss_len, or (2) never touch __ss_len.  cast to sockaddr * and use
+  sa_len.
+
+  Next version of RFC2553 (RFC2553bis = RFC3493) will define ss_len (not
+  __ss_len), and be synchronized better with X/Open document.
+
+- Never, never touch the __u6_addr{,8,16,32} member in struct in6_addr
+  directly.  Symbols starting with "__" are NOT supposed to be used.
+
+- RFC2553 defines only s6_addr[16] (array of u_int8_t) as member of struct
+  in6_addr.  KAME strictly follows RFC2553, and does not provide any
+  extensions like s6_addr{8,16,32} to the userland.  For maximum portability
+  across IPv6 platforms, only s6_addr should be used.
+  In the future, we may provide s6_addr{8,16,32} to the userland when updates
+  to RFC2553 defines them.  They are, in fact, very convenient and we would
+  like to see them defined in standard document.
+
+- sysctl(3) support in kernel.
+  FreeBSD: linker hack #define in sys/sysctl.h, like SYSCTL_INT().
+	no need to recompile sysctl(8).
+	SYSCTL_INT(_net_inet6_tcp6, TCP6CTL_SYN_CACHE_INTER,
+	    syn_cache_interval, CTLFLAG_RW, &tcp6_syn_cache_interval, 0, "");
+	Note that sys/kernel.h should be included as well, which SYSCTL_XXX
+	macros depend.
+  OpenBSD/NetBSD: xx_sysctl() needs to be supplied from inet6sw.
+	xx_sysctl() should implement switch statement to dispatch to all
+	possible leaf nodes available.  symbols must be defined in header file
+	for use from sysctl(8).
+  BSDI: similar to OpenBSD/NetBSD, but sysctl_int_arr() makes xx_sysctl()
+	code much easier for simple integer leaf nodes.
+
+- Under BSD make tree (bsd.prog.mk), you can't use relative path against
+  include files, like the following example:
+	#include "../foo/foo.h"		/*THIS DOES NOT WORK*/
+  If you are in baa/Makefile, and if you do "make obj", you will be in
+  baa/obj when you build the tree.  ../foo/foo.h will not be reachable
+  (it will be interpreted as baa/obj/../foo/foo.h = baa/foo/foo.h)
+
+  Solution: use -I${.CURDIR}/../foo.
+
+- OpenBSD does not allow duplicated inclusion of system header files.
+  (it does not have #ifndef _FOO_H_ wrapper)
+
+- Developers are advised to use pedantic compilation options (like -Wall
+  -Werror).  To configure default make settings, /etc/make.conf (freebsd),
+  /etc/mk.conf (netbsd/openbsd), and/or /usr/share/mk/sys.mk (bsdi) should be
+  useful.  Note, however, that the default compiler of bsdi3 (/usr/ucb/cc)
+  does not suppport the -Werror option.
+
+  Note that the meaning of -Wall is different across *BSD because *BSD use
+  different version of gnu cc.  Sometimes -Wall raises bogus warning due to
+  bugs in code generator.  Also, since function prototypes are defined
+  differently in some cases (like ntohl), certain tweaks are needed to
+  eliminate warnings on all the platforms.  Don't worry about it too much,
+  you can always talk with other developers.
+
+- For portability in kernel networking code, look at kame/sys/net/net_osdep.h.
+
+- The -interface modifier of the route(8) command does not take an
+  argument except on FreeBSD.  On other platforms, you should use the
+  -ifp modifier with a dummy gateway.
+
+  For example,
+  # route add -inet6 default -interface gif0 (on FreeBSD)
+  is (almost) equivalent to
+  # route add -inet6 default ::1 -ifp gif0 -interface (on others)
+
+  Unfortunately, the latter does not work for FreeBSD.  Thus, there is
+  no portable usage that works for all *BSDs.
+
+  Please also note that the usage of the -ifp modifier in the above
+  example may not work on older versions of *BSD.  If this is the
+  case, you will need a mixture of the "change" operation and the -ifp
+  modifier of the route command.  The following sequence is an
+  equivalent of the latter example above.
+  # route add -inet6 default ::1
+  # route change -inet6 default ::1 -ifp gif0
+
+- (Not really a portability issue)  Fixes/improvements to libpcap and tcpdump
+  should be sent to itojun, or patches@tcpdump.org.  We no longer maintain
+  libpcap/tcpdump under "kame" directory.  http://www.tcpdump.org/
+
+- freebsd and bsdi3 do not have satosin() in sys/netinet/in.h.  not sure
+  where is the origin for this macro.  do not use it, or define it locally
+  in C source if you don't have one (#ifndef - #define).
+
+- INADDR_LOOPBACK is declared only in freebsd[34], netbsd and openbsd.
+
+- Location of MD5 library.
+  netbsd/openbsd: header is <md5.h>, libc.
+  freebsd: header is <md5.h>, libcrypt
+
+- mandoc formatting for SYNOPSIS section.
+  On netbsd/openbsd, people usually use
+	.Nm ""
+  to indicate new line in SYNOPSIS section ("" makes proper hanging indent,
+  while .Nm does not).  However, bsdi mandoc chokes with it.  Explicitly write
+	.Nm foo
+  to avoid portability issue (it is unfortunate that we need to place
+  duplicated text...).
+
+- SADB_X_SA2 (in /usr/include/net/pfkeyv2.h) has completely different meaning
+  between KAME-based systems and openbsd systems.  take caution if you plan to
+  use it.
+
+- getopt(3) returns -1 on openbsd/netbsd, and EOF on other platforms.  This was
+  due to POSIX changes (POSIX.2 uses -1 and is more recent).
+  Since EOF is usually defined to be -1, it is not a major issue.
+
+- SECURITY: Never use printf-like functions (including syslog, setproctitle
+  and others) with only a "fmt" argument.  Always use "%s".  Otherwise,
+  your program will be compromised by malicious party.
+	BAD: syslog(foo);
+	GOOD: syslog("%s", foo);
+
+- SECURITY: be careful using fd_set, specifically when you are in setuid'ed
+  applications.  there's buffer overrun possibility with FD_SET().
+  use poll(2) whenever available (note that KAME still support platforms
+  without poll(2)).  see openbsd select(2) manpage.
+
+- strlcpy/strlcat.
+	comes with strlcpy/cat: netbsd15 openbsd freebsd3[3-5] freebsd4
+	does not come with them: freebsd2 freebsd3[0-2] bsdi[34] netbsd142
+		(libinet6 includes it to ease code sharing)
+
+  strlcpy and strlcat -- consistent, safe, string copy and concatenation.
+  Usenix 1999, by Todd C. Miller, Theo de Raadt.
+	http://www.openbsd.org/papers/strlcpy-paper.ps
+	http://www.openbsd.org/papers/strlcpy-slides.ps
+
+- strptime.
+	freebsd4 and netbsd have it in libc.
+	bsdi4 does not have it.
+	others?
+
+- snprintf and friends can return negative value, as well as value larger
+  than the specified region.  therefore, it is unsafe to manipulate a pointer
+  directly by the return value.
+	WRONG:	lp += snprintf(lp, ep - lp, "%s", foo);
+	RIGHT:	n = snprintf(lp, ep - lp, "%s", foo);
+		if (n < 0 || n >= ep - lp)
+			die();
+		lp += n;
+
+- daemon(3) with noclose arg = 0: must be used prior to socket/file descriptor
+  initialization.  otherwise daemon(3) can mess with opened file descriptors.
+
+- mandoc(7) rule is different in every *BSD.
+	NetBSD - for commands, use EXIT STATUS rather than RETURN VALUES.
+		no CAVEATS section.  has SECURITY CONSIDERATIONS section.
+	OpenBSD - has CAVEATS section.

@@ -1,0 +1,117 @@
+	Installation procedure - preparation of the tree
+	KAME project
+	$KAME: INSTALL,v 1.29 2002/01/28 05:35:06 itojun Exp $
+
+Let's call the entire file-tree under this directory "the KAME tree".
+
+This directory contains several information files and two directories.
+The "kame" directory contains files created by the KAME project, which
+are shareable among NetBSD, FreeBSD, and other operating systems.  The
+other directory is for your target operating system.  For example, if
+you are on NetBSD, the KAME tree looks like this:
+
+kame --+-- INSTALL		(the document you are looking at)
+       +-- kame --+-- sys	(kernel source code shared among OSes)
+       |          +-- kame --+-- libinet6
+       |		     +-- ....
+       |			(userland source code shared among OSes)
+       |
+       +-- netbsd --+-- INSTALL	(NetBSD-specific installation document)
+		    +-- sys	(kernel source code specific to NetBSD)
+		    +-- lib --+-- libinet6
+		    |	      +-- ...
+		    +-- ...	(userland source code specific to NetBSD)
+
+The KAME tree has no direct relationship with "/usr/src" tree.  You do
+not need to care about /usr/src at all.  Please follow the following
+instructions.
+
+Except for bsdi[34], sufficient files are provided in the KAME tree to
+bulid complete set of IPv6/IPsec binaries.  You don't have to apply
+any patches.
+
+For bsdi[34], due to license restrictions, some necessary files are
+not provided (we are not allowed to redistribute the whole source code
+tree).  You have to complete the KAME tree by yourself.  For example,
+for bsdi[34], we cannot ship entire "sys" tree under kame/bsdi3/sys.
+"sys.diff" is included in the KAME kit instead.  You need to extract
+"sys" tree under kame/bsdi3/sys by following step 2 in this document.
+
+kame --+-- INSTALL
+       +-- kame --+-- sys
+       |          +-- kame --+-- libinet6
+       |		     +-- ....
+       |
+       +-- bsdi3 --+-- INSTALL
+		   +-- sys.diff		<--- need to extract "sys" tree here
+		   +-- lib --+-- libinet6
+		   |	      +-- ...
+		   +-- ...
+
+NOTE: On some operating systems it is possible to perform "make obj"
+before building.  However, it is not recommended since it might cause
+troubles with anoncvs operation.  For example, the "update" target for
+Makefile in the top-level directory will become unusable.  Do not
+perform "make obj" unless you are ready to tackle those troubles.
+
+0. If you have an installed KAME kit in the past, you may need to
+   remove the files under "/usr/local/v6" to avoid conflicts or misuse
+   of the old files during building.  We recommend you to remove the
+   following, at least:
+	/usr/local/v6/lib/*
+   Also, do not forget to update "/usr/include" in step 5 (see below),
+   otherwise the include files and source code become out-of-sync.
+
+1. See the "VERSION" file and identify a symbol name for your target
+   operating system.  For the rest of this document, we assume "netbsd"
+   for explanation.
+  
+2. Be sure to have the complete KAME tree.  For certain platforms
+   (namely bsdi3 and bsdi4) we cannot ship the whole source code tree
+   into the KAME tar.gz file, and you need to
+	- copy/untar fresh tree from CD-ROM/whatever
+	- apply patch included in KAME kit
+   Please read section 0 in bsdi[34]/INSTALL before proceed further,
+   if you are using bsdi[34].
+
+3. Invoke the following:
+	% make TARGET=netbsd prepare
+   This will create necessary symbolic links for building (from the
+   "netbsd" tree to the "kame" tree).  NOTE: You'll need the "perl"
+   interpreter to invoke this.  If you see any error message from the
+   the process, you skipped some of steps required.  Do not proceed
+   further.
+
+4. Some parts of the KAME tree will be compiled, only if there are
+   certain libraries installed beforehand:
+	usr.sbin/racoon:
+		Compiles only when OpenSSL 0.9.5a (or later) is installed
+		beforehand, and shell search path is configured to
+		reach "openssl" program.
+   Please install those libraries before building.
+
+   We support the following installations.
+
+   - Your system has OpenSSL installed by default.  FreeBSD 4.3-RELEASE,
+     BSD/OS 4.2 and NetBSD 1.5 (and beyond) fall into this category.
+
+   - A system with OpenSSL, installed manually with default installation path.
+	This means that you gave no option to "./configure".  In this case
+	you should have /usr/local/ssl/include/openssl/des.h.
+
+   - A system with OpenSSL, installed via FreeBSD ports system.
+	Note that we do not support ports-current.  Please stick to the
+	ports directory came with the FreeBSD revioin you are using, or
+	the one came with KAME kit.  In this case you should have
+	/usr/local/include/openssl/des.h.  We do not support
+	ports with non-standard LOCALBASE/PREFIX.
+
+   If you install OpenSSL with some other ways, the KAME tree may fail
+   to find OpenSSL and omit compilation of, for example,
+   usr.sbin/racoon.
+
+5. Go down to the target directory that you have specified (e.g
+   "netbsd"), and read document named "INSTALL" (placed in somewhere
+   like "netbsd/INSTALL").  
+
+Good luck!

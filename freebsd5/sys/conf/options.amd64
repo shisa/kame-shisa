@@ -1,0 +1,35 @@
+# $FreeBSD: src/sys/conf/options.amd64,v 1.10 2003/11/17 08:58:16 peter Exp $
+# Options specific to AMD64 platform kernels
+
+AUTO_EOI_1		opt_auto_eoi.h
+AUTO_EOI_2		opt_auto_eoi.h
+MAXMEM
+PERFMON			opt_perfmon.h
+
+# Change KVM size.  Changes things all over the kernel.
+KVA_PAGES		opt_global.h
+
+CLK_CALIBRATION_LOOP	opt_clock.h
+TIMER_FREQ		opt_clock.h
+
+VGA_ALT_SEQACCESS	opt_vga.h
+VGA_DEBUG		opt_vga.h
+VGA_NO_FONT_LOADING	opt_vga.h
+VGA_NO_MODE_CHANGE	opt_vga.h
+VGA_SLOW_IOACCESS	opt_vga.h
+VGA_WIDTH90		opt_vga.h
+
+ATKBD_DFLT_KEYMAP	opt_atkbd.h
+
+# -------------------------------
+# EOF
+# -------------------------------
+HAMMER			opt_cpu.h
+PPC_PROBE_CHIPSET	opt_ppc.h
+PPC_DEBUG		opt_ppc.h
+PSM_HOOKRESUME		opt_psm.h
+PSM_RESETAFTERSUSPEND	opt_psm.h
+PSM_DEBUG		opt_psm.h
+IA32
+NO_MIXED_MODE
+DEV_ATPIC		opt_atpic.h

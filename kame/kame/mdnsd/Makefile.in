@@ -1,0 +1,40 @@
+#	$KAME: Makefile.in,v 1.4 2001/07/26 14:03:32 itojun Exp $
+
+srcdir=	@srcdir@
+VPATH=	@srcdir@
+CFLAGS=	@CFLAGS@ @DEFS@
+LDFLAGS=@LDFLAGS@
+LIBOBJS=@LIBOBJS@
+LIBS=	@LIBS@
+CC=	@CC@
+TARGET=	mdnsd
+
+INSTALL=@INSTALL@
+INSTALL_PROGRAM=@INSTALL_PROGRAM@
+INSTALL_DATA=@INSTALL_DATA@
+prefix=	@prefix@
+exec_prefix=	@exec_prefix@
+bindir=	@bindir@
+sbindir=@sbindir@
+mandir=	@mandir@
+
+OBJS=	mdnsd.o mainloop.o db.o
+
+all:	$(TARGET) 
+mdnsd:	$(OBJS) $(LIBOBJS)
+	$(CC) $(LDFLAGS) -o mdnsd $(OBJS) $(LIBOBJS) $(LIBS) 
+
+install::
+	$(INSTALL_PROGRAM) -s -o bin -g bin $(TARGET) $(sbindir)
+	$(INSTALL_DATA) -o bin -g bin mdnsd.8 $(mandir)/man8
+
+includes::
+
+clean cleandir::
+	/bin/rm -f *.o $(TARGET)
+
+distclean:: clean
+	/bin/rm -f Makefile config.cache config.log config.status .depend
+
+depend:
+	mkdep ${CFLAGS:M-[ID]*} $(srcdir)/*.c

@@ -1,0 +1,242 @@
+	README of KAME kit
+	KAME Project
+	$KAME: README,v 1.71 2004/06/21 16:26:23 itojun Exp $
+
+<<<Project Overview>>>
+
+"KAME Project" is a joint effort to create single solid software set,
+especially targeted at IPv6/IPsec.  Talented researchers from Fujitsu
+Limited, Hitachi, Ltd., IIJ Research Laboratory, NEC Corporation,
+Toshiba Corporation, YDC Corporation and Yokogawa Electric Corporation
+joined the project.  This joint effort will avoid unnecessary duplicated
+development in the same area, and effectively provides high quality and
+advanced featured packages.
+
+KAME was originally called "Hydrangea" which was developed by v6
+working group, WIDE Project.  We have merged codes, which each company
+in Japan has developed, into "Hydrangea".  To identify the joint
+effort, we changed the name from "Hydrangea" to "KAME".
+
+Stabilized portion of KAME software has been merged into FreeBSD, NetBSD,
+OpenBSD, and BSD/OS.  Therefore, if you just want to use IPv6, you do not
+need the KAME patch contained in this tar.gz file.
+- FreeBSD: 4.0 and beyond
+- NetBSD: 1.5 and beyond
+- OpenBSD: 2.7 and beyond
+- BSD/OS: 4.2 and beyond
+
+"KAME" officially indicates a short word of <Ka>rigo<me> where our office
+locates.  But it, in fact, stands for turtle in Japanese.
+
+
+<<<Our Goals>>>
+
+KAME Project aims to provide FREE reference implementations of
+	(1) IPv6
+	(2) IPsec
+	(3) advanced internetworking such as advanced packet queuing, 
+	    ATM, mobility, and whatever interesting
+on several BSD variants.
+
+
+<<<Copyright>>>
+
+The kit comes with BSD-like copyright.  In short, the code is FREELY
+available but with NO WARRANTY.  Even commercial use is OK.  Please
+refer to the COPYRIGHT file for more details.  The copyright holder is
+WIDE Project instead of KAME Project.  This is because KAME Project is
+to be terminated in March 2006 (may be extended).
+
+READ CAREFULLY: Several countries have legal enforcement for
+export/import/use of cryptographic software.  Check it before playing
+with the kit.  We do not intend to be your legalease clearing house
+(NO WARRANTY).  If you intend to include KAME stack into your product,
+you'll need to check if the licenses on each file fit your situations,
+and/or possible intellectual property right issues.
+
+In KAME kit, there are some software which come with restricted copyright
+notices.  Here is a list of those software (may not be comprehensive):
+
+kame/bsdi[34]: some of the modules are BSDi copyrighted.  for those modules
+	we ship diffs instead of full source.
+kame/kame/kame/pim6[sd]d: see LICENCE.{pimd,mrouted}.
+kame/sys/netinet6/in6_rmx.c: specifies "without fee" (affects kame/freebsd[234])
+kame/kame/kame/libaltq/parser.c
+
+
+<<<What's Next?>>>
+
+To know the difference from the previous stable release, please refer
+to CHANGELOG and RELNOTES.
+
+To install this kit, please read INSTALL at the top directory, and
+INSTALL under operating system directory (for example,
+netbsd/INSTALL).
+
+If you want to know what features are provided, please refer to
+IMPLEMENTATION. 
+
+Before you start using this kit, please take a look at USAGE. 
+
+
+<<<What is the difference with *BSD IPv6/IPsec code and KAME code?>>>
+
+Starting summer 1999, *BSD distributions start incorporating KAME IPv6/IPsec
+stack into their development track (i.e. *BSD-current).  Recently some of
+*BSDs ship with integrated IPv6 code (for example, FreeBSD 4.0-RELEASE).
+Basically,
+- *BSD distributions ship with past KAME code.  and they do not include
+  some of experimental code in KAME tree (merger did not take place for
+  some of experimental portion, on purpose).
+- KAME kit includes more recent IPv6/IPsec changes by KAME team.
+  It also includes more experimental code than the *BSD distributions, as
+  well as additional functionalities which haven't integrated into *BSDs yet.
+
+http://www.kame.net/project-overview.html#release talks more about this issue.
+A file named COVERAGE has detailed comparison between kame/*bsd, *bsd-curernt
+and recent *bsd releases.
+
+
+<<<Reporting bugs>>
+
+When you report bugs, please be sure to include the following information:
+- the opertaing system platform you are using (like "FreeBSD 2.2.8-RELEASE")
+- the hardware architecture you are using (i386, sparc, vax or whatever)
+- the version of KAME you are using ("SNAP dated Jan 1 2000", or
+  "grabbed via anonymous CVS around Jan 1 2000")
+- information necessary to repeat the problem
+  this includes, but not limited to,
+	(1) kernel compilation options,
+	(2) exact command line that raises the issue,
+	(3) routing table setup taken by "netstat -rn",
+	(4) interface configuration via "ifconfig -a",
+	(5) sysctl setting taken by "sysctl -a"
+- (if necessary) hardware configuration, like "ethernet card is NE2000"
+- (if necessary) screen trace on the trouble, taken by "script" command.
+- (if necessary) packet trace taken by "tcpdump" command.
+- (if necessary) IPv6/v4 connectivity status in your network
+
+Before sending questions, or you are uncertain if it is really a bug or not,
+make sure you have checked all available documents, including release notes
+and manual pages.  Also make sure that you have the latest code with you
+(normally we are unable to help you if you are using ancient version of
+KAME kit).
+
+Don't try to *describe* your settings, just paste command output itself
+onto the report instead.  A bad example is "I assigned a global address on
+my ethernet interface, but ping6 didn't work.  Why?" No one will be
+able to answer this kind of question.  Instead, you should type as follows:
+# /usr/local/v6/sbin/ifconfig -a
+(paste the output.  Again, the exact output is best.  Do not try to
+ describe the output by your own word)
+# /usr/local/v6/sbin/ifconfig ne0 inet6 2001:200::1234 prefixlen 64 alias
+(paste the output)
+# /usr/local/v6/sbin/ifconfig -a
+(paste the output.  The difference between the two "ifconfig -a" might
+ be important.)
+# /usr/local/v6/sbin/ping6 -n 2001:300::1
+(paste the output, including errors and warnings)
+etc...
+
+If you track the bugs, please notice the following items:
+- be sure to use "ping6 -n", not "ping6", when you probe reachability.
+- read IMPLEMENTATION chapter 1.3 if you try link-local addresses on
+  your tests.
+
+Submit your bug report by using bug database, or you may want to
+submit it to snap-users mailing list.
+	bug database: http://www.kame.net/, or /usr/local/v6/bin/kame-send-pr
+	snap-users mailing list: http://www.kame.net/snap-users/
+
+If you try to send an email for bug report or questions, use public mailing
+list whenever possible, as the discussions may be able to help other people
+as well.  The following lists the public mailing lists popular among our
+community.
+	snap-users@kame.net
+		see http://www.kame.net/ for subscription guideline
+	users@ipv6.org
+		see http://www.ipv6.org/ for subscription guideline
+
+Thanks for your feedback!
+
+
+<<<Contact Points>>
+
+If you want to know more about KAME Project, please visit:
+	http://www.kame.net/
+You can get source code snapshots as well as bug reports (you can also
+send bug reports on this web page).
+
+We maintain users mailing list, called "snap-users".
+	http://www.kame.net/snap-users/
+has archives of postings, how to subscribe, and some other information.
+Share your tips, experiences, comments with other users.
+
+If you have private comments to our developers, please drop a line to:
+	core@kame.net
+
+If you have questions about commercial usage or other
+administrative/political issues, please send the questions to:
+	kame-secretary@kame.net
+
+
+<<<Researchers>>>
+
+Current core members are:
+           Kazu YAMAMOTO  IIJ Research Laboratory
+       Jun-ichiro HAGINO  IIJ Research Laboratory
+          Shoichi SAKANE  Yokogawa Electric Corporation
+           Tatuya JINMEI  Toshiba Corporation
+	     Kenjiro CHO  Sony Computer Science Laboratory Inc.
+	 Shinsuke SUZUKI  Hitachi, Ltd.
+	   Keiichi SHIMA  IIJ Research Laboratory
+	 Tsuyoshi MOMOSE  NEC Corporation
+	      Hideki ONO  Fujitsu Limited
+
+Alumni of core members:
+         Yoshinobu INOUE  Fujitsu Limited
+      Munechika SUMIKAWA  Hitachi, Ltd.
+           Kazushi SUGYO  NEC Corporation
+      Shin-ichi FUJISAWA  Yokogawa Electric Corporation
+	  Shuichi KARINO  NEC Corporation
+	     Koji KAWANO  Matsushita Graphic Communication Systems, Inc.
+	   Noriyasu KATO  Toshiba Corporation
+
+
+<<<Acknowledgements>>>
+
+The core members deeply thank the original members and the
+contributors including:
+Yusaku HASEGAWA, Kentaro MISU, Yasushi YAMASAKI,
+Atsushi ONOE, Noritoshi DEMIZU, Katsushi KOBAYASHI, Takahiro
+KIKUCHI, Motonori NAKAMURA, Francis Dupont, Kazunori FUJIWARA,
+HO Sonmyong, Masanari TSUBAI, Hiroshi URA, Craig Metz, Chris the
+Elder, UO Youjiro, Wayne Knowles, Hajimu UMEMOTO, Ichiro Fukuhara,
+David P.  Wiggins, Martti Kuparinen, Tetsuya Isaki, Erik Bertelsen,
+Toshio Shimojou, Kazunori Fujiwara, Kimio Ishii, Masafumi OE,
+Mickael Hoerdt, Tomomi Suzuki, Arkadiusz Miskiewicz, Wolfgang Rupprecht,
+YASUOKA Masahiko, Nobumichi Ozoe, Frederic SOULIER, Koji Kondo,
+David PATE, Kenjiro Komaki, Satosi KOBAYASI, Takashi Tanaka, Heiko
+W. Rupp, Kazuto Ushioda, Masahiro Ishiyama, Bill Sommerfeld, Jason
+Thorpe, Yasunari Momoi, Chris P. Ross, Hideaki Imaizumi, Alexander
+Fung, Scott Mace, Peter Tattam, Hideaki YOSHIFUJI, Naoyasu Takenaka,
+Wada Keiji, Theo de Raadt, Niels Baggesen, Takahiro Yugawa, Laine
+Stump, Hans-Joachim Knobloch, Angelos D. Keromytis, KOIE Hidetaka,
+Markus Friedl, Ryota HIROSE, Shigeya Suzuki, Assar Westerlund,
+Bruce A. Mah, Masaaki Noro, Hugh Graham, Hubert Feyer, Eric Lemiere,
+Benoit Hilt, Noriaki Takamiya, Olivier TOGNI, Greg Troxel, Bill
+Fenner, Goeran Bengtson, Tomio Narita, Conny Larsson, Ryuji Somegawa,
+Akira Kato, Ronald van der Pol, Graham Wheeler, Kris Kennaway, Kazuo Horikawa,
+larry baird, rimi guyomarch, Makoto MATSUSHITA, Kevin Lahey
+SHIMIZU Ryo, Shigeyuki Fukushima, Toshiaki Nakatsu, Florent Parent,
+SHIRASAKI Yasuhiro, Constantine Sapuntzakis, Jun-ya Kato, Kazuyoshi Tomita,
+Hitoshi Asaeda, and SUDOH Yoshiaki.
+(in no particular order).
+
+We would also like to thank BSDI (http://www.bsdi.com/) for donating
+BSD/OS licenses for development.
+
+We apologize for any omissions from this list, which are certainly
+unintentional.
+
+							<end of README>

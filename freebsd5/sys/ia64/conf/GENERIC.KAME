@@ -1,0 +1,229 @@
+
+# KAME NOTE: kernel compilation may fail if you enable any of items that are
+# commented out. (to be improved in the future, but do it on your own risk.
+# report results to snap-users@kame.net)
+#
+
+#
+# GENERIC -- Generic kernel configuration file for FreeBSD/ia64
+#
+# For more information on this file, please read the handbook section on
+# Kernel Configuration Files:
+#
+#    http://www.FreeBSD.org/doc/en_US.ISO8859-1/books/handbook/kernelconfig-config.html
+#
+# The handbook is also available locally in /usr/share/doc/handbook
+# if you've installed the doc distribution, otherwise always see the
+# FreeBSD World Wide Web server (http://www.FreeBSD.org/) for the
+# latest information.
+#
+# An exhaustive list of options and more detailed explanations of the
+# device lines is also present in the ../../conf/NOTES and NOTES files.
+# If you are in doubt as to the purpose or necessity of a line, check
+# first in NOTES.
+#
+# For hardware specific information check HARDWARE.TXT
+#
+# $FreeBSD: src/sys/ia64/conf/GENERIC,v 1.58.2.1 2004/01/26 19:42:12 nectar Exp $
+
+machine		ia64
+cpu		ITANIUM
+ident		GENERIC
+
+makeoptions	DEBUG=-g	# Build kernel with debug information.
+
+options 	CD9660		# ISO 9660 Filesystem
+options 	COMPAT_43	# Compatible with BSD 4.3 [KEEP THIS!]
+options 	DDB		# Enable the kernel debugger
+options 	FFS		# Berkeley Fast Filesystem
+options 	INET		# InterNETworking
+options 	INET6		# IPv6 communications protocols
+options 	KTRACE		# ktrace(1) syscall trace support
+options 	MD_ROOT		# MD usable as root device
+options 	MSDOSFS		# MSDOS Filesystem
+options 	NFSCLIENT	# Network Filesystem Client
+options 	NFSSERVER	# Network Filesystem Server
+options 	NFS_ROOT	# NFS usable as root device
+options 	PROCFS		# Process filesystem (/proc)
+options 	PSEUDOFS	# Pseudo-filesystem framework
+options 	SCHED_4BSD	# 4BSD scheduler
+options 	SCSI_DELAY=5000	# Delay (in ms) before probing SCSI
+#options 	SMP		# SMP support
+options 	SOFTUPDATES	# Enable FFS soft updates support
+options 	SYSVMSG		# SYSV-style message queues
+options 	SYSVSEM		# SYSV-style semaphores
+options 	SYSVSHM		# SYSV-style shared memory
+options 	UFS_ACL		# Support for access control lists
+options 	UFS_DIRHASH	# Hash-based directory lookup scheme
+options 	_KPOSIX_PRIORITY_SCHEDULING	# Posix P1003_1B RT extensions
+options 	PFIL_HOOKS	# pfil(9) framework
+
+# Various "busses"
+device 		acpi		# ACPI support (mandatory)
+device		firewire	# FireWire bus code
+device		miibus		# MII bus support (ethernet)
+device		pci		# PCI bus support
+device		scbus		# SCSI bus (required for SCSI)
+device		usb		# USB Bus (required for USB)
+
+# ATA and ATAPI devices
+device		ata		# ATA controller
+device		atadisk		# ATA disk drives
+device		atapicd		# ATAPI CDROM drives
+device		atapifd		# ATAPI floppy drives
+device		ataraid		# ATA RAID drives
+
+# SCSI Controllers
+device		ahc		# AHA2940 and AIC7xxx devices
+device		ahd		# AHA39320/29320 and AIC79xx devices
+device		isp		# Qlogic family
+device		mpt		# LSI-Logic MPT-Fusion
+device		sym		# NCR/Symbios Logic
+
+# RAID controllers interfaced to the SCSI subsystem
+device		asr		# DPT SmartRAID V, VI and Adaptec RAID
+device		ciss		# Compaq Smart RAID 5*
+device		dpt		# DPT Smartcache III, IV
+device		iir		# Intel Integrated RAID
+device		mly		# Mylex AcceleRAID/eXtremeRAID
+
+# SCSI peripherals
+device		cd		# CD-ROM, DVD-ROM etc.
+device		ch		# Media changer
+device		da		# Direct Access (ie disk)
+device		pass		# Passthrough (direct SCSI access)
+device		sa		# Sequential Access (ie tape)
+device		ses		# Environmental Services (and SAF-TE)
+
+# RAID controllers
+device		amr		# AMI MegaRAID
+device		ida		# Compaq Smart RAID
+device		mlx		# Mylex DAC960 family
+
+# USB host controllers and peripherals
+device		ehci		# EHCI host controller
+device		ohci		# OHCI PCI->USB interface
+device		ugen		# Generic device
+device		uhci		# UHCI PCI->USB interface
+device		uhid		# Human Interface Devices
+device		ukbd		# Keyboard
+device		ulpt		# Printer
+device		umass		# Disks/Mass storage (need scbus & da)
+device		ums		# Mouse
+
+# PCI Ethernet NICs.
+device		de		# DEC/Intel DC21x4x (``Tulip'')
+device		em		# Intel PRO/1000 adapter Gigabit Ethernet Card
+device		txp		# 3Com 3cR990 (``Typhoon'')
+device		vx		# 3Com 3c590, 3c595 (``Vortex'')
+
+# PCI Ethernet NICs that use the common MII bus controller code.
+device		bge		# Broadcom BCM570xx Gigabit Ethernet
+device		dc		# DEC/Intel 21143 and various workalikes
+device		fxp		# Intel EtherExpress PRO/100B (82557, 82558)
+device		pcn		# AMD Am79C97x PCI 10/100 NICs
+device		re		# RealTek 8139C+/8169/8169S/8110S
+device		rl		# RealTek 8129/8139
+device		sf		# Adaptec AIC-6915 (``Starfire'')
+device		sis		# Silicon Integrated Systems SiS 900/SiS 7016
+device		xl		# 3Com 3c90x ("Boomerang", "Cyclone")
+
+# USB Ethernet
+device		aue		# ADMtek USB ethernet
+device		cue		# CATC USB ethernet
+device		kue		# Kawasaki LSI USB ethernet
+
+# FireWire support
+device		sbp		# SCSI over FireWire (need scbus & da)
+
+# Various (pseudo) devices
+device		ether		# Ethernet support
+device		faith		# IPv6-to-IPv4 relaying (translation)
+device		gif		# IPv6 and IPv4 tunneling
+device		loop		# Network loopback
+device		md		# Memory "disks"
+device		pty		# Pseudo-ttys (telnet etc)
+device		puc		# Multi I/O cards and multi-channel UARTs
+device		random		# Entropy device
+device		tun		# Packet tunnel.
+device		uart		# Serial port (UART)
+
+# The `bpf' device enables the Berkeley Packet Filter.
+# Be aware of the administrative consequences of enabling this!
+device		bpf		# Berkeley packet filter
+
+# KAME extensions
+#
+# IPSEC does not work due to FAST_IPSEC changes
+#options 	IPSEC			#IP security
+#options 	IPSEC_ESP		#IP security (crypto; define w/ IPSEC)
+#options 	IPSEC_DEBUG		#debug for IP security
+#options 	NATM			#native mode ATM
+#options 	ENABLE_DEFAULT_SCOPE
+
+#options 	ND6_DEBUG	# net.inet6.icmp6.nd6_debug=1 by default
+
+options 	NEW_STRUCT_ROUTE	# mandatory
+
+#options 	RADIX_MPATH	# equal cost multipath
+
+#options 	SCTP		# adds SCTP stack to kernel - requires INET6
+#options 	SCTP_DEBUG	# adds debugging support for SCTP
+#options 	SCTP_TCP_MODEL_SUPPORT	# adds TCP model support
+#options 	SCTP_USE_ADLER32	# use obsolete Adler32 checksum,
+#options 	SCTP_ALTERNATE_ROUTE	# alternate route support - TBD
+
+# Router Preference on host side
+#options 	RTPREF
+
+# IPv6 firewall
+#options 	"IPV6FIREWALL"
+#options 	"IPV6FIREWALL_VERBOSE"
+#options 	"IPV6FIREWALL_DEFAULT_TO_ACCEPT"
+
+# ALTQ
+options 	ALTQ		#alternate queueing
+#options 	ALTQ_CBQ	#class based queueing
+#options 	ALTQ_WFQ	#weighted fair queueing
+#options 	ALTQ_FIFOQ	#fifo queueing
+#options 	ALTQ_RED	#random early detection
+#options 	ALTQ_FLOWVALVE	#flowvalve for RED (needs RED)
+#options 	ALTQ_RIO	#triple red for diffserv (needs RED)
+#options 	ALTQ_LOCALQ	#local use
+#options 	ALTQ_HFSC	#hierarchical fair service curve
+#options 	ALTQ_JOBS	#joint buffer management and scheduling
+#options 	ALTQ_IPSEC	#check ipsec in IPv4
+#options 	ALTQ_CDNR	#diffserv traffic conditioner
+#options 	ALTQ_BLUE	#blue by wu-chang feng
+#options 	ALTQ_PRIQ	#priority queue
+#options 	ALTQ_NOPCC	#don't use processor cycle counter
+#options 	ALTQ_DEBUG	#for debugging
+# you might want to set kernel timer to 1kHz if you use CBQ,
+# especially with 100baseT
+#options 	HZ=1000
+
+options 	TCP_ECN		# ECN support in TCP
+
+# Network Address Translation - Protocol Translation (NAT-PT)
+#options 	NATPT		# IPv6 -> IPv4 translation.
+#options 	NATPT_NAT	# IPv4 -> IPv4 NAT.
+				# Valid only when "options NATPT" is defined.
+
+# Source-Specific Multicast (SSM)
+#options 	IGMPV3		# IPv4
+#options 	MLDV2		# IPv6
+
+#device		atm	1
+device  	dummy	1
+device		stf	1
+
+# Mobile IPv6
+#options 	MIP6
+#options 	MIP6_HOME_AGENT
+#options 	MIP6_MOBILE_NODE
+#device		hif	1
+#options 	MIP6_DEBUG
+
+device		pf	1
+device		pflog	1
+device		pfsync	1

@@ -1,0 +1,128 @@
+	RELNOTES of KAME kit
+	KAME Project
+	$KAME: RELNOTES,v 1.81 2004/06/15 08:03:12 itojun Exp $
+
+For list of changes from past KAME kit, please refer to CHANGELOG.
+
+BACKWARD COMPATIBILITY NOTICE
+=============================
+Please understand that the KAME kit is, from its nature, a distribution
+of very experimental set of software.  Do not assume ANY backward
+compatibility, for source, binary nor configuration file, between
+different version of KAME kits, or between KAME-patched tree and
+normal *BSD tree.  This means that you MUST recompile everything
+every time you upgrade KAME kit, to ensure it works.  You may also
+need to update your configuration files to meet the latest
+implementation.  We are not ignoring backward compatibility issues,
+however, we are sometimes unable to maintain backward compatibility.
+
+For this reason, the following act can raise troubles like kernel panic,
+abnormal program termination and other things:
+- try to make shared library from KAME-supplied library and override
+  normal ones
+- mix LKM binary and kernel binary from different origin
+  (like FreeBSD-origin LKM binary and KAME kernel)
+- mix dynamic linked modules for non-IPv6 ready program, with IPv6-ready
+  parent program (like non-IPv6 apache modules and IPv6-ready apache)
+- mix non-KAME userland binary with KAME kernel.  it depends on what kind of
+  kernel API the binary uses.
+  Example: *BSD-origin netstat will not work with KAME kernel, as it touches
+	kmem and we changed the size of inpcb between *BSD and KAME kernel.
+  Example: FreeBSD 4.2-RELEASE uses spec non-conformant numbers for PF_KEY
+	API (sys/net/pfkeyv2.h).  KAME/freebsd4 uses spec-conformant numbers,
+	so freeBSD 4.2-RELEASE setkey(8) will choke on KAME/freebsd4 kernel
+	(and vice versa).
+
+The caveat does not apply to KAME code merged into *BSD - merged code
+will maintain the backward compatibility policy decided by *BSD team.
+
+SECURITY FIXES
+==============
+Note that the KAME tree MAY NOT include all the security fixes from
+*BSD, or some other advisories.  So, some portion of KAME code may
+be vulnerable to attacks.  If you run KAME code on production system,
+real-world routers and other realworld use, you may want to check *BSD
+advisories and other announcements.
+
+Please let developers know if you notice significant issues.
+
+END OF LIFE
+===========
+We do not maintain KAME kits for older releases on a BSD release branch -
+for example, on FreeBSD 4.x series, KAME kit is supplied and maintained for
+the latest one only (4.5-RELEASE as of April 2002).
+
+The following KAME releases have reached their end of life:
+- KAME/FreeBSD 2.x
+- KAME/FreeBSD 3.x
+- KAME/BSDI 3.x
+- KAME/BSDI 4.x
+You can still checkout OS-specific code for the above platforms from our
+anonymous CVS server, however, it is for reference purposes only.
+The tree may not compile on the above platforms at all.
+(in fact, we are now actively removing #ifdef to support older platforms)
+Use newer BSD official releases, or KAME kit on more recent BSD releases.
+
+KNOWN BUGS/TWISTS
+=================
+Most of the following problems will be fixed in near-future SNAP releases.
+
+You can find problem reports from other KAME users, at:
+	http://orange.kame.net/dev/query-pr-summary.cgi
+Many of old ones have been solved.
+
+- Some of the userland tool may not work properly, if you configure
+  more than 500 interfaces.  (libinet6 is fixed for this, but there
+  are some places where max # of interfaces is hardcoded) Also, some
+  of non-KAME binaries may not be ready to handle tons of interfaces.
+  If a code uses fixed-size buffer for SIOCGIFCONF, the code is not
+  friendly with tons-of-interface kernel.
+
+- Notebooks/laptops problem: multicast hardware filter on ethernet
+  card will not be properly initialized after suspend/resume session,
+  and this makes trouble with IPv6 commuincation (which heavily uses
+  multicast).  This is not a KAME problem (*BSD problems), but please
+  be warned.  Workaround: perform "ifconfig down", then "ifconfig up"
+  after resume.
+
+- FreeBSD/OpenBSD/BSDI Intel EtherExpress Pro driver has some problem with
+  the initialization sequence KAME is using.  This is because these
+  drivers use interrupts for multicast filter setup, and KAME code calls
+  multicast initialization code in splimp() or splnet(). 
+  It is not KAME problem, it is problem in drivers.  These drivers should
+  be corrected not to use interrupts in initialization sequence.
+
+  KAME/FreeBSD: fxp driver, no workaround available.
+  KAME/OpenBSD: fxp driver, workaround is in KAME tree (sys/net/if.c)
+  KAME/BSDI3: exp driver, status unknown
+  KAME/BSDI4: exp driver, workaround is in KAME tree (sys/i386/pci/if_exp.c)
+
+- Alignment constraints were changed in couple of places.  Namely: 
+	(1) SIOCGIFCONF: due to introduction of sockaddr_in6. 
+	(2) ancillary data: due to RFC2292 and X/Open change in CMSG_xx.  
+  You may experience some trouble running non-KAME binaries (like
+  those shipped with stock *BSD) on top of KAME kernel.
+
+- In the past we have shipped IPv6-ready tcpdump/libpcap with KAME
+  kit.  To make a single effort in tcpdump.org, we have removed the
+  compilation tree (*bsd*/usr.sbin/tcpdump and *bsd*/lib/libpcap).  If
+  you want IPv6-ready tcpdump/libpcap, download them from tcpdump.org.
+  We supply ports for easier installation on kame/freebsd[23].
+  For recent *BSD releases, IPv6-ready tcpdump/libpcap is installed by default.
+
+- libinet6 resolver code does not support NIS lookup.
+
+- bsdi4: may see panics on multicast socket close.
+
+- In many cases, you cannot use *BSD userland programs with KAME-patched
+  kernel, or vice versa.  Be sure to use userland programs supplied with KAME
+  (in /usr/local/v6) when you use KAME-patched kernel.  If you mix them up,
+  you may experience strange behaviors.  For example, it causes serious trouble
+  if you use FreeBSD 4.x-RELEASE /sbin/ifconfig against KAME-patched kernel.
+
+- The KAME build tree is designed to avoid overwrites of userland programs.
+  It is intentional that we install KAME userland binaries into /usr/local/v6,
+  not into /usr/{bin,sbin}, it is to allow you to go back to unpatched
+  BSD kernel easily.
+
+							<end of RELNOTES>

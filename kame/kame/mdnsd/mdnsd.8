@@ -1,0 +1,341 @@
+.\"	$KAME: mdnsd.8,v 1.49 2003/04/08 09:13:07 jinmei Exp $
+.\"
+.\" Copyright (C) 2000 WIDE Project.
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. Neither the name of the project nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE PROJECT OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.Dd May 21, 1999
+.Dt MDNSD 8
+.Os KAME
+.Sh NAME
+.Nm mdnsd
+.Nd multicast DNS resolver
+.\"
+.Sh SYNOPSIS
+.Nm mdnsd
+.Bk -words
+.Op Fl 46DflmN
+.Ek
+.Bk -words
+.Op Fl h Ar hostname
+.Ek
+.Bk -words
+.Op Fl p Ar inport
+.Ek
+.Bk -words
+.Op Fl P Ar outport
+.Ek
+.Bk -words
+.Op Fl r Ar relayport
+.Ek
+.Bk -words
+.Fl i Ar intface
+.Ek
+.Bk -words
+.Op Ar server...
+.Ek
+.\"
+.Sh DESCRIPTION
+.Nm
+serves as multicast DNS resolver.
+The program should be invoked on every node which speaks multicast DNS.
+.Pp
+.Nm
+will receive unicast DNS queries
+and forward the queries toward link-local multicast DNS address on
+.Ar intface ,
+if the query is within
+.Dq Li local.
+domain.
+Whenever a reply comes back against the multicast queries,
+.Nm
+will forward the reply to the original querier.
+.Nm
+can also relay queries to unicast DNS server(s), if the query is outside of
+.Dq Li local.
+domain.
+.Pp
+.Nm
+will reply to multicast DNS queries from other nodes,
+to advertise mapping between the name of the local node and the addresses
+of the local node.
+.Pp
+Therefore, if two or more nodes on the same link are running
+.Nm Ns ,
+they can resolve their addresses without having to configure unicast
+DNS servers.
+Users just need to know the FQDN name for the neighboring node.
+.Bl -tag -width Ds
+.It Fl 4
+.It Fl 6
+Controls the address family to use for DNS transport.
+By default
+.Nm
+will listen to all the available address families.
+.It Fl D
+Enable trace messages for debugging.
+.It Fl f
+Run in foreground mode.
+Do not daemonize on invocation.
+.It Fl h Ar hostname
+.Ar hostname
+specifies local hostname that
+.Nm
+will serve against incoming unicast/multicast queries.
+If ommitted, result from
+.Xr gethostname 3
+will be used.
+.Ar hostname
+must be an FQDN, terminated by dot.
+.It Fl i Ar intface
+.Ar intface
+specifies outgoing interface for multicast queries.
+The flag is mandatory.
+.It Fl l
+Advertise scoped addresses against queries from IPv6 link-local address,
+or loopback address.
+Care must be taken if you enable it,
+scoped address and DNS are not really compatible.
+.It Fl m
+Be compatible with
+.Dq mediator
+DNS cache daemon.
+Redistribution of 
+.Dq mediator
+code is
+.Pq still 
+restricted, hence
+.Fl m
+flag is not very useful for most of users.
+Do not send questions about this
+.Li :-)
+.It Fl N
+Transmit ICMPv6 node information queries, instead of multicast DNS queries,
+for resolving names on the adjacent link.
+With the option, it is highly possible for
+.Nm
+to respond with link-local addresses in DNS packet.
+Experimental.
+.Nm
+must be invoked under root privilege to use this option.
+.It Fl p Ar inport
+.Nm
+listens to UDP port
+.Ar inport
+for incoming DNS unicast queries, or unicast replies.
+By default,
+.Ar inport
+will be 53.
+.Fl p
+is for debugging purposes only.
+.It Fl P Ar outport
+.Nm
+accepts/transmits UDP multicast queries/replies to UDP port
+.Ar outport.
+By default,
+.Ar outport
+will be 5353.
+.Fl P
+is for debugging purposes only
+.Po
+for running two daemons on a single node
+.Pc .
+.It Fl r Ar relayport
+.Nm
+relays unicast queries to port
+.Ar relayport.
+By default,
+.Ar relayport
+will be 53.
+This option is useful when
+.Nm
+listens on the default DNS port on a node that runs a DNS caching server
+listening on a different port.
+.It Ar server
+Specify unicast DNS servers we may want to try sending queries.
+Users can list multiple DNS servers.
+.Ar server
+has to be numeric IPv4/v6 addresses.
+.El
+.Pp
+.Nm
+will generate status dump file on signal
+.Dv SIGUSR1 .
+.\"
+.Sh FILES
+.Bl -tag -width /var/run/mdnsd.dump -compact
+.It Pa /var/run/mdnsd.dump
+Status dump file.
+.El
+.\"
+.Sh EXAMPLES
+First, run
+.Nm
+on UDP port 53
+.Pq standard DNS UDP port .
+You need to be root to issue
+.Xr bind 2
+on privileged port.
+.Bd -literal -offset indent
+# mdnsd -6 -i wi0
+.Ed
+.Pp
+Then, configure
+.Xr resolv.conf 5
+to resolve IP addresses from names using
+.Nm Ns .
+Notice the presense of
+.Dq Li itojun.org.local.
+and
+.Dq Li local.
+From the speficiation, we can only resolve names using multicast DNS,
+iff names are under
+.Li local.
+domain.
+.Bd -literal -offset indent
+search itojun.org itojun.org.local local
+nameserver ::1
+.Ed
+.Pp
+If you would like to contact unicast DNS servers as well, you may want to
+specify them on the command line.
+DNS queries will be sent to unicast servers, if the DNS name is outside of
+.Li local.
+.Bd -literal -offset indent
+# mdnsd -6 -i wi0 3ffe:501:4819::42
+.Ed
+.Pp
+Here is the sequence of events which would happen
+on a multicast name resolution:
+.Bl -bullet
+.It
+An application on node A queries AAAA record of
+.Dq Li b.local. .
+The query is transmitted toward the address configured in
+.Pa /etc/resolv.conf ,
+which is the loopback address.
+.It
+The query reaches
+.Nm
+on node A.
+.It
+.Nm
+on node A relays the query out to the ethernet interface, as multicast packet.
+.It
+.Nm
+on node B receives the packet, and finds out that it is asking for
+.Dq Li b.local. .
+.It
+.Nm
+on node B responds to node A, with the list of IPv6 addresses assigned to
+node B.
+.It
+.Nm
+on node A gets the reply from node B.
+.It
+.Nm
+on node A relays the response back to the application.
+.El
+.\"
+.Sh SEE ALSO
+.Rs
+.%A Levon Esibov
+.%A Bernard Aboba
+.%A Dave Thaler
+.%D July 2001
+.%T Multicast DNS
+.%R internet draft
+.%N draft-ietf-dnsext-mdns-03.txt
+.%O work in progress material
+.Re
+.\"
+.Sh HISTORY
+The
+.Nm
+command first appeared in WIDE/KAME IPv6 protocol stack kit.
+.\"
+.Sh BUGS
+Specification conformance is still very low.
+Some of
+.Pq or most of
+the features are not implemented yet.
+.Pp
+Since there is no standard IPv6 multicast address assigned for multicast DNS,
+we use linklocal all-node multicast address at this moment.
+.Pp
+.Nm
+is too aggressive when sending queries.
+For example, if you specify unicast DNS servers by
+.Ar server
+argument,
+.Nm
+will transmit DNS queries every time a client asks
+.Nm
+about the record.
+Instead,
+.Nm
+should add some delay between subsequent transmissions,
+and implement cache mechanisms
+.Pq both positive and negative .
+.Pp
+.Nm
+requires interface
+.Ar intface
+to be available and in
+.Dv IFF_UP
+state, on invocation.
+This may be too much to ask for laptop usage.
+.Pp
+.Fl N
+may not be very useful, as DNS responses will contain link-local addresses.
+.Pp
+With
+.Fl N
+.Nm
+sends ICMPv6 node information queries to link-local all node multicast address
+.Pq Li ff02::1 .
+We should be using NI group address
+.Pq Li ff02::2:xxxx:xxxx
+instead, however, it is not useful right now due to deployment issues.
+.Pp
+.Nm
+relays EDNS0 pseudo RR from a original querier,
+while it should decide EDNS0 independently from the querier.
+Imagine cases where the original querier supports EDNS0,
+while multicast/unicast nameservers
+.Pq which are the destination of the relayed packet
+do not.
+.Pp
+.Nm
+uses
+.Dq Li local.
+instead of
+.Dq Li local.arpa.
+for mDNS suffix, to interoperate with Apple Rendezvous implementation in
+MacOS 10.2.
+.Pp
+The latest mDNS/LLMNR spec does not recommend the use of domain suffix to
+switch between mDNS/LLMNR and DNS lookup.

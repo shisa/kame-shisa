@@ -1,0 +1,424 @@
+.\"	$KAME: bindtest.1,v 1.25 2001/09/10 08:24:35 jinmei Exp $
+.\"
+.\" Copyright (C) 1999 WIDE Project.
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. Neither the name of the project nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE PROJECT OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.Dd June 25, 2001
+.Dt BINDTEST 1
+.Os KAME
+.\"
+.Sh NAME
+.Nm bindtest
+.Nd test bind(2) behavior on IPv6 implementation
+.\"
+.Sh SYNOPSIS
+.Nm
+.Op Fl 126APlstv
+.Op Fl b Ar IPv4broadcast
+.Op Fl o Ar IPv4address
+.Fl p Ar port
+.\"
+.Sh DESCRIPTION
+.Nm
+tests interaction between IPv4/IPv6 socket interface, implemented into
+the kernel it has underneath.
+.Pp
+RFC2553 defines socket API for IPv6, and relationship between
+IPv6 wildcard
+.Xr bind 2
+socket
+.Pq Li ::.port
+and IPv4 wildcard
+.Xr bind 2
+socket
+.Pq Li 0.0.0.0.port .
+However, the document does not define ordering constraints between them,
+relationship with specific
+.Xr bind 2 ,
+nor relationship with speficfic
+.Xr bind 2
+using IPv4 mapped IPv6 address
+.Pq Li ::ffff:127.0.0.1 .
+.Pp
+.Nm
+tries to reveal the behavior implemented in the kernel,
+and shows some report to standard output.
+As RFC2553 does not define the expected behavior,
+we have no idea what the result should be.
+.Pp
+The following command line options are accepted.
+For details please see the following subsections:
+.Bl -tag -width indent
+.It Fl 1
+After successful
+.Xr bind 2
+on two sockets, try a
+.Xr connect 2
+to the first socket.
+Works only when
+.Fl t
+is specified as well.
+.It Fl 2
+Like
+.Fl 1 ,
+but try a
+.Xr connect 2
+to the second socket.
+Works only when
+.Fl t
+is specified as well.
+.It Fl 6
+Uses
+.Dv IPV6_V6ONLY
+socket option on
+.Dv AF_INET6
+sockets
+.Pq note that not many stacks implement this yet .
+.It Fl A
+Set
+.Dv SO_REUSEADDR
+socket option for all the sockets.
+.It Fl P
+Set
+.Dv SO_REUSEPORT
+socket option for all the sockets.
+.It Fl b Ar IPv4broadcast
+Specifies an additional broadcast address to test if UDP datagram to
+.Ar IPv4broadcast ,
+which is an IPv4 broadcast address, can be sent on an AF_INET6 socket
+as an IPv4-mapped IPv6 address.
+This option can only be specified for UDP.
+Currently, the
+.Fl s
+option and this option cannot coexist.
+.It Fl l
+With TCP test, normally
+.Nm
+will issue
+.Xr bind 2
+and
+.Xr listen 2
+for the first socket, then
+.Xr bind 2
+and
+.Xr listen 2
+for the second socket.
+With
+.Fl l ,
+.Nm
+will issue two
+.Xr bind 2
+first, then two
+.Xr listen 2
+system calls.
+Works only when
+.Fl t
+is specified as well.
+.It Fl o Ar IPv4addresss
+Specifies an additional address to test
+.Xr connect 2
+or
+.Xr sendto 2
+behavior.
+The address should already be assigned to the node,
+and should not be the loopback address
+.Pq 127.0.0.1 .
+.It Fl p Ar port
+.Ar port
+specifies the TCP/UDP port number used for the test.
+The
+.Ar port
+needs to be vacant.
+The flag is mandatory.
+.It Fl s
+Summary output.
+See the following subsection for details.
+.It Fl t
+By default
+.Nm
+will use
+.Dv SOCK_DGRAM
+socket for testing.
+With
+.Fl t ,
+.Nm
+will use
+.Dv SOCK_STREAM
+socket instead.
+.It Fl v
+.Nm
+prints its version and exits without testing anything.
+.El
+.Pp
+.Ss The test process
+The goal of
+.Nm
+is to detect how the implementation interpteted and coded RFC2553.
+More specifically, the following items are tested:
+.Pp
+.Bl -bullet
+.It
+If we issue two
+.Xr bind 2
+system calls to two sockets with the same port number,
+will it go successful, or either of/both of them fails?
+.It
+For the failure case, does the ordering of
+.Xr bind 2
+matter?
+.It
+If the two
+.Xr bind 2
+attemps go successful, which socket will get incoming traffic?
+.It
+For TCP case, does the order between
+.Xr bind 2
+and
+.Xr listen 2
+affect the behavior?
+.El
+.Pp
+The list of addresses to be tested with
+.Xr bind 2
+are as below:
+.Bl -tag -width "loopback"
+.It wildcard: Li :: and 0.0.0.0
+.It loopback: Li ::1 and 127.0.0.1
+.It IPv4 mapped wildcard and loopback:
+::ffff:0.0.0.0 and ::ffff:127.0.0.1
+.It invalid address:
+::ffff:0.0.0.1 and 0.0.0.1.
+Their goal is to test common programming mistakes in the implementation.
+.El
+.Pp
+.Pp
+When two sockets become ready after
+.Xr bind 2 ,
+.Nm
+attempts to send some packets to see which socket accepts which
+packets.
+For UDP cases, it tries to issue
+.Xr sendto 2
+for each address bound to each socket, and for
+the additional address if specified by the
+.Fl o
+option.
+For TCP cases, the program tries to issue
+.Xr connect 2
+for one destination specified by
+the
+.Fl 1 ,
+.Fl 2 ,
+or
+.Fl o Ar IPv4address
+options.
+.Fl 1
+and
+.Fl 2
+let
+.Nm
+.Xr connect 2
+to the address that the program has used for
+.Xr bind 2 .
+With
+.Fl o ,
+.Nm
+connects to the address specified by the extra argument,
+.Ar IPv4address .
+Note that the options
+.Fl 1
+and
+.Fl 2
+are meaningful only when
+.Fl t
+is specified.
+.Pp
+When the
+.Fl o Ar IPv4address
+option is specified, the address can be any valid IPv4 address in
+theory, but, for the testing purpose, the address is meaningful only
+when it is an IPv4 address assigned on the testing node itself.
+.Pp
+The
+.Fl l
+option is meaningful only when the corresponding socket is TCP.
+It specifies
+.Nm
+to issue
+.Xr bind 2
+for both two sockets first, and then to issue
+.Xr listen 2
+for the sockets.
+Normally, the program calls the two calls for the first socket, and
+then calls them for the second socket.
+This option exists because there is an operating system that behaves
+differently for those two cases.
+.Ss Summary output
+With
+.Fl s ,
+.Nm
+generates summarized output instead of verbose output.
+Here is a sample output, and the legends for summarized output.
+.Pp
+.Ds
+starting tests, socktype = SOCK_DGRAM, SO_REUSEADDR, V6ONLY
+        wild4   wild6   loop4   loop6   wildm   loopm   onem    one4
+wild4:  x       o[--1x] o[-21x] o[-21x] ?2(49)  ?2(49)  ?2(49)  ?2(49)
+wild6:  o[--2x] x       o[-20x] o[-20x] ?2(49)  ?2(49)  ?2(49)  ?2(49)
+loop4:  o[1-2x] o[1-0x] x       o[120x] ?2(49)  ?2(49)  ?2(49)  ?2(49)
+loop6:  o[1-2x] o[1-0x] o[120x] x       ?2(49)  ?2(49)  ?2(49)  ?2(49)
+wildm:  ?1(49)  ?1(49)  ?1(49)  ?1(49)  ?1(49)  ?1(49)  ?1(49)  ?1(49)
+loopm:  ?1(49)  ?1(49)  ?1(49)  ?1(49)  ?1(49)  ?1(49)  ?1(49)  ?1(49)
+onem:   ?1(49)  ?1(49)  ?1(49)  ?1(49)  ?1(49)  ?1(49)  ?1(49)  ?1(49)
+one4:   ?1(49)  ?1(49)  ?1(49)  ?1(49)  ?1(49)  ?1(49)  ?1(49)  ?1(49)
+.De
+.Pp
+.Nm
+will make a two set of
+.Xr socket 2
+and
+.Xr bind 2 .
+The first set is presented on the lefthand side.
+The second set is presented above the table.
+.Bl -tag -width "xxxx"
+.It o
+The second
+.Xr bind 2
+attempt was successful after the first
+.Xr bind 2 .
+.Dq o
+is followed by three letters enclosed in square brackets.
+The first letter shows the test result after
+.Xr sendto 2
+to the first socket address
+.Pq listed on the topmost row .
+The second letter shows the test result after
+.Xr sendto 2
+to the second socket address
+.Pq listed on the leftmost column .
+The third letter shows the test result after
+.Xr sendto 2
+to the IPv4 additional address, when specified by the
+.Fl o
+option, through an AF_INET socket.
+The fourth letter shows the test result after
+.Xr sendto 2
+to the additional IPv4 address, when specified by the
+.Fl o
+option, through an AF_INET6 socket using IPv4-mapped IPv6 address.
+.Bl -tag -width "xxxx"
+.It -
+The address is wildcard
+.Po
+.Li ::
+or
+.Li 0.0.0.0
+.Pc
+and no attempts were made to test send/recv behavior.
+.It 0
+None of the sockets received the packet.
+.It 1
+The first socket received the packet.
+.It 2
+The second socket received the packet.
+.It b
+Both sockets received the packet.  This result is not supposed to
+happen, but exists just in case.
+.It x
+The attempt of
+.Xr sendto 2
+failed.
+UDP cases only.
+.It c
+The attempt of
+.Xr connect 2
+failed.
+TCP cases only.
+.El
+.Pp
+The meaning of the result table is the same for TCP cases, whereas
+only one of the three possible cases should be tried in a single
+execution of the test.
+.It x
+.Xr bind 2
+failed for the second set, with
+.Dv EADDRINUSE .
+.It !1
+.Xr socket 2
+failed for the first set.
+Normally you will not see this, unless you run
+.Nm
+on IPv4-only/IPv6-only kernel.
+Will be followed by
+.Xr errno 2
+in paren.
+.It !2
+.Xr socket 2
+failed for the second set.
+Normally you will not see this, unless you run
+.Nm
+on IPv4-only/IPv6-only kernel.
+Will be followed by
+.Xr errno 2
+in paren.
+.It ?1
+.Xr bind 2
+failed for the first set.
+Will be followed by
+.Xr errno 2
+in paren.
+.It ?2
+.Xr bind 2
+failed for the second set, with some error other than
+.Dv EADDRINUSE .
+Will be followed by
+.Xr errno 2
+in paren.
+.El
+.\"
+.Sh RETURN VALUES
+.Nm
+exits with 0 on success, and non-zero on errors.
+.\"
+.Sh SEE ALSO
+.Rs
+.%A R. Gilligan
+.%A S. Thomson
+.%A J. Bound
+.%A W. Stevens
+.%T Basic Socket Interface Extensions for IPv6
+.%D March 1999
+.%N RFC2553
+.Re
+.Pp
+.Xr bind 2 ,
+.Xr tcpdump 8
+.\"
+.Sh HISTORY
+The
+.Nm
+command first appeared in WIDE/KAME IPv6 protocol stack kit.
