@@ -916,7 +916,7 @@ net/if_iso88025subr.c	optional token
 net/if_dummy.c		optional dummy
 net/if_faith.c		optional faith
 net/if_fddisubr.c	optional fddi
-net/if_gif.c		optional gif
+net/if_gif.c		optional gif 
 net/if_gre.c		optional gre
 net/if_loop.c		optional loop
 net/if_media.c		standard
@@ -929,6 +929,8 @@ net/if_stf.c		optional stf
 net/if_tun.c		optional tun
 net/if_tap.c		optional tap
 net/if_vlan.c		optional vlan
+net/if_mip.c		optional mip mip6
+net/if_nemo.c		optional nemo mip6
 net/net_osdep.c		standard
 net/ppp_deflate.c	optional ppp_deflate
 net/ppp_tty.c		optional ppp
@@ -1074,6 +1076,7 @@ net/pf_table.c		optional pf
 net/pf_osfp.c		optional pf
 net/if_pflog.c		optional pflog
 net/if_pfsync.c		optional pfsync
+net/mipsock.c		optional inet6 mip6
 netinet/accf_data.c	optional accept_filter_data
 netinet/accf_http.c	optional accept_filter_http
 netinet/if_atm.c	optional atm
@@ -1145,7 +1148,7 @@ netinet6/frag6.c	optional inet6
 netinet6/icmp6.c	optional inet6
 netinet6/in6.c		optional inet6
 netinet6/in6_cksum.c	optional inet6
-netinet6/in6_gif.c	optional gif inet6
+netinet6/in6_gif.c	optional gif inet6 
 netinet6/in6_msf.c	optional inet6 mldv2
 netinet6/ip6_forward.c	optional inet6
 netinet6/ip6_fw.c	optional inet6 ipv6firewall
@@ -1179,6 +1182,7 @@ netinet6/sctp6_usrreq.c	optional inet6 sctp
 netinet6/udp6_output.c	optional inet6
 netinet6/udp6_usrreq.c	optional inet6
 netinet6/dccp6_usrreq.c	optional inet6 dccp
+netinet6/mip6.c		optional inet6 mip6
 netipsec/ipsec.c	optional fast_ipsec
 netipsec/ipsec_input.c	optional fast_ipsec
 netipsec/ipsec_mbuf.c	optional fast_ipsec

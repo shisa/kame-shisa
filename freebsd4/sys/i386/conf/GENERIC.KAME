@@ -350,6 +350,7 @@ options 	TCP_ECN		# ECN support in TCP
 
 # Mobile IPv6
 #options 	MIP6			# required for all node types
+#pseudo-device	mip	1		# required for a mobile node
 #options 	MIP6_HOME_AGENT		# required for a home agent
 #options 	MIP6_MOBILE_NODE	# required for a mobile node
 #pseudo-device	hif	1		# required for a mobile node
