@@ -1,4 +1,4 @@
-/*      $Id: mdd_rtsock.c,v 1.6 2004/10/28 08:02:52 keiichi Exp $  */
+/*      $Id: mdd_rtsock.c,v 1.7 2004/10/28 12:34:05 keiichi Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -103,7 +103,7 @@ next_sa(sa)
 void
 get_rtaddrs(addrs, sa, rti_info)
 	int addrs;
-	struct sockaddr *sa
+	struct sockaddr *sa;
 	struct sockaddr *rti_info[];
 {
 	int i;
