@@ -11,6 +11,7 @@ LDADD=	-lkvm
 DPADD=	${LIBKVM}
 CPPFLAGS+= -DINET6 -DIPSEC
 CPPFLAGS+= -DDCCP
+CPPFLAGS+= -DMIP6
 
 .if exists(/usr/local/v6/lib/libinet6.a)
 LDADD+=	-L${.CURDIR}/../../lib/libinet6 \

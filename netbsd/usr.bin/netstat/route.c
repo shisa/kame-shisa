@@ -84,7 +84,7 @@ __RCSID("$NetBSD: route.c,v 1.59 2002/05/13 05:13:23 matt Exp $");
  * Definitions for showing gateway flags.
  */
 struct bits {
-	short	b_mask;
+	long	b_mask;
 	char	b_val;
 } bits[] = {
 	{ RTF_UP,	'U' },
