@@ -1,4 +1,4 @@
-/*	$Id: mip6.h,v 1.2 2004/10/13 16:29:01 keiichi Exp $	*/
+/*	$Id: mip6.h,v 1.3 2004/10/28 04:22:30 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -54,10 +54,11 @@
 #define MIP6CTL_RR_HINT_PPSLIM		3
 #define MIP6CTL_MAXID			4
  
-#define MIP6CTL_NAMES {			\
-	{ 0, 0 },			\
-	{ "debug", CTLTYPE_INT },	\
-	{ "use_ipsec", CTLTYPE_INT },	\
+#define MIP6CTL_NAMES {				\
+	{ 0, 0 },				\
+	{ "debug", CTLTYPE_INT },		\
+	{ "rr_hint_ppslimit", CTLTYPE_INT },	\
+	{ "use_ipsec", CTLTYPE_INT },		\
 }
 
 #endif /* !_NETINET6_MIP6_H_ */
