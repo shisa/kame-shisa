@@ -60,7 +60,7 @@ new_fd_list(fd, events, func)
 	if (fdl == NULL)
 		return (NULL);
 
-	bzero(fdl, sizeof(*fdl));
+	memset(fdl, 0, sizeof(*fdl));
 	fdl->pollfd.fd = fd;
 	fdl->pollfd.events = events;
 	fdl->func = func;

@@ -1,4 +1,4 @@
-/*      $Id: network.c,v 1.2 2004/09/27 08:50:43 t-momose Exp $  */
+/*      $Id: network.c,v 1.3 2004/10/01 11:30:44 t-momose Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -1030,6 +1030,3 @@ ip6_sprintf(addr)
 
 	return ip6buf[ip6round];
 }
-
-
-

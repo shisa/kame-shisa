@@ -1,4 +1,4 @@
-/*	$Id: mnd.c,v 1.2 2004/09/27 08:50:43 t-momose Exp $	*/
+/*	$Id: mnd.c,v 1.3 2004/10/01 11:30:44 t-momose Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -1440,7 +1440,3 @@ command_flush(s, arg)
 
 	}
 }
-
-
-
-

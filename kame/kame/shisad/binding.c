@@ -1,4 +1,4 @@
-/*      $Id: binding.c,v 1.1 2004/09/27 04:05:59 t-momose Exp $  */
+/*      $Id: binding.c,v 1.2 2004/10/01 11:30:44 t-momose Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -790,8 +790,8 @@ bul_get_nohoa(cookie, coa, peer)
 };
 
 void
-command_show_bul(int s) {
-
+command_show_bul(int s)
+{
 	char buff[2048];
 	struct mip6_hoainfo *hoainfo = NULL;
 	struct binding_update_list *bul = NULL;
@@ -848,7 +848,8 @@ command_show_bul(int s) {
 } 
 
 void
-command_show_kbul(s) {
+command_show_kbul(s)
+{
         struct if_bulreq bulreq;
         struct bul6info *bul6;
         int sock, i;
@@ -929,5 +930,3 @@ command_show_kbul(s) {
 }
 
 #endif /* MIP_MN */
-
-
