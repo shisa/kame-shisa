@@ -978,6 +978,7 @@ rt_addrinfomsg(ifa)
 	struct mbuf *m;
 	struct rt_addrinfo info;
 	struct sockaddr *sa;
+	struct sockproto route_proto;
 
 	sa = ifa->ifa_addr;
 
