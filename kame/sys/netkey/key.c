@@ -539,11 +539,6 @@ static struct mbuf *key_alloc_mbuf __P((int));
 struct callout key_timehandler_ch;
 #endif
 
-#ifdef MIP6
-static struct secpolicy *key_mip6_find_sp(int,
-    const struct sockaddr_in6 *, const struct sockaddr_in6 *);
-#endif /* MIP6 */
-
 /* %%% IPsec policy management */
 /*
  * allocating a SP for OUTBOUND or INBOUND packet.
