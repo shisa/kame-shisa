@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.10 2004/10/12 10:14:32 keiichi Exp $	*/
+/*	$Id: mip6.c,v 1.11 2004/10/12 10:25:16 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -498,64 +498,65 @@ mip6_bce_update(cnaddr, hoa, coa, flags, bid)
 	int error = 0;
 	struct mip6_bc_internal *bce = NULL;
 	struct ifaddr *ifa;
-#ifdef IPSEC
+#if defined(IPSEC) && !defined(__OpenBSD__)
 	struct sockaddr_in6 hoa_sa, coa_sa, haaddr_sa;
-#endif
+#endif /* IPSEC && !__OpenBSD__ */
 
 	/* Non IPv6 address is not support (only for MIP6) */
 	if ((cnaddr->sin6_family != AF_INET6) ||
 	    (hoa->sin6_family != AF_INET6) ||
 	    (coa->sin6_family != AF_INET6))
-		return EPFNOSUPPORT; /* XXX ? */
-
-#ifndef MIP6_MCOA
-	bce = mip6_bce_get((struct in6_addr *)(&hoa->sin6_addr),
-			   (struct in6_addr *)(&cnaddr->sin6_addr));
-#else
-	bce = mip6_bce_get((struct in6_addr *)(&hoa->sin6_addr),
-			   (struct in6_addr *)(&cnaddr->sin6_addr), NULL, bid);
-#endif /* MIP6_MCOA */
-	if (bce) {
-		bce->mbc_coa = coa->sin6_addr;
-		goto bc_update_ipsecdb;
-	} 
+		return (EAFNOSUPPORT); /* XXX ? */
 
 #if defined(__NetBSD__) || defined(__OpenBSD__)
 	s = splsoftnet();
 #else
 	s = splnet();
 #endif
-	/* No BCE */
+
+#ifndef MIP6_MCOA
+	bce = mip6_bce_get((struct in6_addr *)(&hoa->sin6_addr),
+	    (struct in6_addr *)(&cnaddr->sin6_addr));
+#else
+	bce = mip6_bce_get((struct in6_addr *)(&hoa->sin6_addr),
+	    (struct in6_addr *)(&cnaddr->sin6_addr), NULL, bid);
+#endif /* MIP6_MCOA */
+	if (bce) {
+		bce->mbc_coa = coa->sin6_addr;
+		goto bc_update_ipsecdb;
+	} 
+
+	/* there is no existing bc entry.  create a new one. */
 	ifa = ifa_ifwithaddr((struct sockaddr *)cnaddr);
 #ifndef MIP6_MCOA
 	bce = mip6_bce_new_entry(&cnaddr->sin6_addr, &hoa->sin6_addr,
-				 &coa->sin6_addr, ifa, flags);
+	    &coa->sin6_addr, ifa, flags);
 #else
 	bce = mip6_bce_new_entry(&cnaddr->sin6_addr, &hoa->sin6_addr,
-				 &coa->sin6_addr, ifa, flags, bid);
+	    &coa->sin6_addr, ifa, flags, bid);
 #endif /* MIP6_MCOA */
-	if (!bce) {
+	if (bce == NULL) {
 		error = ENOMEM;
 		goto done;
 	}
 	mip6_bc_list_insert(bce);
 		
-	/* Home agent */
-	if (MIP6_IS_HA && bce && flags & IP6_MH_BU_HOME) {
+	/* a home agent creates a proxy ND entry for a mobile node. */
+	if (MIP6_IS_HA && bce != NULL &&
+	    (flags & IP6_MH_BU_HOME) != 0) {
 		error = mip6_bc_proxy_control(&hoa->sin6_addr,
-					      &cnaddr->sin6_addr, RTM_ADD);
+		    &cnaddr->sin6_addr, RTM_ADD);
 		bce->mbc_encap = encap_attach_func(AF_INET6, IPPROTO_IPV6,
-						   mip6_rev_encapcheck,
-						   (struct protosw *)&mip6_tunnel_protosw,
-						   bce);
+		    mip6_rev_encapcheck,
+		    (struct protosw *)&mip6_tunnel_protosw, bce);
 	}
 
  bc_update_ipsecdb:
 	if (MIP6_IS_HA && bce != NULL &&
 	    (flags & IP6_MH_BU_HOME) != 0) {
 #if defined(IPSEC) && !defined(__OpenBSD__)
-/* racoon2 guys wants us to update ipsecdb. (2004.10.8) */
-		/* update ipsecdb. */
+/* racoon2 guys want us to update ipsecdb. (2004.10.8) */
+		/* update the ipsecdb. */
 		bzero(&hoa_sa, sizeof(struct sockaddr_in6));
 		hoa_sa.sin6_len = sizeof(struct sockaddr_in6);
 		hoa_sa.sin6_family = AF_INET6;
@@ -575,8 +576,9 @@ mip6_bce_update(cnaddr, hoa, coa, flags, bid)
 		    &haaddr_sa)) {
 			mip6log((LOG_ERR,
 			    "failed to update ipsec databse "
-			    "on a mobile node.\n"));
-			return (EINVAL);
+			    "on a home agent.\n"));
+			error = EIO; /* XXX ? */
+			goto done;
 		}
 #endif /* IPSEC && !__OpenBSD__ */
 	}
@@ -865,7 +867,7 @@ mip6_bul_add(peeraddr, hoa, coa, hoa_ifindex, flags, state, bid)
 		}
 
 #ifdef IPSEC
-/* racoon2 guys wants us to update ipsecdb. (2004.10.8) */
+/* racoon2 guys want us to update ipsecdb. (2004.10.8) */
 		/* update ipsecdb. */
 		bzero(&hoa_sa, sizeof(struct sockaddr_in6));
 		hoa_sa.sin6_len = sizeof(struct sockaddr_in6);
