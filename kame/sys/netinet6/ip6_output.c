@@ -348,7 +348,7 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 		panic("ip6_output: IPv4 pcb is passed");
 #else
 	int needipsectun = 0;
-	struct socket *so;
+	struct socket *so = NULL;
 	struct secpolicy *sp = NULL;
 
 #if !(defined(__FreeBSD__) && __FreeBSD_version >= 503000)

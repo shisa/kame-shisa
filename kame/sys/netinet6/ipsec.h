@@ -357,6 +357,9 @@ extern int ipsec_invalpcbcacheall __P((void));
 
 extern struct secpolicy *ipsec4_getpolicybysock
 	__P((struct mbuf *, u_int, struct socket *, int *));
+struct inpcb;
+extern struct secpolicy *ipsec4_getpolicybypcb
+	(struct mbuf *m, u_int dir, struct inpcb *, int *);
 extern struct secpolicy *ipsec4_getpolicybyaddr
 	__P((struct mbuf *, u_int, int, int *));
 extern struct secpolicy *ipsec4_getpolicybytag
