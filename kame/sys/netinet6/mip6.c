@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.9 2004/10/12 09:47:53 t-momose Exp $	*/
+/*	$Id: mip6.c,v 1.10 2004/10/12 10:14:32 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -517,7 +517,7 @@ mip6_bce_update(cnaddr, hoa, coa, flags, bid)
 #endif /* MIP6_MCOA */
 	if (bce) {
 		bce->mbc_coa = coa->sin6_addr;
-		return (0);
+		goto bc_update_ipsecdb;
 	} 
 
 #if defined(__NetBSD__) || defined(__OpenBSD__)
@@ -548,7 +548,12 @@ mip6_bce_update(cnaddr, hoa, coa, flags, bid)
 						   mip6_rev_encapcheck,
 						   (struct protosw *)&mip6_tunnel_protosw,
 						   bce);
-#ifdef IPSEC
+	}
+
+ bc_update_ipsecdb:
+	if (MIP6_IS_HA && bce != NULL &&
+	    (flags & IP6_MH_BU_HOME) != 0) {
+#if defined(IPSEC) && !defined(__OpenBSD__)
 /* racoon2 guys wants us to update ipsecdb. (2004.10.8) */
 		/* update ipsecdb. */
 		bzero(&hoa_sa, sizeof(struct sockaddr_in6));
@@ -573,7 +578,7 @@ mip6_bce_update(cnaddr, hoa, coa, flags, bid)
 			    "on a mobile node.\n"));
 			return (EINVAL);
 		}
-#endif
+#endif /* IPSEC && !__OpenBSD__ */
 	}
 
  done:
