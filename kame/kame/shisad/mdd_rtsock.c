@@ -1,4 +1,4 @@
-/*      $Id: mdd_rtsock.c,v 1.5 2004/10/28 06:22:03 keiichi Exp $  */
+/*      $Id: mdd_rtsock.c,v 1.6 2004/10/28 08:02:52 keiichi Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -59,52 +59,56 @@ static int ifmsglen = 0;
 
 
 int
-get_ifmsg(void)
+get_ifmsg()
 {
 	int len;
 	int mib[] = {CTL_NET, AF_ROUTE, 0, AF_INET6, NET_RT_IFLIST, 0};
 
 	if (sysctl(mib, sizeof(mib)/sizeof(int), NULL, &len, NULL, 0) < 0)
-		return(-1);
+		return (-1);
 
 	ifmsg = realloc(ifmsg, len);
 	if (ifmsg == NULL) {
 		ifmsglen = 0;
-		return(-1);
+		return (-1);
 	}
 	if (sysctl(mib, sizeof(mib)/sizeof(int), ifmsg, &len, NULL, 0) < 0)
-		return(-1);
+		return (-1);
 
 	ifmsglen = len;
 
-	return 0;
+	return (0);
 }
 
 
 
-#define ROUNDUP(a, size)						\
-		(((a) & ((size)-1)) ? (1+((a) | ((size)-1))) : (a))
+#define ROUNDUP(a, size)					\
+    (((a) & ((size)-1)) ? (1+((a) | ((size)-1))) : (a))
 
 
 
 int
-next_sa(struct sockaddr *sa)
+next_sa(sa)
+	struct sockaddr *sa;
 {
 	if (sa->sa_len) {
-		return ROUNDUP(sa->sa_len, sizeof (u_long));
+		return (ROUNDUP(sa->sa_len, sizeof (u_long)));
 	} else {
-		return sizeof(u_long);
+		return (sizeof(u_long));
 	}
 }
 
 
 
 void
-get_rtaddrs(int addrs, struct sockaddr *sa, struct sockaddr *rti_info[])
+get_rtaddrs(addrs, sa, rti_info)
+	int addrs;
+	struct sockaddr *sa
+	struct sockaddr *rti_info[];
 {
 	int i;
 
-	for (i=0; i<RTAX_MAX; i++) {
+	for (i=0; i < RTAX_MAX; i++) {
 		if (addrs & (1 << i)) {
 			rti_info[i] = sa;
 			sa = (struct sockaddr *) ((caddr_t) sa + next_sa(sa));
@@ -117,19 +121,24 @@ get_rtaddrs(int addrs, struct sockaddr *sa, struct sockaddr *rti_info[])
 
 
 int
-is_in_ifl(int index, struct cifl *ifl_headp)
+is_in_ifl(index, ifl_headp)
+	int index;
+	struct cifl *ifl_headp;
 {
 	struct cif *cifp;
 
 	LIST_FOREACH(cifp, ifl_headp, cif_entries) {
-		if (if_nametoindex(cifp->cif_name) == index) return 1;
+		if (if_nametoindex(cifp->cif_name) == index)
+			return (1);
 	}
 
-	return 0;
+	return (0);
 }
 
 int
-get_addr_with_ifl(struct coacl *coacl_headp, struct cifl *ifl_headp)
+get_addr_with_ifl(coacl_headp, ifl_headp)
+	struct coacl *coacl_headp;
+	struct cifl *ifl_headp;
 {
 	char *next, *limit;
 	struct if_msghdr *ifm;
@@ -140,18 +149,20 @@ get_addr_with_ifl(struct coacl *coacl_headp, struct cifl *ifl_headp)
 	struct sockaddr_in6 *sin6;
 	int flags6;
 
-	if (get_ifmsg() < 0) return -1;
+	if (get_ifmsg() < 0)
+		return (-1);
 	
 	limit = ifmsg + ifmsglen;
 	for (next = ifmsg; next < limit; next += ifm->ifm_msglen) {
-		ifm = (struct if_msghdr *) next;
-		if (!is_in_ifl(ifm->ifm_index, ifl_headp)) continue;
+		ifm = (struct if_msghdr *)next;
+		if (!is_in_ifl(ifm->ifm_index, ifl_headp))
+			continue;
 		if (ifm->ifm_type == RTM_NEWADDR) {
-			ifam = (struct ifa_msghdr *) next;
+			ifam = (struct ifa_msghdr *)next;
 			get_rtaddrs(ifam->ifam_addrs,
-				(struct sockaddr *) (ifam + 1), rti_info);
+			    (struct sockaddr *)(ifam + 1), rti_info);
 
-			sin6 = (struct sockaddr_in6 *) rti_info[RTAX_IFA];
+			sin6 = (struct sockaddr_in6 *)rti_info[RTAX_IFA];
 			memset(&ifr6, 0, sizeof(ifr6));
 			ifr6.ifr_addr = *sin6;
 			if (if_indextoname(ifm->ifm_index, ifr6.ifr_name)
@@ -172,25 +183,28 @@ get_addr_with_ifl(struct coacl *coacl_headp, struct cifl *ifl_headp)
 			if (flags6 & IN6_IFF_DETACHED)
 				continue;
 
+#if 0
 			/*
 			 * XXX need more consideration:
 			 * a home address cannot be a CoA.
 			 */
 			if (flags6 & IN6_IFF_HOME)
 				continue;
+#endif
 
 			cp = malloc(sizeof(struct coac));
 			memcpy(&cp->coa, sin6, sizeof(cp->coa));
 			LIST_INSERT_HEAD(coacl_headp, cp, coac_entries);
 		}
 	}
-	return 0;
+	return (0);
 }
 
 
 
 int
-in6_addrscope(struct in6_addr *addr)
+in6_addrscope(addr)
+	struct in6_addr *addr;
 {
 	int scope;
 
@@ -199,13 +213,13 @@ in6_addrscope(struct in6_addr *addr)
 
 		switch (scope) {
 		case 0x80:
-			return __IPV6_ADDR_SCOPE_LINKLOCAL;
+			return (__IPV6_ADDR_SCOPE_LINKLOCAL);
 			break;
 		case 0xc0:
-			return __IPV6_ADDR_SCOPE_SITELOCAL;
+			return (__IPV6_ADDR_SCOPE_SITELOCAL);
 			break;
 		default:
-			return __IPV6_ADDR_SCOPE_GLOBAL; /* just in case */
+			return (__IPV6_ADDR_SCOPE_GLOBAL); /* just in case */
 			break;
 		}
 	}
@@ -220,16 +234,16 @@ in6_addrscope(struct in6_addr *addr)
 		 */
 		switch (scope) {
 		case __IPV6_ADDR_SCOPE_INTFACELOCAL:
-			return __IPV6_ADDR_SCOPE_INTFACELOCAL;
+			return (__IPV6_ADDR_SCOPE_INTFACELOCAL);
 			break;
 		case __IPV6_ADDR_SCOPE_LINKLOCAL:
-			return __IPV6_ADDR_SCOPE_LINKLOCAL;
+			return (__IPV6_ADDR_SCOPE_LINKLOCAL);
 			break;
                 case __IPV6_ADDR_SCOPE_SITELOCAL:
-			return __IPV6_ADDR_SCOPE_SITELOCAL;
+			return (__IPV6_ADDR_SCOPE_SITELOCAL);
 			break;
 		default:
-			return __IPV6_ADDR_SCOPE_GLOBAL;
+			return (__IPV6_ADDR_SCOPE_GLOBAL);
 			break;
 		}
 	}
@@ -240,39 +254,43 @@ in6_addrscope(struct in6_addr *addr)
 	 */
 	if (bcmp(&in6addr_loopback, addr, sizeof(*addr) - 1) == 0) {
 		if (addr->s6_addr[15] == 1) /* loopback */
-			return __IPV6_ADDR_SCOPE_LINKLOCAL;
+			return (__IPV6_ADDR_SCOPE_LINKLOCAL);
 		if (addr->s6_addr[15] == 0) /* unspecified */
-			return __IPV6_ADDR_SCOPE_GLOBAL; /* XXX: correct? */
+			return (__IPV6_ADDR_SCOPE_GLOBAL); /* XXX: correct? */
 	}
 
-	return __IPV6_ADDR_SCOPE_GLOBAL;
+	return (__IPV6_ADDR_SCOPE_GLOBAL);
 }
 
 
 int
-get_ifl(struct cifl *ifl_headp)
+get_ifl(ifl_headp)
+	struct cifl *ifl_headp;
 {
 	struct cif *cifp;
 #if 1
 	char *next, *limit, *ifname;
 	struct if_msghdr *ifm;
 
-	if (get_ifmsg() < 0) return -1;
+	if (get_ifmsg() < 0)
+		return (-1);
 
 	limit = ifmsg + ifmsglen;
 	for (next = ifmsg; next < limit; next += ifm->ifm_msglen) {
-		ifm = (struct if_msghdr *) next;
-		if (is_in_ifl(ifm->ifm_index, ifl_headp)) continue;
+		ifm = (struct if_msghdr *)next;
+		if (is_in_ifl(ifm->ifm_index, ifl_headp))
+			continue;
 
-		ifname = (char *) malloc(IFNAMSIZ);
-		if (ifname == NULL) continue;
+		ifname = (char *)malloc(IFNAMSIZ);
+		if (ifname == NULL)
+			continue;
 
 		if (if_indextoname(ifm->ifm_index, ifname) == NULL) {
 			free(ifname);
 			continue;
 		}
 
-		cifp = (struct cif *) malloc(sizeof(*cifp));
+		cifp = (struct cif *)malloc(sizeof(*cifp));
 		if (cifp == NULL) {
 			free(ifname);
 			continue;
@@ -286,7 +304,7 @@ get_ifl(struct cifl *ifl_headp)
 	if (getifaddrs(&ifap) != 0)
 		return (-1);
 	for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
-		cifp = (struct cif *) malloc(sizeof(*cifp) + strlen(ifa->ifa_name) + 1);
+		cifp = (struct cif *)malloc(sizeof(*cifp) + strlen(ifa->ifa_name) + 1);
 		if (cifp == NULL) {
 			continue;
 		}
@@ -297,34 +315,38 @@ get_ifl(struct cifl *ifl_headp)
 	freeifaddrs(ifap);
 #endif
 
-	return 0;
+	return (0);
 }
 
 
 
 int
-del_if_from_ifl(struct cifl *ifl_headp, int type)
+del_if_from_ifl(ifl_headp, type)
+	struct cifl *ifl_headp;
+	int type;
 {
 	char *next, *limit;
 	struct if_msghdr *ifm;
 	struct cif *cifp;
 	struct sockaddr_dl *sdl;
 
-	if (get_ifmsg() < 0) return -1;
+	if (get_ifmsg() < 0)
+		return (-1);
 
 	limit = ifmsg + ifmsglen;
 	for (next = ifmsg; next < limit; next += ifm->ifm_msglen) {
-		ifm = (struct if_msghdr *) next;
+		ifm = (struct if_msghdr *)next;
 
-		if (ifm->ifm_type != RTM_IFINFO) continue;
+		if (ifm->ifm_type != RTM_IFINFO)
+			continue;
 
 		sdl = (struct sockaddr_dl *)(ifm + 1);
 
 		if (sdl->sdl_type == type) {
-		   retry:
+		retry:
 	        	LIST_FOREACH(cifp, ifl_headp, cif_entries) {
 				if (if_nametoindex(cifp->cif_name)
-							!= ifm->ifm_index)
+				    != ifm->ifm_index)
 					continue;
 
 				LIST_REMOVE(cifp, cif_entries);
@@ -334,32 +356,34 @@ del_if_from_ifl(struct cifl *ifl_headp, int type)
 		}
 	}
 
-	return 0;
+	return (0);
 }
 
 
 
 int
-in6_mask2prefixlen(struct in6_addr *a)
+in6_mask2prefixlen(a)
+	struct in6_addr *a;
 {
 	int bytes = sizeof(struct in6_addr)/sizeof(u_int8_t);
 	u_int8_t mask;
 	int i, j;
 
-	for (i=0; i<bytes; i++) {
+	for (i = 0; i < bytes; i++) {
 		mask = 0;
-		for (j=0; j<8; j++) {
+		for (j = 0; j < 8; j++) {
 			mask = 0x80 >> j;
-			if ((mask & a->s6_addr[i]) == 0) return 8*i+j;
+			if ((mask & a->s6_addr[i]) == 0)
+				return (8 * i + j);
 		}
 	}
-	return 8*i;
+	return (8 * i);
 }
 
 
 
 int
-_get_hoalist(void)
+_get_hoalist()
 {
 	char *next, *limit;
 	struct if_msghdr *ifm;
@@ -374,40 +398,46 @@ _get_hoalist(void)
 	int index[10], indexp=0;
 #endif
 
-	if (get_ifmsg() < 0) return -1;
+	if (get_ifmsg() < 0)
+		return (-1);
 	
 	limit = ifmsg + ifmsglen;
 #if 0
 	for (next = ifmsg; next < limit; next += ifm->ifm_msglen) {
-		ifm = (struct if_msghdr *) next;
+		ifm = (struct if_msghdr *)next;
 
-		if (ifm->ifm_type != RTM_IFINFO) continue;
+		if (ifm->ifm_type != RTM_IFINFO)
+			continue;
 
 		sdl = (struct sockaddr_dl *)(ifm + 1);
 
 		if (sdl->sdl_type == IFT_MIP) {
 			index[indexp++] = ifm->ifm_index;
-			if (indexp >= 10) break;
+			if (indexp >= 10)
+				break;
 		}
 	}
 #endif
 
 	for (next = ifmsg; next < limit; next += ifm->ifm_msglen) {
-		ifm = (struct if_msghdr *) next;
-		if (ifm->ifm_type != RTM_NEWADDR) continue;
+		ifm = (struct if_msghdr *)next;
+		if (ifm->ifm_type != RTM_NEWADDR)
+			continue;
 
 #if 0
-		for (i=0; i<indexp; i++) {
-			if (ifm->ifm_index == index[i]) break;
+		for (i = 0; i < indexp; i++) {
+			if (ifm->ifm_index == index[i])
+				break;
 		}
-		if (i == indexp) continue;
+		if (i == indexp)
+			continue;
 #endif
 
-		ifam = (struct ifa_msghdr *) next;
+		ifam = (struct ifa_msghdr *)next;
 		get_rtaddrs(ifam->ifam_addrs,
-			(struct sockaddr *) (ifam + 1), rti_info);
-		sin6 = (struct sockaddr_in6 *) rti_info[RTAX_IFA];
-		sin6mask = (struct sockaddr_in6 *) rti_info[RTAX_NETMASK];
+		    (struct sockaddr *)(ifam + 1), rti_info);
+		sin6 = (struct sockaddr_in6 *)rti_info[RTAX_IFA];
+		sin6mask = (struct sockaddr_in6 *)rti_info[RTAX_NETMASK];
 
 		memset(&ifr6, 0, sizeof(ifr6));
 		ifr6.ifr_addr = *sin6;
@@ -419,21 +449,23 @@ _get_hoalist(void)
 		}
 		flags6 = ifr6.ifr_ifru.ifru_flags6;
 
-		if (in6_addrscope(&sin6->sin6_addr) != __IPV6_ADDR_SCOPE_GLOBAL)
+		if (in6_addrscope(&sin6->sin6_addr)
+		    != __IPV6_ADDR_SCOPE_GLOBAL)
 			continue;
 		if ((flags6 & IN6_IFF_HOME) == 0)
 			continue;
 
 		set_hoa(&sin6->sin6_addr,
-				in6_mask2prefixlen(&sin6mask->sin6_addr));
+		    in6_mask2prefixlen(&sin6mask->sin6_addr));
 	}
 
-	return 0;
+	return (0);
 }
 
 
 int
-in6_addr2ifindex(struct in6_addr *ia6)
+in6_addr2ifindex(ia6)
+	struct in6_addr *ia6;
 {
 	char *next, *limit;
 	struct if_msghdr *ifm;
@@ -441,51 +473,58 @@ in6_addr2ifindex(struct in6_addr *ia6)
 	struct sockaddr_in6 *sin6;
 	struct sockaddr *rti_info[RTAX_MAX];
 
-	if (get_ifmsg() < 0) return -1;
+	if (get_ifmsg() < 0)
+		return (-1);
 
 	limit = ifmsg + ifmsglen;
 	for (next = ifmsg; next < limit; next += ifm->ifm_msglen) {
-		ifm = (struct if_msghdr *) next;
-		if (ifm->ifm_type != RTM_NEWADDR) continue;
+		ifm = (struct if_msghdr *)next;
+		if (ifm->ifm_type != RTM_NEWADDR)
+			continue;
 
-		ifam = (struct ifa_msghdr *) next;
+		ifam = (struct ifa_msghdr *)next;
 		get_rtaddrs(ifam->ifam_addrs,
-			(struct sockaddr *) (ifam + 1), rti_info);
-		sin6 = (struct sockaddr_in6 *) rti_info[RTAX_IFA];
+		    (struct sockaddr *) (ifam + 1), rti_info);
+		sin6 = (struct sockaddr_in6 *)rti_info[RTAX_IFA];
 
 		if (IN6_ARE_ADDR_EQUAL(&sin6->sin6_addr, ia6))
-			return ifm->ifm_index;
+			return (ifm->ifm_index);
 	}
 
-	return -1;
+	return (-1);
 }
 
 
 int
-in6_is_one_of_hoa(struct ifa_msghdr *ifam, struct bl *bl_headp)
+in6_is_one_of_hoa(ifam, bl_headp)
+	struct ifa_msghdr *ifam;
+	struct bl *bl_headp;
 {
 	struct sockaddr_in6 *sin6;
 	struct binding *bp;
 	struct sockaddr *rti_info[RTAX_MAX];
 		
 	get_rtaddrs(ifam->ifam_addrs,
-		(struct sockaddr *) (ifam + 1), rti_info);
-	sin6 = (struct sockaddr_in6 *) rti_info[RTAX_IFA];
+	    (struct sockaddr *)(ifam + 1), rti_info);
+	sin6 = (struct sockaddr_in6 *)rti_info[RTAX_IFA];
 
-	if (sin6 == NULL) return 0;
+	if (sin6 == NULL)
+		return (0);
 
 	LIST_FOREACH(bp, bl_headp, binding_entries) {
 		if (IN6_ARE_ADDR_EQUAL(&sin6->sin6_addr, &bp->hoa.sin6_addr))
-			return 1;
+			return (1);
 	}
 
-	return 0;
+	return (0);
 }
 
 
 
 int
-in6_is_on_homenetwork(struct ifa_msghdr *ifam, struct bl *bl_headp)
+in6_is_on_homenetwork(ifam, bl_headp)
+	struct ifa_msghdr *ifam;
+	struct bl *bl_headp;
 {
 	struct sockaddr_in6 *sin6;
 	struct binding *bp;
