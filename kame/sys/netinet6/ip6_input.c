@@ -1557,7 +1557,6 @@ ip6_savecontrol(in6p, m, mp)
 #ifdef PULLDOWN_TEST
 			struct mbuf *ext = NULL;
 #endif
-#endif
 
 			/*
 			 * if it is not an extension header, don't try to

@@ -52,9 +52,6 @@
 
 #include <net/if.h>
 #include <net/route.h>
-#ifdef MIP6
-#include <net/mipsock.h>
-#endif /* MIP6 */
 
 #include <netinet/in.h>
 #include <netinet/in_var.h>
@@ -65,6 +62,15 @@
 #endif
 #include <netinet/icmp6.h>
 #include <netinet6/scope6_var.h>
+
+#ifdef MIP6
+#include <netinet/ip6mh.h>
+#include <netinet6/mip6_var.h>
+
+static int	dest6_swap_hao __P((struct ip6_hdr *, struct ip6aux *,
+				    struct ip6_opt_home_address *));
+static int	dest6_nextopt __P((struct mbuf *, int, struct ip6_opt *));
+#endif /* MIP6 */
 
 /*
  * Destination options header processing.

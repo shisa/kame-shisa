@@ -187,6 +187,10 @@
 #endif
 #endif /* IPSEC */
 
+#ifdef MIP6
+#include <netinet6/mip6_var.h>
+#endif /* MIP6 */
+
 #include <netinet6/ip6protosw.h>
 
 #include <net/net_osdep.h>

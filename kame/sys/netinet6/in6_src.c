@@ -829,12 +829,6 @@ in6_selectroute(dstsock, opts, mopts, ro, retifp, retrt, clone)
 				goto done;
 			}
 		}
-		if (!nd6_is_addr_neighbor(sin6_next, ron->ro_rt->rt_ifp)) {
-			RTFREE(ron->ro_rt);
-			ron->ro_rt = NULL;
-			error = EHOSTUNREACH;
-			goto done;
-		}
 	}
 
   done:
