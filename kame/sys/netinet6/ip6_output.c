@@ -627,13 +627,13 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 	if (exthdrs.ip6e_hbh) optlen += exthdrs.ip6e_hbh->m_len;
 	if (exthdrs.ip6e_dest1) optlen += exthdrs.ip6e_dest1->m_len;
 	if (exthdrs.ip6e_rthdr) optlen += exthdrs.ip6e_rthdr->m_len;
-	unfragpartlen = optlen + sizeof(struct ip6_hdr);
 #ifdef MIP6
 	if (exthdrs.ip6e_rthdr2) optlen += exthdrs.ip6e_rthdr2->m_len;
 #if NMIP > 0
 	if (exthdrs.ip6e_hoa) optlen += exthdrs.ip6e_hoa->m_len;
 #endif /* NMIP > 0 */
 #endif /* MIP6 */
+	unfragpartlen = optlen + sizeof(struct ip6_hdr);
 	/* NOTE: we don't add AH/ESP length here. do that later. */
 	if (exthdrs.ip6e_dest2) optlen += exthdrs.ip6e_dest2->m_len;
 
@@ -1521,6 +1521,17 @@ skip_ipsec2:;
 		 * Change the next header field of the last header in the
 		 * unfragmentable part.
 		 */
+#ifdef MIP6
+#if NMIP > 0
+		if (exthdrs.ip6e_hoa) {
+			nextproto = *mtod(exthdrs.ip6e_hoa, u_char *);
+			*mtod(exthdrs.ip6e_hoa, u_char *) = IPPROTO_FRAGMENT;
+#endif /* NMIP > 0 */
+		} else if (exthdrs.ip6e_rthdr2) {
+			nextproto = *mtod(exthdrs.ip6e_rthdr2, u_char *);
+			*mtod(exthdrs.ip6e_rthdr2, u_char *) = IPPROTO_FRAGMENT;
+		} else
+#endif /* MIP6 */
 		if (exthdrs.ip6e_rthdr) {
 			nextproto = *mtod(exthdrs.ip6e_rthdr, u_char *);
 			*mtod(exthdrs.ip6e_rthdr, u_char *) = IPPROTO_FRAGMENT;
@@ -1530,16 +1541,6 @@ skip_ipsec2:;
 		} else if (exthdrs.ip6e_hbh) {
 			nextproto = *mtod(exthdrs.ip6e_hbh, u_char *);
 			*mtod(exthdrs.ip6e_hbh, u_char *) = IPPROTO_FRAGMENT;
-#ifdef MIP6
-#if NMIP > 0
-		} else if (exthdrs.ip6e_hoa) {
-			nextproto = *mtod(exthdrs.ip6e_hoa, u_char *);
-			*mtod(exthdrs.ip6e_hoa, u_char *) = IPPROTO_FRAGMENT;
-#endif /* NMIP > 0 */
-		} else if (exthdrs.ip6e_rthdr) {
-			nextproto = *mtod(exthdrs.ip6e_rthdr, u_char *);
-			*mtod(exthdrs.ip6e_rthdr, u_char *) = IPPROTO_FRAGMENT;
-#endif /* MIP6 */
 		} else {
 			nextproto = ip6->ip6_nxt;
 			ip6->ip6_nxt = IPPROTO_FRAGMENT;
