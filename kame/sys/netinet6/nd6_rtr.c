@@ -1372,26 +1372,24 @@ prelist_update(new, dr, m, mcast)
 		ifa6->ia6_lifetime = lt6_tmp;
 		ifa6->ia6_updatetime = time_second;
 	}
+#if defined(MIP6) && NMIP > 0
+	/* 
+	 * if the received prefix is equal to a home prefix, should
+	 * not create a new address from the prefix. The home agent
+	 * may defend the same address by proxy ND due to binding
+	 * registration.  Thus, the new address (i.e. Home Address)
+	 * will be added manually by shiisa.
+	 */
+	if (MIP6_IS_MN && mip6_are_homeprefix(new)) {
+		mips_notify_home_hint(new->ndpr_ifp->if_index, 
+		    &new->ndpr_prefix.sin6_addr, new->ndpr_plen);
+		goto end;
+	}
+#endif /* MIP6 && NMIP > 0 */
 	if (ia6_match == NULL && new->ndpr_vltime) {
 		int ifidlen;
 
 		ifidlen = ((struct in6_ifextra *)(ifp)->if_afdata[AF_INET6])->ifidlen;
-#if defined(MIP6) && NMIP > 0
-		/* 
-		 * if the received prefix is equal to a home prefix, should not 
-		 * create a new address from the prefix. The home agent may defend
-		 * the same address by proxy ND due to binding registration. 
-		 * Thus, the new address (i.e. Home Address) will be 
-		 * added manually by shiisa.  
-		 */
-		if (MIP6_IS_MN
-		    && mip6_are_homeprefix(new)) {
-			mips_notify_home_hint(new->ndpr_ifp->if_index, 
-				&new->ndpr_prefix.sin6_addr, new->ndpr_plen);
-			printf("DEBUG: returning home\n");
-			goto end;
-		}
-#endif /* MIP6 && NMIP > 0 */
 		/*
 		 * 5.5.3 (d) (continued)
 		 * No address matched and the valid lifetime is non-zero.
