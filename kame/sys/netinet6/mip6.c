@@ -1,4 +1,4 @@
-/*	$Id: mip6.c,v 1.3 2004/10/06 02:55:56 keiichi Exp $	*/
+/*	$Id: mip6.c,v 1.4 2004/10/06 11:35:26 keiichi Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
@@ -97,10 +97,10 @@ int mip6ctl_debug = 0;
 
 extern struct ip6protosw mip6_tunnel_protosw;
 
+#if NMIP > 0
 static int mip6_rr_hint_pps_count = 0;
 static struct timeval mip6_rr_hint_ppslim_last;
 
-#if NMIP > 0
 #ifndef MIP6_MCOA
 static struct mip6_bul_internal *mip6_bul_create(const struct in6_addr *,
 						 const struct in6_addr *, 
@@ -136,8 +136,11 @@ static struct mip6_bc_internal *mip6_bce_new_entry(struct in6_addr *,
 static void mip6_bc_list_insert(struct mip6_bc_internal *);
 static void mip6_bc_list_remove(struct mip6_bc_internal *);
 
+#if NMIP > 0
 static int mip6_rr_hint_ratelimit(const struct in6_addr *,
     const struct in6_addr *);
+#endif /* NMIP > 0 */
+
 /*
  * sysctl knobs.
  */
@@ -339,14 +342,19 @@ mip6_tunnel_input(mp, offp, proto)
 
 #if NMIP > 0
 		ip6 = mtod(m, struct ip6_hdr *);
+		if (ip6->ip6_nxt == IPPROTO_MH)
+			goto nonotify;
 		src = &ip6->ip6_src;
 		dst = &ip6->ip6_dst;
 		bul = mip6_bul_get_home_agent(dst);
+		if (bul == NULL)
+			goto nonotify;
 		cnbul = mip6_bul_get(dst, src);
-		if ((bul != NULL) && 
-		    ((cnbul == NULL) || !(cnbul->mbul_state & MIP6_BUL_STATE_NEEDTUNNEL))) {
+		if ((cnbul == NULL) ||
+		    !(cnbul->mbul_state & MIP6_BUL_STATE_NEEDTUNNEL)) {
 			mip6_notify_rr_hint(dst, src);
 		}
+	nonotify:
 #endif /* NMIP > 0 */
 
 		mip6stat.mip6s_revtunnel++;
