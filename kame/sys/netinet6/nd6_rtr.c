@@ -1646,7 +1646,7 @@ pfxlist_onlink_check()
 		     * even when we don't have autoconfigured
 		     * addresses.
 		     */
-	  	    && !((ifa->ia6_flags & IN6_IFF_HOME) && (ifa->ia_ifp->if_type == IFT_MIP)) 
+	  	    && !((ifa->ia6_flags & IN6_IFF_HOME) && (ifa->ia_ifp->if_type != IFT_MIP)) 
 #endif /* MIP6 && NMIP > 0 */
 			)
 			continue;
@@ -1665,7 +1665,12 @@ pfxlist_onlink_check()
 	}
 	if (ifa) {
 		for (ifa = in6_ifaddr; ifa; ifa = ifa->ia_next) {
-			if ((ifa->ia6_flags & IN6_IFF_AUTOCONF) == 0)
+			if (!(ifa->ia6_flags & IN6_IFF_AUTOCONF)
+#if defined(MIP6) && NMIP > 0
+			    /* see the comment above. */
+			    && !((ifa->ia6_flags & IN6_IFF_HOME) && (ifa->ia_ifp->if_type != IFT_MIP)) 
+#endif /* MIP6 && NMIP > 0 */
+				)
 				continue;
 
 			if (ifa->ia6_ndpr == NULL) /* XXX: see above. */
