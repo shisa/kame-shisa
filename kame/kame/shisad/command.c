@@ -1,4 +1,4 @@
-/*	$Id: command.c,v 1.3 2004/09/29 11:44:45 t-momose Exp $	*/
+/*	$Id: command.c,v 1.4 2004/11/20 05:09:48 mitsuya Exp $	*/
 
 /*
  * Copyright (C) 2004 WIDE Project.
@@ -68,11 +68,18 @@ command_init(p, cmdset, cmdset_size, port)
 	u_short port;
 {
 	int i, s;
+	int s_optval = 1;
 	struct command_table *c;
 
 	s = socket(PF_INET6, SOCK_STREAM, 0);
 	if (s < 0) {
 		perror("command: socket");
+		return (-1);
+	}
+
+	if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR,
+			&s_optval, sizeof(s_optval)) == -1) {
+		perror("command: setsockopt");
 		return (-1);
 	}
 
