@@ -64,6 +64,7 @@
 #include <netinet6/scope6_var.h>
 
 #ifdef MIP6
+#include <net/mipsock.h>
 #include <netinet/ip6mh.h>
 #include <netinet6/mip6_var.h>
 
