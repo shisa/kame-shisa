@@ -1217,7 +1217,7 @@ in6_update_ifa(ifp, ifra, ia, flags)
 	ia->ia6_flags &= ~IN6_IFF_DUPLICATED;	/* safety */
 	if (hostIsNew && in6if_do_dad(ifp)
 #if defined(MIP6) && NMIP > 0
-	    && 1/*(MIP6_IS_MN && 0) /* XXX XXX XXX */
+	    && !(ia->ia6_flags & IN6_IFF_HOME) /* XXX XXX XXX */
 #endif /* MIP6 && NMIP > 0 */
 		)
 		ia->ia6_flags |= IN6_IFF_TENTATIVE;
