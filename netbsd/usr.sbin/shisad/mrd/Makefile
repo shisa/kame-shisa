@@ -35,7 +35,7 @@ CFLAGS+= -I${.OBJDIR} -I${SRCDIR}
 LDADD+=	-L${.OBJDIR}/../../../lib/libinet6 \
 	-L/usr/local/v6/lib -linet6 -lssl -lcrypto
 
-MAN8=	mnd.8
+MAN=	mnd.8
 
 .PATH:	${SRCDIR}
 

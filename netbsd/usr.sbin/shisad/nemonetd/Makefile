@@ -33,7 +33,7 @@ CFLAGS+= -g -Wall -Werror  -DMIP_NEMO #-DMIP_MCOA
 #LDADD+=	-L${.OBJDIR}/../../../lib/libinet6 \
 #	-L/usr/local/v6/lib -linet6 -lssl -lcrypto
 
-MAN8=	nemonetd.8
+MAN=	nemonetd.8
 
 .PATH:	${SRCDIR}
 
