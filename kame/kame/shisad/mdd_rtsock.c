@@ -1,4 +1,4 @@
-/*      $Id: mdd_rtsock.c,v 1.4 2004/10/13 16:13:43 keiichi Exp $  */
+/*      $Id: mdd_rtsock.c,v 1.5 2004/10/28 06:22:03 keiichi Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -155,7 +155,9 @@ get_addr_with_ifl(struct coacl *coacl_headp, struct cifl *ifl_headp)
 			memset(&ifr6, 0, sizeof(ifr6));
 			ifr6.ifr_addr = *sin6;
 			if (if_indextoname(ifm->ifm_index, ifr6.ifr_name)
-							== NULL) continue;
+			    == NULL) {
+				continue;
+			}
 			if (ioctl(sock_dg6, SIOCGIFAFLAG_IN6, &ifr6) < 0) {
 				perror("ioctl(SIOCGIFAFLAG_IN6)");
 				continue;
