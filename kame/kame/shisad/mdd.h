@@ -1,4 +1,4 @@
-/*      $Id: mdd.h,v 1.1 2004/09/27 04:06:03 t-momose Exp $  */
+/*      $Id: mdd.h,v 1.2 2005/10/11 14:15:35 mitsuya Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -54,11 +54,13 @@ struct cif {
 	LIST_ENTRY(cif)		cif_entries;
 	char *			cif_name;
 	int                     cif_linkstatus;
+	int			preference;
 };
 
 struct coac {
 	LIST_ENTRY(coac)	coac_entries;
 	struct sockaddr_in6	coa;
+	int			preference;
 };
 
 LIST_HEAD(bl, binding);
@@ -70,7 +72,7 @@ struct binding *set_hoa(struct in6_addr *, int);
 struct binding *set_hoa_str(char *);
 void get_hoalist(void);
 int _get_hoalist(void);
-void set_coaif(char *);
+void set_coaif(char *, int);
 void get_coaiflist(void);
 void get_coacandidate(void);
 void set_coa(void);

@@ -1,4 +1,4 @@
-/*      $Id: mdd.c,v 1.8 2004/11/02 14:15:17 kei Exp $  */
+/*      $Id: mdd.c,v 1.9 2005/10/11 14:15:35 mitsuya Exp $  */
 /*
  * Copyright (C) 2004 WIDE Project.  All rights reserved.
  *
@@ -60,7 +60,9 @@
 
 static void reload(int);
 static void terminate(int);
+#if 0
 static int in6_is_addr_coa_candidate(struct in6_addr *);
+#endif
 
 static char *cmd;
 int ver_major = 0;
@@ -115,6 +117,7 @@ main(argc, argv, env)
 {
 	int ch;
 	struct binding *bp = NULL;
+	int if_pref = 0;
 #ifdef MIP_MCOA
 	u_int16_t bid = 0; 
 	
@@ -150,7 +153,8 @@ main(argc, argv, env)
 			break;
 #endif /* MIP_MCOA */
 		case 'i':
-			set_coaif(optarg);
+			if_pref++;
+			set_coaif(optarg, if_pref);
 			cflag += 1;
 			break;
 		case 'h':
@@ -392,14 +396,16 @@ get_hoalist()
 }
 
 void
-set_coaif(ifname)
+set_coaif(ifname, preference)
 	char *ifname;
+	int preference;
 {
 	struct cif *cifp;
 
 	cifp = (struct cif *) malloc(sizeof(struct cif));
 	cifp->cif_name = ifname;
 	cifp->cif_linkstatus = -1;
+	cifp->preference = preference;
 	LIST_INSERT_HEAD(&cifl_head, cifp, cif_entries);
 }
 
@@ -497,23 +503,43 @@ set_coa()
 {
 	struct coac *cp;
 	struct binding *bp;
-	int maxmatchlen, matchlen;
+	int maxmatchlen, matchlen, if_pref;
 	struct sockaddr_in6 sin6;
+	char buf[PA_BUFSIZE];
 
 	LIST_FOREACH(bp, &bl_head, binding_entries) {
+
+#if 0
 		if (in6_is_addr_coa_candidate(&bp->coa.sin6_addr)) {
 			/* the care-of address is still valid. */
 			continue;
 		}
+#endif
 
 		maxmatchlen = -1;
+		if_pref = -1;
 		LIST_FOREACH(cp, &coacl_head, coac_entries) {
+			/* check the binary match */
 			matchlen = in6_matchlen(&bp->hoa.sin6_addr,
 							&cp->coa.sin6_addr);
-			if (maxmatchlen < matchlen) {
+
+			/* 
+			 * 1. check preference 
+			 *	take bigger one as primary coa
+			 * 2. if preference were same, check matchlen 
+			 *	take bigger one as primary coa
+			 */
+			if (if_pref < cp->preference) {
+				if_pref = cp->preference;
 				maxmatchlen = matchlen;
 				memcpy(&sin6, &cp->coa, sizeof(sin6));
+			} else if (if_pref == cp->preference) {
+				if (maxmatchlen < matchlen) {
+					maxmatchlen = matchlen;
+					memcpy(&sin6, &cp->coa, sizeof(sin6));
+				}
 			}
+
 		}
 		if (maxmatchlen < 0) {
 			bp->flags &= ~BF_BOUND;
@@ -532,19 +558,27 @@ set_coa()
 			bp->flags &= ~BF_BOUND;
 			bp->flags |= BF_HOME;
 			memcpy(&bp->pcoa, &bp->coa, sizeof(bp->pcoa));
-			bp->pcoaifindex = bp->coaifindex;
 			memcpy(&bp->coa, &sin6, sizeof(bp->coa));
 			bp->coaifindex = in6_addr2ifindex(&bp->coa.sin6_addr);
 #endif
 		} else {
+			/* not home */
 			bp->flags |= BF_BOUND;
 			bp->flags &= ~BF_HOME;
 			memcpy(&bp->pcoa, &bp->coa, sizeof(bp->pcoa));
+			bp->pcoaifindex = bp->coaifindex;
 			memcpy(&bp->coa, &sin6, sizeof(bp->coa));
+
+			printf("set_coa(): coa %s\n",
+				(char *) inet_ntop(AF_INET6,
+				&bp->coa.sin6_addr,
+				buf, sizeof(buf)));
 		}
+
 	}
 }
 
+#if 0
 static int
 in6_is_addr_coa_candidate(addr)
 	struct in6_addr *addr;
@@ -557,6 +591,7 @@ in6_is_addr_coa_candidate(addr)
 	}
 	return (0);
 }
+#endif
 
 
 void
